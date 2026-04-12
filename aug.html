@@ -3,40 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v1.9</title>
+<title>MeineAugen v2.0</title>
 <style>
-:root { --p: #2c3e50; --s: #27ae60; --bg: #fdfcfb; }
-body { font-family: sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
-.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
-.btn-start { background: var(--s); color: white; }
+:root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; }
+.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: 20px auto; border: 1px solid #eee; }
+.status-badge { font-size: 0.8rem; padding: 5px 15px; border-radius: 20px; background: #f0f0f0; display: inline-block; margin-bottom: 15px; }
+button { border: none; padding: 18px; border-radius: 18px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; transition: 0.2s; }
+.btn-main { background: var(--s); color: white; }
+.btn-emergency { background: #fff5f5; color: var(--d); border: 1px solid #fed7d7; }
 .btn-stop { background: #95a5a6; color: white; }
-.timer-val { font-size: 4.5rem; color: #d35400; margin: 20px 0; font-weight: 200; }
+.timer-val { font-size: 4.5rem; color: var(--a); margin: 15px 0; font-weight: 200; }
 .hidden { display: none; }
+.feedback-grid { display: flex; gap: 8px; margin-top: 15px; }
+.btn-f { flex: 1; font-size: 0.8rem; padding: 12px 5px; }
 </style>
 </head>
 <body>
 
-<h1>MeineAugen v1.9</h1>
-
 <div id="main-menu" class="card">
-<p id="status">Status: Standby</p>
-<button id="work-btn" class="btn-start" onclick="toggleWorkMode()">🛡️ Begleiter (Test: 30s)</button>
-<button style="background: #eee;" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
+<h1>MeineAugen <span style="font-size: 0.8rem; color: var(--a);">v2.0</span></h1>
+<div id="status-badge" class="status-badge">Bereit</div>
+<button class="btn-main" id="work-btn" onclick="toggleWorkMode()">🛡️ Begleiter starten</button>
+<button style="background:#ecf0f1;" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
+<button class="btn-emergency" onclick="triggerEmergency()">⚠️ Augen schlecht</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h2 id="ex-title">Pause</h2>
+<h2 id="ex-title" style="font-weight: 400;">Pause</h2>
+<p id="ex-desc" style="color: #666;">...</p>
 <div class="timer-val" id="timer-display">--</div>
+<div id="feedback-area" class="hidden">
+<hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+<p>Wie ist dein Status?</p>
+<div class="feedback-grid">
+<button class="btn-f" style="background:#eafaf1; color:#27ae60" onclick="processFeedback('gut')">Gut</button>
+<button class="btn-f" style="background:#fef9e7; color:#f1c40f" onclick="processFeedback('mittel')">Mittel</button>
+<button class="btn-f" style="background:#fdedec; color:#e74c3c" onclick="processFeedback('schlecht')">Schlecht</button>
+</div>
+</div>
 </div>
 
-<audio id="silent-audio" loop>
-<source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-</audio>
+<audio id="silent-audio" loop><source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav"></audio>
 
 <script>
+let workDuration = 15; // Start in Minuten
+let badCount = 0;
 let isWorkModeActive = false;
-let workDurationSec = 30; // ZUM TESTEN AUF 30 SEKUNDEN GESETZT
 let timerTimeout;
 const synth = window.speechSynthesis;
 
@@ -44,9 +57,20 @@ function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
-utter.rate = 0.8;
+utter.rate = 0.85;
 if (callback) utter.onend = callback;
 synth.speak(utter);
+}
+
+function updateUI() {
+const badge = document.getElementById('status-badge');
+if (isWorkModeActive) {
+badge.innerText = `🛡️ Aktiv | Intervall: ${workDuration} Min.`;
+badge.style.color = "#27ae60"
+} else {
+badge.innerText = "Bereit"
+badge.style.color = "#7f8c8d"
+}
 }
 
 function toggleWorkMode() {
@@ -55,52 +79,58 @@ const audio = document.getElementById('silent-audio');
 
 if (!isWorkModeActive) {
 isWorkModeActive = true;
-btn.innerText = "🛑 Stoppen"
+btn.innerText = "🛑 Begleiter stoppen"
 btn.className = "btn-stop"
-document.getElementById('status').innerText = "Begleiter aktiv (Warte 30s)..."
-// Hack: Spiele lautloses Audio ab, um den Standby zu verhindern
-audio.play().catch(e => console.log("Audio-Autoplay geblockt"));
-speak("Begleiter aktiv. Ich melde mich in 30 Sekunden.");
+audio.play().catch(() => {});
+speak("Begleiter aktiviert. Ich achte auf deine Pausen.");
 scheduleNext();
 } else {
 isWorkModeActive = false;
-btn.innerText = "🛡️ Begleiter (Test: 30s)"
-btn.className = "btn-start"
+btn.innerText = "🛡️ Begleiter starten"
+btn.className = "btn-main"
 audio.pause();
 clearTimeout(timerTimeout);
-document.getElementById('status').innerText = "Status: Aus"
 }
+updateUI();
 }
 
 function scheduleNext() {
 if (!isWorkModeActive) return;
 clearTimeout(timerTimeout);
-timerTimeout = setTimeout(() => {
-startRoutine('break');
-}, workDurationSec * 1000);
+timerTimeout = setTimeout(() => { startRoutine('break'); }, workDuration * 60 * 1000);
 }
+
+function triggerEmergency() { startRoutine('emergency'); }
 
 function startRoutine(type) {
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
-const steps = [
-{ t: "Dunkelpause", s: 10, v: "Pause! Augen zu und Dunkelheit genießen." },
-{ t: "Ferne", s: 10, v: "Jetzt sanft in die Ferne schauen." }
-];
-runStep(steps, 0);
+document.getElementById('feedback-area').classList.add('hidden');
+const flows = {
+break: [
+{ t: "Dunkelpause", d: "Augen zu. Atme tief.", s: 40, v: "Zeit für eine Dunkelpause. Schließe deine Augen jetzt." },
+{ t: "Weitblick", d: "Schau entspannt in die Ferne.", s: 20, v: "Öffne die Augen und lass den Blick ganz weit schweifen." }
+],
+morgen: [
+{ t: "Ankommen", d: "Schlafmaske auf.", s: 90, v: "Guten Morgen. Genieße anderthalb Minuten Dunkelheit." },
+{ t: "Wärme", d: "Warme Kompresse auflegen.", s: 60, v: "Lege jetzt die warme Kompresse auf." }
+],
+emergency: [
+{ t: "Sofort-Ruhe", d: "Absolute Dunkelheit.", s: 180, v: "Notstopp. Wir machen jetzt drei Minuten Pause in völliger Dunkelheit." }
+]
+};
+runStep(flows[type], 0);
 }
 
 function runStep(steps, index) {
 if (index >= steps.length) {
-speak("Pause beendet.", () => {
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) scheduleNext();
-});
+document.getElementById('feedback-area').classList.remove('hidden');
+speak("Übung beendet. Wie fühlen sich deine Augen an?");
 return;
 }
 const s = steps[index];
 document.getElementById('ex-title').innerText = s.t;
+document.getElementById('ex-desc').innerText = s.d;
 speak(s.v);
 let sec = s.s;
 document.getElementById('timer-display').innerText = sec;
@@ -109,6 +139,25 @@ sec--;
 document.getElementById('timer-display').innerText = sec;
 if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
 }, 1000);
+}
+
+function processFeedback(state) {
+if (state === "schlecht") {
+badCount++;
+workDuration = Math.max(5, workDuration - 5);
+if (badCount >= 2) {
+alert("Hard-Stop: Zu viel Stress. Pause machen!");
+isWorkModeActive = false;
+toggleWorkMode();
+}
+} else {
+badCount = 0;
+if (state === "gut") workDuration = Math.min(25, workDuration + 2);
+}
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+updateUI();
+if (isWorkModeActive) scheduleNext();
 }
 </script>
 </body>
