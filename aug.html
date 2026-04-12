@@ -3,124 +3,111 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v1.8</title>
+<title>MeineAugen v1.9</title>
 <style>
-:root { --p: #2c3e50; --s: #27ae60; --d: #c0392b; --bg: #fdfcfb; }
+:root { --p: #2c3e50; --s: #27ae60; --bg: #fdfcfb; }
 body { font-family: sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
 .card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
 button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
 .btn-start { background: var(--s); color: white; }
 .btn-stop { background: #95a5a6; color: white; }
-.timer-val { font-size: 4rem; color: #d35400; margin: 20px 0; font-weight: 200; }
-.status-msg { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px; min-height: 1.2em; }
+.timer-val { font-size: 4.5rem; color: #d35400; margin: 20px 0; font-weight: 200; }
 .hidden { display: none; }
 </style>
 </head>
 <body>
 
-<h1>MeineAugen v1.8</h1>
+<h1>MeineAugen v1.9</h1>
 
 <div id="main-menu" class="card">
-<div id="status-info" class="status-msg">Bereit für den Begleiter.</div>
-<button id="work-btn" class="btn-start" onclick="toggleWorkMode()">🛡️ Begleiter aktivieren</button>
-<button style="background: #ecf0f1; color: #2c3e50;" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
+<p id="status">Status: Standby</p>
+<button id="work-btn" class="btn-start" onclick="toggleWorkMode()">🛡️ Begleiter (Test: 30s)</button>
+<button style="background: #eee;" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h2 id="ex-title" style="font-weight: 400;">Pause</h2>
-<p id="ex-desc">Augen schließen...</p>
+<h2 id="ex-title">Pause</h2>
 <div class="timer-val" id="timer-display">--</div>
 </div>
 
+<audio id="silent-audio" loop>
+<source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+</audio>
+
 <script>
-let workDuration = 15; // Minuten
-let timeoutId;
 let isWorkModeActive = false;
+let workDurationSec = 30; // ZUM TESTEN AUF 30 SEKUNDEN GESETZT
+let timerTimeout;
 const synth = window.speechSynthesis;
 
 function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
-utter.rate = 0.85;
-utter.pitch = 0.9;
+utter.rate = 0.8;
 if (callback) utter.onend = callback;
 synth.speak(utter);
 }
 
 function toggleWorkMode() {
 const btn = document.getElementById('work-btn');
-const status = document.getElementById('status-info');
+const audio = document.getElementById('silent-audio');
 
 if (!isWorkModeActive) {
 isWorkModeActive = true;
-btn.innerText = "🛑 Begleiter stoppen"
+btn.innerText = "🛑 Stoppen"
 btn.className = "btn-stop"
-status.innerText = "Begleiter wacht im Hintergrund..."
-speak("Begleiter aktiviert. Ich melde mich in " + workDuration + " Minuten für deine erste Dunkelpause.");
-// Erster automatischer Timer-Start
-scheduleNextBreak();
+document.getElementById('status').innerText = "Begleiter aktiv (Warte 30s)..."
+// Hack: Spiele lautloses Audio ab, um den Standby zu verhindern
+audio.play().catch(e => console.log("Audio-Autoplay geblockt"));
+speak("Begleiter aktiv. Ich melde mich in 30 Sekunden.");
+scheduleNext();
 } else {
 isWorkModeActive = false;
-btn.innerText = "🛡️ Begleiter aktivieren"
+btn.innerText = "🛡️ Begleiter (Test: 30s)"
 btn.className = "btn-start"
-status.innerText = "Begleiter deaktiviert."
-clearTimeout(timeoutId);
-speak("Begleiter ausgeschaltet.");
+audio.pause();
+clearTimeout(timerTimeout);
+document.getElementById('status').innerText = "Status: Aus"
 }
 }
 
-function scheduleNextBreak() {
+function scheduleNext() {
 if (!isWorkModeActive) return;
-clearTimeout(timeoutId);
-// Wir nutzen ein Timeout, das die Funktion startRoutine('break') aufruft
-timeoutId = setTimeout(() => {
-if (isWorkModeActive) startRoutine('break');
-}, workDuration * 60 * 1000);
+clearTimeout(timerTimeout);
+timerTimeout = setTimeout(() => {
+startRoutine('break');
+}, workDurationSec * 1000);
 }
 
 function startRoutine(type) {
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
-const flow = {
-break: [
-{ t: "Dunkelpause", d: "Augen zu. Atme tief.", s: 40, v: "Zeit für deine Augen. Schließe sie jetzt und genieße die Dunkelheit." },
-{ t: "Fokus-Wechsel", d: "Schau weit aus dem Fenster.", s: 20, v: "Öffne die Augen vorsichtig und schau in die weite Ferne." }
-],
-morgen: [
-{ t: "Ankommen", d: "Schlafmaske auf.", s: 60, v: "Guten Morgen. Wir starten mit einer Minute Dunkelheit." }
-]
-};
-
-runStep(flow[type], 0);
+const steps = [
+{ t: "Dunkelpause", s: 10, v: "Pause! Augen zu und Dunkelheit genießen." },
+{ t: "Ferne", s: 10, v: "Jetzt sanft in die Ferne schauen." }
+];
+runStep(steps, 0);
 }
 
 function runStep(steps, index) {
 if (index >= steps.length) {
-speak("Pause beendet. Du kannst weiterarbeiten.", () => {
+speak("Pause beendet.", () => {
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) scheduleNextBreak();
+if (isWorkModeActive) scheduleNext();
 });
 return;
 }
-
 const s = steps[index];
 document.getElementById('ex-title').innerText = s.t;
-document.getElementById('ex-desc').innerText = s.d;
 speak(s.v);
-
 let sec = s.s;
-const timerDiv = document.getElementById('timer-display');
-timerDiv.innerText = sec;
-
-const interval = setInterval(() => {
+document.getElementById('timer-display').innerText = sec;
+const int = setInterval(() => {
 sec--;
-timerDiv.innerText = sec;
-if (sec <= 0) {
-clearInterval(interval);
-runStep(steps, index + 1);
-}
+document.getElementById('timer-display').innerText = sec;
+if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
 }, 1000);
 }
 </script>
