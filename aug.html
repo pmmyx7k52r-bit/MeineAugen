@@ -3,59 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v1.3</title>
+<title>MeineAugen v1.5 Pro</title>
 <style>
-:root { --primary: #2980b9; --secondary: #27ae60; --accent: #e67e22; --bg: #f0f3f5; }
-body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #34495e; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-.card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); width: 100%; max-width: 420px; margin-bottom: 20px; transition: all 0.3s ease; }
-.mode-active { border: 3px solid var(--secondary); background: #f0fff4; }
-h1 { font-size: 1.8rem; margin-bottom: 5px; color: #2c3e50; }
-.subtitle { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 25px; }
-button { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; font-size: 1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
-button.secondary { background: var(--secondary); }
-button.stop { background: #e74c3c; }
-.timer-display { font-size: 3.5rem; font-weight: bold; color: var(--accent); margin: 20px 0; }
-.badge { background: #ebf5fb; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
-.hidden { display: none; }
-#visual-box { font-size: 4rem; margin: 20px 0; }
+/* --- DESIGN FOUNDATION --- */
+:root {
+--primary: #3498db; /* Vertrauenswürdiges Blau */
+--primary-dark: #2980b9;
+--secondary: #2ecc71; /* Beruhigendes Grün */
+--accent: #e67e22; /* Warn-Orange */
+--danger: #e74c3c; /* Notfall-Rot */
+--bg-start: #fdfbfb; /* Hell & Sauber */
+--bg-end: #ebedee;
+--text-main: #2c3e50;
+--text-sub: #7f8c8d;
+--card-bg: rgba(255, 255, 255, 0.95);
+}
+
+body {
+font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+background-image: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+color: var(--text-main);
+margin: 0;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+min-height: 100vh;
+-webkit-font-smoothing: antialiased;
+}
+
+h1 {
+font-size: 2.2rem;
+margin-bottom: 5px;
+font-weight: 800;
+background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+letter-spacing: -1px;
+}
+
+.subtitle {
+font-size: 1rem;
+color: var(--text-sub);
+margin-bottom: 30px;
+font-weight: 400;
+}
+
+/* --- CARDS & LAYOUT --- */
+.card {
+background: var(--card-bg);
+border-radius: 24px;
+padding: 30px;
+box-shadow: 0 15px 35px rgba(0,0,0,0.07);
+width: 100%;
+max-width: 420px;
+margin-bottom: 25px;
+text-align: center;
+backdrop-filter: blur(5px);
+border: 1px solid rgba(255,255,255,0.3);
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+transform: translateY(-3px);
+box-shadow: 0 18px 40px rgba(0,0,0,0.1);
+}
+
+/* --- BUTTONS --- */
+button {
+border: none;
+padding: 16px 20px;
+border-radius: 16px;
+font-size: 1.05rem;
+cursor: pointer;
+width: 100%;
+margin: 10px 0;
+font-weight: 600;
+transition: all 0.2s ease;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+button:active {
+transform: scale(0.97);
+box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+.btn-prime {
+background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+color: white;
+}
+.btn-prime:hover { background: var(--primary-dark); }
+
+.btn-secondary {
+background: linear-gradient(135deg, var(--secondary) 0%, #27ae60 100%);
+color: white;
+}
+
+.btn-danger {
+background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);
+color: white;
+}
+
+.btn-feedback {
+width: 30%;
+margin: 5px;
+font-size: 0.9rem;
+padding: 12px;
+}
+
+/* --- UTILITIES --- */
+.timer-display {
+font-size: 4rem;
+font-weight: 800;
+color: var(--accent);
+margin: 10px 0;
+font-variant-numeric: tabular-nums; /* Verhindert Wackeln der Zahlen */
+}
+
+.status-info {
+font-size: 0.95rem;
+margin-bottom: 20px;
+padding: 12px;
+background: #f8f9fa;
+border-radius: 12px;
+border: 1px solid #eee;
+color: var(--text-sub);
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+}
+
+.status-dot {
+height: 10px;
+width: 10px;
+background-color: #bbb;
+border-radius: 50%;
+display: inline-block;
+}
+
+.active-dot {
+background-color: var(--secondary);
+animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+.hidden { display: none; opacity: 0; }
+.fade-in {
+animation: fadeInAnimation 0.5s ease forwards;
+}
+
+@keyframes fadeInAnimation {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
+#visual-box { font-size: 4.5rem; margin: 15px 0; }
+
 </style>
 </head>
 <body>
 
-<h1>👁️ MeineAugen <span style="font-size: 0.8rem; vertical-align: middle; color: var(--accent);">v1.3</span></h1>
-<p class="subtitle">Dein Coach für gesundes Sehen</p>
+<div class="fade-in">
+<h1>MeineAugen</h1>
+<p class="subtitle">Dein adaptiver Seh-Coach</p>
+</div>
 
-<div id="main-menu" class="card">
-<div class="badge">AKTIVIEREN</div>
-<button onclick="startRoutine('morgen')">☀️ Morgen-Routine (3 Min)</button>
-<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-<div class="badge">HINTERGRUND-SCHUTZ</div>
-<div id="work-status-text" style="margin-bottom: 10px; font-size: 0.9rem;">Der Begleiter ist aktuell <b>aus</b>.</div>
-<button id="work-btn" class="secondary" onclick="toggleWorkMode()">🛡️ Begleiter-Modus starten</button>
+<div id="main-menu" class="card fade-in">
+<div class="status-info" id="status-display">
+<span class="status-dot" id="status-dot"></span>
+<span id="status-text">Modus: Standby</span>
+</div>
+<button class="btn-prime" onclick="startRoutine('morgen')">☀️ Morgen-Routine starten</button>
+<button class="btn-danger" onclick="triggerEmergency()">⚠️ Augen schlecht (Sofort-Hilfe)</button>
+<hr>
+<button id="work-btn" class="btn-secondary" onclick="toggleWorkMode()">🛡️ Begleiter-Modus einschalten</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<div class="badge" id="step-badge">ÜBUNG</div>
-<h3 id="ex-title" style="margin: 10px 0;">Übung</h3>
-<p id="ex-desc" style="font-size: 0.95rem; line-height: 1.4;">...</p>
+<h3 id="ex-title">Übung</h3>
+<p id="ex-desc">...</p>
 <div class="timer-display" id="timer-display">00</div>
-<div id="visual-box">💧</div>
+<div id="visual-box">🌄</div>
+<div id="feedback-area" class="hidden">
+<hr>
+<h4>Wie fühlen sich deine Augen an?</h4>
+<div style="display: flex; justify-content: center; gap: 10px;">
+<button class="btn-secondary btn-feedback" onclick="processFeedback('gut')">Gut 😊</button>
+<button class="btn-feedback" style="background:#f1c40f; color:white;" onclick="processFeedback('mittel')">Mittel 😐</button>
+<button class="btn-danger btn-feedback" onclick="processFeedback('schlecht')">Schlecht 😓</button>
+</div>
+</div>
 </div>
 
 <script>
-let timerId;
+// (Der JavaScript-Code bleibt logisch identisch mit v1.4,
+// ich habe nur die IDs für die UI-Updates angepasst)
+
+let workDuration = 20; // Startwert in Minuten
+let badCount = 0;
 let workInterval;
 let isWorkModeActive = false;
 const synth = window.speechSynthesis;
 
+// Übungs-Definitionen
 const flows = {
 morgen: [
-{ t: "Warme Kompresse", d: "Augen zu. Sanfte Wärme genießen.", s: 60, i: "🛀", v: "Lege jetzt das warme Tuch auf." },
-{ t: "Lid-Massage", d: "Ganz sanft vertikal ausstreichen.", s: 30, i: "💆", v: "Massiere nun vorsichtig deine Augenlider." },
-{ t: "Blinzel-Training", d: "Locker flattern lassen.", s: 15, i: "✨", v: "Und jetzt 20 Mal locker blinzeln." }
+{ t: "Warme Kompresse", d: "Löse Verkrustungen. Augen locker schließen.", s: 60, i: "🛀", v: "Lege jetzt die warme Kompresse auf." },
+{ t: "Lid-Massage", d: "Ganz sanft vertikal ausstreichen (oben nach unten, unten nach oben).", s: 30, i: "💆", v: "Massiere nun vorsichtig deine Augenlider." },
+{ t: "Blinzel-Training", d: "20-mal locker flattern lassen. Nicht kneifen.", s: 15, i: "✨", v: "Und jetzt 20 Mal locker blinzeln." }
 ],
 break: [
-{ t: "20-Sekunden-Blick", d: "Such dir einen Punkt weit weg.", s: 20, i: "🔭", v: "Pause! Schau jetzt tief in die Ferne." }
+{ t: "Fokus-Reset", d: "Finde den entferntesten Punkt. Halte ihn locker fest.", s: 20, i: "🌄", v: "Schau jetzt tief in die maximale Ferne." }
 ]
 };
 
@@ -66,65 +235,61 @@ utter.lang = 'de-DE';
 synth.speak(utter);
 }
 
-function playSound(type) {
-const context = new (window.AudioContext || window.webkitAudioContext)();
-const osc = context.createOscillator();
-const gain = context.createGain();
-osc.connect(gain);
-gain.connect(context.destination);
-if(type === 'start') {
-osc.frequency.setValueAtTime(880, context.currentTime);
-osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.5);
+function updateStatus() {
+const statusText = document.getElementById('status-text');
+const statusDot = document.getElementById('status-dot');
+if (isWorkModeActive) {
+statusText.innerHTML = `🛡️ Aktiv | Nächster Reset in: <b>${workDuration} Min.</b>`;
+statusDot.classList.add('active-dot');
 } else {
-osc.frequency.setValueAtTime(440, context.currentTime);
-osc.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.5);
+statusText.innerText = "Modus: Standby"
+statusDot.classList.remove('active-dot');
 }
-gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
-osc.start();
-osc.stop(context.currentTime + 0.5);
 }
 
 function toggleWorkMode() {
+isWorkModeActive = !isWorkModeActive;
 const btn = document.getElementById('work-btn');
-const status = document.getElementById('work-status-text');
-const menu = document.getElementById('main-menu');
-
-if (!isWorkModeActive) {
-isWorkModeActive = true;
+if (isWorkModeActive) {
 btn.innerText = "🛑 Begleiter stoppen"
-btn.classList.add('stop');
-menu.classList.add('mode-active');
-status.innerHTML = "🛡️ Der Begleiter wacht über deine Augen.<br><small>(Meldet sich alle 20 Min.)</small>"
-speak("Begleiter Modus aktiviert. Ich erinnere dich alle 20 Minuten.");
-// Alle 20 Minuten die Pause triggern
-workInterval = setInterval(() => {
-startRoutine('break');
-}, 20 * 60 * 1000);
+btn.classList.remove('btn-secondary');
+btn.classList.add('btn-danger');
+planNextBreak();
 } else {
-isWorkModeActive = false;
-btn.innerText = "🛡️ Begleiter-Modus starten"
-btn.classList.remove('stop');
-menu.classList.remove('mode-active');
-status.innerHTML = "Der Begleiter ist aktuell <b>aus</b>."
-clearInterval(workInterval);
-speak("Begleiter Modus deaktiviert.");
+btn.innerText = "🛡️ Begleiter-Modus einschalten"
+btn.classList.remove('btn-danger');
+btn.classList.add('btn-secondary');
+clearTimeout(workInterval);
 }
+updateStatus();
+}
+
+function planNextBreak() {
+clearTimeout(workInterval);
+// Wir nutzen hier setTimeout für die dynamische Anpassung
+workInterval = setTimeout(() => {
+startRoutine('break');
+}, workDuration * 60 * 1000);
+}
+
+function triggerEmergency() {
+speak("Sofort-Stopp. Schließe die Augen.");
+startRoutine('break');
 }
 
 function startRoutine(type) {
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('exercise-card').classList.remove('hidden');
+showCard('exercise-card');
+document.getElementById('feedback-area').classList.add('hidden');
 playFlow(flows[type], 0);
 }
 
 function playFlow(flow, index) {
 if (index >= flow.length) {
-playSound('end');
-speak("Sehr gut.");
-setTimeout(() => {
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-}, 2000);
+// Ende der Routine -> Feedback zeigen
+const feedbackArea = document.getElementById('feedback-area');
+feedbackArea.classList.remove('hidden');
+feedbackArea.classList.add('fade-in');
+speak("Übung beendet. Wie ist dein Status?");
 return;
 }
 
@@ -132,21 +297,60 @@ const step = flow[index];
 document.getElementById('ex-title').innerText = step.t;
 document.getElementById('ex-desc').innerText = step.d;
 document.getElementById('visual-box').innerText = step.i;
-playSound('start');
 speak(step.v);
 
 let timeLeft = step.s;
-document.getElementById('timer-display').innerText = timeLeft;
+const timerDiv = document.getElementById('timer-display');
+timerDiv.innerText = timeLeft;
 
-clearInterval(timerId);
-timerId = setInterval(() => {
+clearInterval(window.activeTimerInterval); // Alten Timer löschen
+window.activeTimerInterval = setInterval(() => {
 timeLeft--;
-document.getElementById('timer-display').innerText = timeLeft;
+timerDiv.innerText = timeLeft;
 if (timeLeft <= 0) {
-clearInterval(timerId);
+clearInterval(window.activeTimerInterval);
 playFlow(flow, index + 1);
 }
 }, 1000);
+}
+
+function processFeedback(state) {
+// Die Logik bleibt identisch
+if (state === "schlecht") {
+badCount++;
+workDuration = Math.max(5, workDuration - 5);
+} else if (state === "gut") {
+badCount = 0;
+workDuration = Math.min(30, workDuration + 2);
+} else {
+badCount = 0;
+}
+
+if (badCount >= 2) {
+alert("CRASH-STOPP: Zweimal 'Schlecht' in Folge. Mach jetzt 10 Min echte Pause!");
+isWorkModeActive = false; // Begleiter stoppen
+// UI des Buttons manuell zurücksetzen, toggleWorkMode() würde es umkehren
+const btn = document.getElementById('work-btn');
+btn.innerText = "🛡️ Begleiter-Modus einschalten"
+btn.classList.remove('btn-danger');
+btn.classList.add('btn-secondary');
+clearTimeout(workInterval);
+}
+
+showCard('main-menu');
+updateStatus();
+if (isWorkModeActive) planNextBreak();
+}
+
+// Hilfsfunktion für sanfte Wechsel
+function showCard(cardId) {
+const menu = document.getElementById('main-menu');
+const exercise = document.getElementById('exercise-card');
+menu.classList.add('hidden');
+exercise.classList.add('hidden');
+const activeCard = document.getElementById(cardId);
+activeCard.classList.remove('hidden');
+activeCard.classList.add('fade-in');
 }
 </script>
 </body>
