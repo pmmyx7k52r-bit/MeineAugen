@@ -3,248 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v1.5 Pro</title>
+<title>MeineAugen v1.7 - Sanfte Führung</title>
 <style>
-/* --- DESIGN FOUNDATION --- */
 :root {
---primary: #3498db; /* Vertrauenswürdiges Blau */
---primary-dark: #2980b9;
---secondary: #2ecc71; /* Beruhigendes Grün */
---accent: #e67e22; /* Warn-Orange */
---danger: #e74c3c; /* Notfall-Rot */
---bg-start: #fdfbfb; /* Hell & Sauber */
---bg-end: #ebedee;
---text-main: #2c3e50;
---text-sub: #7f8c8d;
---card-bg: rgba(255, 255, 255, 0.95);
+--primary: #2c3e50; --secondary: #27ae60; --accent: #d35400; --danger: #c0392b;
+--soft-bg: #fdfcfb; --card-white: #ffffff;
 }
-
 body {
-font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-background-image: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
-color: var(--text-main);
-margin: 0;
-padding: 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
-min-height: 100vh;
--webkit-font-smoothing: antialiased;
+font-family: 'Segoe UI', sans-serif; background: var(--soft-bg); color: #333;
+margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
 }
-
-h1 {
-font-size: 2.2rem;
-margin-bottom: 5px;
-font-weight: 800;
-background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-letter-spacing: -1px;
-}
-
-.subtitle {
-font-size: 1rem;
-color: var(--text-sub);
-margin-bottom: 30px;
-font-weight: 400;
-}
-
-/* --- CARDS & LAYOUT --- */
 .card {
-background: var(--card-bg);
-border-radius: 24px;
-padding: 30px;
-box-shadow: 0 15px 35px rgba(0,0,0,0.07);
-width: 100%;
-max-width: 420px;
-margin-bottom: 25px;
-text-align: center;
-backdrop-filter: blur(5px);
-border: 1px solid rgba(255,255,255,0.3);
-transition: transform 0.3s ease, box-shadow 0.3s ease;
+background: var(--card-white); border-radius: 30px; padding: 35px;
+box-shadow: 0 15px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px;
+text-align: center; border: 1px solid #f1f1f1;
 }
-
-.card:hover {
-transform: translateY(-3px);
-box-shadow: 0 18px 40px rgba(0,0,0,0.1);
-}
-
-/* --- BUTTONS --- */
+h1 { font-weight: 300; letter-spacing: 1px; color: var(--primary); }
 button {
-border: none;
-padding: 16px 20px;
-border-radius: 16px;
-font-size: 1.05rem;
-cursor: pointer;
-width: 100%;
-margin: 10px 0;
-font-weight: 600;
-transition: all 0.2s ease;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 12px;
-box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem;
+cursor: pointer; width: 100%; margin: 12px 0; font-weight: 500;
+transition: all 0.3s;
 }
-
-button:active {
-transform: scale(0.97);
-box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-}
-
-.btn-prime {
-background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-color: white;
-}
-.btn-prime:hover { background: var(--primary-dark); }
-
-.btn-secondary {
-background: linear-gradient(135deg, var(--secondary) 0%, #27ae60 100%);
-color: white;
-}
-
-.btn-danger {
-background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);
-color: white;
-}
-
-.btn-feedback {
-width: 30%;
-margin: 5px;
-font-size: 0.9rem;
-padding: 12px;
-}
-
-/* --- UTILITIES --- */
-.timer-display {
-font-size: 4rem;
-font-weight: 800;
-color: var(--accent);
-margin: 10px 0;
-font-variant-numeric: tabular-nums; /* Verhindert Wackeln der Zahlen */
-}
-
-.status-info {
-font-size: 0.95rem;
-margin-bottom: 20px;
-padding: 12px;
-background: #f8f9fa;
-border-radius: 12px;
-border: 1px solid #eee;
-color: var(--text-sub);
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 8px;
-}
-
-.status-dot {
-height: 10px;
-width: 10px;
-background-color: #bbb;
-border-radius: 50%;
-display: inline-block;
-}
-
-.active-dot {
-background-color: var(--secondary);
-animation: pulse-dot 1.5s infinite;
-}
-
-@keyframes pulse-dot {
-0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
-70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
-100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-}
-
-.hidden { display: none; opacity: 0; }
-.fade-in {
-animation: fadeInAnimation 0.5s ease forwards;
-}
-
-@keyframes fadeInAnimation {
-from { opacity: 0; transform: translateY(10px); }
-to { opacity: 1; transform: translateY(0); }
-}
-
-hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
-#visual-box { font-size: 4.5rem; margin: 15px 0; }
-
+.btn-main { background: #ecf0f1; color: var(--primary); }
+.btn-safe { background: var(--secondary); color: white; }
+.btn-emergency { background: #fdf2f2; color: var(--danger); border: 1px solid #fadbd8; }
+.timer { font-size: 4.5rem; font-weight: 200; color: var(--accent); margin: 20px 0; }
+.hidden { display: none; }
+.feedback-area { margin-top: 25px; animation: fadeIn 1s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
-<div class="fade-in">
-<h1>MeineAugen</h1>
-<p class="subtitle">Dein adaptiver Seh-Coach</p>
-</div>
+<h1>MeineAugen <span style="font-size: 0.9rem; opacity: 0.5;">v1.7</span></h1>
 
-<div id="main-menu" class="card fade-in">
-<div class="status-info" id="status-display">
-<span class="status-dot" id="status-dot"></span>
-<span id="status-text">Modus: Standby</span>
-</div>
-<button class="btn-prime" onclick="startRoutine('morgen')">☀️ Morgen-Routine starten</button>
-<button class="btn-danger" onclick="triggerEmergency()">⚠️ Augen schlecht (Sofort-Hilfe)</button>
-<hr>
-<button id="work-btn" class="btn-secondary" onclick="toggleWorkMode()">🛡️ Begleiter-Modus einschalten</button>
+<div id="main-menu" class="card">
+<p style="font-style: italic; color: #888; margin-bottom: 20px;">Atme tief durch.</p>
+<button class="btn-main" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
+<button class="btn-emergency" onclick="triggerEmergency()">⚠️ Augen entlasten</button>
+<hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+<button id="work-btn" class="btn-safe" onclick="toggleWorkMode()">🛡️ Begleiter aktivieren</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h3 id="ex-title">Übung</h3>
-<p id="ex-desc">...</p>
-<div class="timer-display" id="timer-display">00</div>
-<div id="visual-box">🌄</div>
-<div id="feedback-area" class="hidden">
-<hr>
-<h4>Wie fühlen sich deine Augen an?</h4>
-<div style="display: flex; justify-content: center; gap: 10px;">
-<button class="btn-secondary btn-feedback" onclick="processFeedback('gut')">Gut 😊</button>
-<button class="btn-feedback" style="background:#f1c40f; color:white;" onclick="processFeedback('mittel')">Mittel 😐</button>
-<button class="btn-danger btn-feedback" onclick="processFeedback('schlecht')">Schlecht 😓</button>
+<h3 id="ex-title" style="font-weight: 400;">...</h3>
+<p id="ex-desc" style="color: #666;">Bereit machen...</p>
+<div class="timer" id="timer-display">00</div>
+<div id="feedback-area" class="hidden feedback-area">
+<p>Wie fühlen sich die Augen an?</p>
+<div style="display: flex; gap: 8px;">
+<button style="background:#eafaf1; color:#27ae60" onclick="processFeedback('gut')">Gut</button>
+<button style="background:#fef9e7; color:#f1c40f" onclick="processFeedback('mittel')">Mittel</button>
+<button style="background:#fdedec; color:#e74c3c" onclick="processFeedback('schlecht')">Schlecht</button>
 </div>
 </div>
 </div>
 
 <script>
-// (Der JavaScript-Code bleibt logisch identisch mit v1.4,
-// ich habe nur die IDs für die UI-Updates angepasst)
-
-let workDuration = 20; // Startwert in Minuten
-let badCount = 0;
+let workDuration = 15; // Noch konservativer gestartet
 let workInterval;
 let isWorkModeActive = false;
 const synth = window.speechSynthesis;
 
-// Übungs-Definitionen
 const flows = {
 morgen: [
-{ t: "Warme Kompresse", d: "Löse Verkrustungen. Augen locker schließen.", s: 60, i: "🛀", v: "Lege jetzt die warme Kompresse auf." },
-{ t: "Lid-Massage", d: "Ganz sanft vertikal ausstreichen (oben nach unten, unten nach oben).", s: 30, i: "💆", v: "Massiere nun vorsichtig deine Augenlider." },
-{ t: "Blinzel-Training", d: "20-mal locker flattern lassen. Nicht kneifen.", s: 15, i: "✨", v: "Und jetzt 20 Mal locker blinzeln." }
+{ t: "Dunkelheit", d: "Nutze deine Schlafmaske oder Hände.", s: 90, v: "Lass uns ganz sanft beginnen. Decke deine Augen ab. Spüre die Dunkelheit und lass alle Spannung aus dem Gesicht weichen." },
+{ t: "Wärme", d: "Warme Kompresse genießen.", s: 60, v: "Lege jetzt die warme Kompresse auf. Die Wärme hilft deinen Augen, sich zu regenerieren." }
 ],
 break: [
-{ t: "Fokus-Reset", d: "Finde den entferntesten Punkt. Halte ihn locker fest.", s: 20, i: "🌄", v: "Schau jetzt tief in die maximale Ferne." }
+{ t: "Dunkel-Pause", d: "Augen zu und entspannen.", s: 30, v: "Zeit für eine kurze Dunkelpause. Schließe die Augen. Atme tief ein und aus." },
+{ t: "Weitblick", d: "Sanft in die Ferne schauen.", s: 20, v: "Öffne die Augen nun vorsichtig und schau ganz weit aus dem Fenster. Ganz ohne Anstrengung." }
+],
+emergency: [
+{ t: "Pacing & Ruhe", d: "Absolute Dunkelheit.", s: 180, v: "Stopp. Deine Augen brauchen jetzt Ruhe. Schließe sie sofort. Wir bleiben für drei Minuten in der Dunkelheit. Atme ruhig." }
 ]
 };
 
-function speak(text) {
-if (synth.speaking) synth.cancel();
-const utter = new SpeechSynthesisUtterance(text);
-utter.lang = 'de-DE';
-synth.speak(utter);
+function getSoftVoice() {
+const voices = synth.getVoices();
+// Suche nach weiblichen deutschen Stimmen
+return voices.find(v => v.lang.includes('de') && (v.name.includes('Katja') || v.name.includes('Hedda') || v.name.includes('Google'))) || voices[0];
 }
 
-function updateStatus() {
-const statusText = document.getElementById('status-text');
-const statusDot = document.getElementById('status-dot');
-if (isWorkModeActive) {
-statusText.innerHTML = `🛡️ Aktiv | Nächster Reset in: <b>${workDuration} Min.</b>`;
-statusDot.classList.add('active-dot');
-} else {
-statusText.innerText = "Modus: Standby"
-statusDot.classList.remove('active-dot');
-}
+function speak(text) {
+if (!text) return;
+synth.cancel();
+const utter = new SpeechSynthesisUtterance(text);
+utter.voice = getSoftVoice();
+utter.lang = 'de-DE';
+utter.pitch = 0.9; // Etwas tiefer = beruhigender
+utter.rate = 0.85; // Langsamer für Pacing
+synth.speak(utter);
 }
 
 function toggleWorkMode() {
@@ -252,106 +101,67 @@ isWorkModeActive = !isWorkModeActive;
 const btn = document.getElementById('work-btn');
 if (isWorkModeActive) {
 btn.innerText = "🛑 Begleiter stoppen"
-btn.classList.remove('btn-secondary');
-btn.classList.add('btn-danger');
+btn.style.background = "#95a5a6"
+speak("Ich begleite dich jetzt. Wir machen regelmäßig Dunkelpausen.");
 planNextBreak();
 } else {
-btn.innerText = "🛡️ Begleiter-Modus einschalten"
-btn.classList.remove('btn-danger');
-btn.classList.add('btn-secondary');
+btn.innerText = "🛡️ Begleiter aktivieren"
+btn.style.background = "#27ae60"
 clearTimeout(workInterval);
 }
-updateStatus();
 }
 
 function planNextBreak() {
 clearTimeout(workInterval);
-// Wir nutzen hier setTimeout für die dynamische Anpassung
-workInterval = setTimeout(() => {
-startRoutine('break');
-}, workDuration * 60 * 1000);
+workInterval = setTimeout(() => startRoutine('break'), workDuration * 60 * 1000);
 }
 
-function triggerEmergency() {
-speak("Sofort-Stopp. Schließe die Augen.");
-startRoutine('break');
-}
+function triggerEmergency() { startRoutine('emergency'); }
 
 function startRoutine(type) {
-showCard('exercise-card');
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('exercise-card').classList.remove('hidden');
 document.getElementById('feedback-area').classList.add('hidden');
 playFlow(flows[type], 0);
 }
 
 function playFlow(flow, index) {
 if (index >= flow.length) {
-// Ende der Routine -> Feedback zeigen
-const feedbackArea = document.getElementById('feedback-area');
-feedbackArea.classList.remove('hidden');
-feedbackArea.classList.add('fade-in');
-speak("Übung beendet. Wie ist dein Status?");
+document.getElementById('feedback-area').classList.remove('hidden');
 return;
 }
-
 const step = flow[index];
 document.getElementById('ex-title').innerText = step.t;
 document.getElementById('ex-desc').innerText = step.d;
-document.getElementById('visual-box').innerText = step.i;
 speak(step.v);
 
 let timeLeft = step.s;
-const timerDiv = document.getElementById('timer-display');
-timerDiv.innerText = timeLeft;
+document.getElementById('timer-display').innerText = timeLeft;
 
-clearInterval(window.activeTimerInterval); // Alten Timer löschen
-window.activeTimerInterval = setInterval(() => {
+const interval = setInterval(() => {
 timeLeft--;
-timerDiv.innerText = timeLeft;
+document.getElementById('timer-display').innerText = timeLeft;
 if (timeLeft <= 0) {
-clearInterval(window.activeTimerInterval);
+clearInterval(interval);
 playFlow(flow, index + 1);
 }
 }, 1000);
 }
 
 function processFeedback(state) {
-// Die Logik bleibt identisch
 if (state === "schlecht") {
-badCount++;
 workDuration = Math.max(5, workDuration - 5);
+speak("Verstanden. Wir verkürzen die Arbeitszeit.");
 } else if (state === "gut") {
-badCount = 0;
-workDuration = Math.min(30, workDuration + 2);
-} else {
-badCount = 0;
+workDuration = Math.min(25, workDuration + 2);
 }
-
-if (badCount >= 2) {
-alert("CRASH-STOPP: Zweimal 'Schlecht' in Folge. Mach jetzt 10 Min echte Pause!");
-isWorkModeActive = false; // Begleiter stoppen
-// UI des Buttons manuell zurücksetzen, toggleWorkMode() würde es umkehren
-const btn = document.getElementById('work-btn');
-btn.innerText = "🛡️ Begleiter-Modus einschalten"
-btn.classList.remove('btn-danger');
-btn.classList.add('btn-secondary');
-clearTimeout(workInterval);
-}
-
-showCard('main-menu');
-updateStatus();
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
 if (isWorkModeActive) planNextBreak();
 }
 
-// Hilfsfunktion für sanfte Wechsel
-function showCard(cardId) {
-const menu = document.getElementById('main-menu');
-const exercise = document.getElementById('exercise-card');
-menu.classList.add('hidden');
-exercise.classList.add('hidden');
-const activeCard = document.getElementById(cardId);
-activeCard.classList.remove('hidden');
-activeCard.classList.add('fade-in');
-}
+// Initialer Voice-Check für Chrome
+window.speechSynthesis.onvoiceschanged = getSoftVoice;
 </script>
 </body>
 </html>
