@@ -3,32 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Augen Coach</title>
-
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
+<title>MeineAugen v1.3</title>
+<style>
+:root { --primary: #2980b9; --secondary: #27ae60; --accent: #e67e22; --bg: #f0f3f5; }
+body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #34495e; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+.card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); width: 100%; max-width: 420px; margin-bottom: 20px; transition: all 0.3s ease; }
+.mode-active { border: 3px solid var(--secondary); background: #f0fff4; }
+h1 { font-size: 1.8rem; margin-bottom: 5px; color: #2c3e50; }
+.subtitle { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 25px; }
+button { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; font-size: 1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
+button.secondary { background: var(--secondary); }
+button.stop { background: #e74c3c; }
+.timer-display { font-size: 3.5rem; font-weight: bold; color: var(--accent); margin: 20px 0; }
+.badge { background: #ebf5fb; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
+.hidden { display: none; }
+#visual-box { font-size: 4rem; margin: 20px 0; }
+</style>
 </head>
-
 <body>
 
-<h1>👁️ Augen Coach</h1>
+<h1>👁️ MeineAugen <span style="font-size: 0.8rem; vertical-align: middle; color: var(--accent);">v1.3</span></h1>
+<p class="subtitle">Dein Coach für gesundes Sehen</p>
 
-<div class="box">
-<h2 id="mode">Bereit</h2>
-<h1 id="timer">07:00</h1>
+<div id="main-menu" class="card">
+<div class="badge">AKTIVIEREN</div>
+<button onclick="startRoutine('morgen')">☀️ Morgen-Routine (3 Min)</button>
+<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+<div class="badge">HINTERGRUND-SCHUTZ</div>
+<div id="work-status-text" style="margin-bottom: 10px; font-size: 0.9rem;">Der Begleiter ist aktuell <b>aus</b>.</div>
+<button id="work-btn" class="secondary" onclick="toggleWorkMode()">🛡️ Begleiter-Modus starten</button>
 </div>
 
-<button onclick="start()">Start</button>
-<button onclick="reset()">Reset</button>
-
-<div class="box">
-<h3>Augenstatus</h3>
-<button class="good" onclick="feedback('gut')">Gut</button>
-<button class="warn" onclick="feedback('mittel')">Mittel</button>
-<button class="bad" onclick="feedback('schlecht')">Schlecht</button>
+<div id="exercise-card" class="card hidden">
+<div class="badge" id="step-badge">ÜBUNG</div>
+<h3 id="ex-title" style="margin: 10px 0;">Übung</h3>
+<p id="ex-desc" style="font-size: 0.95rem; line-height: 1.4;">...</p>
+<div class="timer-display" id="timer-display">00</div>
+<div id="visual-box">💧</div>
 </div>
 
-<script src="app.js"></script>
+<script>
+let timerId;
+let workInterval;
+let isWorkModeActive = false;
+const synth = window.speechSynthesis;
 
+const flows = {
+morgen: [
+{ t: "Warme Kompresse", d: "Augen zu. Sanfte Wärme genießen.", s: 60, i: "🛀", v: "Lege jetzt das warme Tuch auf." },
+{ t: "Lid-Massage", d: "Ganz sanft vertikal ausstreichen.", s: 30, i: "💆", v: "Massiere nun vorsichtig deine Augenlider." },
+{ t: "Blinzel-Training", d: "Locker flattern lassen.", s: 15, i: "✨", v: "Und jetzt 20 Mal locker blinzeln." }
+],
+break: [
+{ t: "20-Sekunden-Blick", d: "Such dir einen Punkt weit weg.", s: 20, i: "🔭", v: "Pause! Schau jetzt tief in die Ferne." }
+]
+};
+
+function speak(text) {
+if (synth.speaking) synth.cancel();
+const utter = new SpeechSynthesisUtterance(text);
+utter.lang = 'de-DE';
+synth.speak(utter);
+}
+
+function playSound(type) {
+const context = new (window.AudioContext || window.webkitAudioContext)();
+const osc = context.createOscillator();
+const gain = context.createGain();
+osc.connect(gain);
+gain.connect(context.destination);
+if(type === 'start') {
+osc.frequency.setValueAtTime(880, context.currentTime);
+osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.5);
+} else {
+osc.frequency.setValueAtTime(440, context.currentTime);
+osc.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.5);
+}
+gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
+osc.start();
+osc.stop(context.currentTime + 0.5);
+}
+
+function toggleWorkMode() {
+const btn = document.getElementById('work-btn');
+const status = document.getElementById('work-status-text');
+const menu = document.getElementById('main-menu');
+
+if (!isWorkModeActive) {
+isWorkModeActive = true;
+btn.innerText = "🛑 Begleiter stoppen"
+btn.classList.add('stop');
+menu.classList.add('mode-active');
+status.innerHTML = "🛡️ Der Begleiter wacht über deine Augen.<br><small>(Meldet sich alle 20 Min.)</small>"
+speak("Begleiter Modus aktiviert. Ich erinnere dich alle 20 Minuten.");
+// Alle 20 Minuten die Pause triggern
+workInterval = setInterval(() => {
+startRoutine('break');
+}, 20 * 60 * 1000);
+} else {
+isWorkModeActive = false;
+btn.innerText = "🛡️ Begleiter-Modus starten"
+btn.classList.remove('stop');
+menu.classList.remove('mode-active');
+status.innerHTML = "Der Begleiter ist aktuell <b>aus</b>."
+clearInterval(workInterval);
+speak("Begleiter Modus deaktiviert.");
+}
+}
+
+function startRoutine(type) {
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('exercise-card').classList.remove('hidden');
+playFlow(flows[type], 0);
+}
+
+function playFlow(flow, index) {
+if (index >= flow.length) {
+playSound('end');
+speak("Sehr gut.");
+setTimeout(() => {
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+}, 2000);
+return;
+}
+
+const step = flow[index];
+document.getElementById('ex-title').innerText = step.t;
+document.getElementById('ex-desc').innerText = step.d;
+document.getElementById('visual-box').innerText = step.i;
+playSound('start');
+speak(step.v);
+
+let timeLeft = step.s;
+document.getElementById('timer-display').innerText = timeLeft;
+
+clearInterval(timerId);
+timerId = setInterval(() => {
+timeLeft--;
+document.getElementById('timer-display').innerText = timeLeft;
+if (timeLeft <= 0) {
+clearInterval(timerId);
+playFlow(flow, index + 1);
+}
+}, 1000);
+}
+</script>
 </body>
 </html>
