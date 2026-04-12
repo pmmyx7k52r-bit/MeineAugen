@@ -3,165 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v1.7 - Sanfte Führung</title>
+<title>MeineAugen v1.8</title>
 <style>
-:root {
---primary: #2c3e50; --secondary: #27ae60; --accent: #d35400; --danger: #c0392b;
---soft-bg: #fdfcfb; --card-white: #ffffff;
-}
-body {
-font-family: 'Segoe UI', sans-serif; background: var(--soft-bg); color: #333;
-margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
-}
-.card {
-background: var(--card-white); border-radius: 30px; padding: 35px;
-box-shadow: 0 15px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px;
-text-align: center; border: 1px solid #f1f1f1;
-}
-h1 { font-weight: 300; letter-spacing: 1px; color: var(--primary); }
-button {
-border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem;
-cursor: pointer; width: 100%; margin: 12px 0; font-weight: 500;
-transition: all 0.3s;
-}
-.btn-main { background: #ecf0f1; color: var(--primary); }
-.btn-safe { background: var(--secondary); color: white; }
-.btn-emergency { background: #fdf2f2; color: var(--danger); border: 1px solid #fadbd8; }
-.timer { font-size: 4.5rem; font-weight: 200; color: var(--accent); margin: 20px 0; }
+:root { --p: #2c3e50; --s: #27ae60; --d: #c0392b; --bg: #fdfcfb; }
+body { font-family: sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
+.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
+button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
+.btn-start { background: var(--s); color: white; }
+.btn-stop { background: #95a5a6; color: white; }
+.timer-val { font-size: 4rem; color: #d35400; margin: 20px 0; font-weight: 200; }
+.status-msg { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px; min-height: 1.2em; }
 .hidden { display: none; }
-.feedback-area { margin-top: 25px; animation: fadeIn 1s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
-<h1>MeineAugen <span style="font-size: 0.9rem; opacity: 0.5;">v1.7</span></h1>
+<h1>MeineAugen v1.8</h1>
 
 <div id="main-menu" class="card">
-<p style="font-style: italic; color: #888; margin-bottom: 20px;">Atme tief durch.</p>
-<button class="btn-main" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
-<button class="btn-emergency" onclick="triggerEmergency()">⚠️ Augen entlasten</button>
-<hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-<button id="work-btn" class="btn-safe" onclick="toggleWorkMode()">🛡️ Begleiter aktivieren</button>
+<div id="status-info" class="status-msg">Bereit für den Begleiter.</div>
+<button id="work-btn" class="btn-start" onclick="toggleWorkMode()">🛡️ Begleiter aktivieren</button>
+<button style="background: #ecf0f1; color: #2c3e50;" onclick="startRoutine('morgen')">☀️ Morgen-Ruhe</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h3 id="ex-title" style="font-weight: 400;">...</h3>
-<p id="ex-desc" style="color: #666;">Bereit machen...</p>
-<div class="timer" id="timer-display">00</div>
-<div id="feedback-area" class="hidden feedback-area">
-<p>Wie fühlen sich die Augen an?</p>
-<div style="display: flex; gap: 8px;">
-<button style="background:#eafaf1; color:#27ae60" onclick="processFeedback('gut')">Gut</button>
-<button style="background:#fef9e7; color:#f1c40f" onclick="processFeedback('mittel')">Mittel</button>
-<button style="background:#fdedec; color:#e74c3c" onclick="processFeedback('schlecht')">Schlecht</button>
-</div>
-</div>
+<h2 id="ex-title" style="font-weight: 400;">Pause</h2>
+<p id="ex-desc">Augen schließen...</p>
+<div class="timer-val" id="timer-display">--</div>
 </div>
 
 <script>
-let workDuration = 15; // Noch konservativer gestartet
-let workInterval;
+let workDuration = 15; // Minuten
+let timeoutId;
 let isWorkModeActive = false;
 const synth = window.speechSynthesis;
 
-const flows = {
-morgen: [
-{ t: "Dunkelheit", d: "Nutze deine Schlafmaske oder Hände.", s: 90, v: "Lass uns ganz sanft beginnen. Decke deine Augen ab. Spüre die Dunkelheit und lass alle Spannung aus dem Gesicht weichen." },
-{ t: "Wärme", d: "Warme Kompresse genießen.", s: 60, v: "Lege jetzt die warme Kompresse auf. Die Wärme hilft deinen Augen, sich zu regenerieren." }
-],
-break: [
-{ t: "Dunkel-Pause", d: "Augen zu und entspannen.", s: 30, v: "Zeit für eine kurze Dunkelpause. Schließe die Augen. Atme tief ein und aus." },
-{ t: "Weitblick", d: "Sanft in die Ferne schauen.", s: 20, v: "Öffne die Augen nun vorsichtig und schau ganz weit aus dem Fenster. Ganz ohne Anstrengung." }
-],
-emergency: [
-{ t: "Pacing & Ruhe", d: "Absolute Dunkelheit.", s: 180, v: "Stopp. Deine Augen brauchen jetzt Ruhe. Schließe sie sofort. Wir bleiben für drei Minuten in der Dunkelheit. Atme ruhig." }
-]
-};
-
-function getSoftVoice() {
-const voices = synth.getVoices();
-// Suche nach weiblichen deutschen Stimmen
-return voices.find(v => v.lang.includes('de') && (v.name.includes('Katja') || v.name.includes('Hedda') || v.name.includes('Google'))) || voices[0];
-}
-
-function speak(text) {
-if (!text) return;
+function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
-utter.voice = getSoftVoice();
 utter.lang = 'de-DE';
-utter.pitch = 0.9; // Etwas tiefer = beruhigender
-utter.rate = 0.85; // Langsamer für Pacing
+utter.rate = 0.85;
+utter.pitch = 0.9;
+if (callback) utter.onend = callback;
 synth.speak(utter);
 }
 
 function toggleWorkMode() {
-isWorkModeActive = !isWorkModeActive;
 const btn = document.getElementById('work-btn');
-if (isWorkModeActive) {
+const status = document.getElementById('status-info');
+
+if (!isWorkModeActive) {
+isWorkModeActive = true;
 btn.innerText = "🛑 Begleiter stoppen"
-btn.style.background = "#95a5a6"
-speak("Ich begleite dich jetzt. Wir machen regelmäßig Dunkelpausen.");
-planNextBreak();
+btn.className = "btn-stop"
+status.innerText = "Begleiter wacht im Hintergrund..."
+speak("Begleiter aktiviert. Ich melde mich in " + workDuration + " Minuten für deine erste Dunkelpause.");
+// Erster automatischer Timer-Start
+scheduleNextBreak();
 } else {
+isWorkModeActive = false;
 btn.innerText = "🛡️ Begleiter aktivieren"
-btn.style.background = "#27ae60"
-clearTimeout(workInterval);
+btn.className = "btn-start"
+status.innerText = "Begleiter deaktiviert."
+clearTimeout(timeoutId);
+speak("Begleiter ausgeschaltet.");
 }
 }
 
-function planNextBreak() {
-clearTimeout(workInterval);
-workInterval = setTimeout(() => startRoutine('break'), workDuration * 60 * 1000);
+function scheduleNextBreak() {
+if (!isWorkModeActive) return;
+clearTimeout(timeoutId);
+// Wir nutzen ein Timeout, das die Funktion startRoutine('break') aufruft
+timeoutId = setTimeout(() => {
+if (isWorkModeActive) startRoutine('break');
+}, workDuration * 60 * 1000);
 }
-
-function triggerEmergency() { startRoutine('emergency'); }
 
 function startRoutine(type) {
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
-document.getElementById('feedback-area').classList.add('hidden');
-playFlow(flows[type], 0);
+const flow = {
+break: [
+{ t: "Dunkelpause", d: "Augen zu. Atme tief.", s: 40, v: "Zeit für deine Augen. Schließe sie jetzt und genieße die Dunkelheit." },
+{ t: "Fokus-Wechsel", d: "Schau weit aus dem Fenster.", s: 20, v: "Öffne die Augen vorsichtig und schau in die weite Ferne." }
+],
+morgen: [
+{ t: "Ankommen", d: "Schlafmaske auf.", s: 60, v: "Guten Morgen. Wir starten mit einer Minute Dunkelheit." }
+]
+};
+
+runStep(flow[type], 0);
 }
 
-function playFlow(flow, index) {
-if (index >= flow.length) {
-document.getElementById('feedback-area').classList.remove('hidden');
+function runStep(steps, index) {
+if (index >= steps.length) {
+speak("Pause beendet. Du kannst weiterarbeiten.", () => {
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+if (isWorkModeActive) scheduleNextBreak();
+});
 return;
 }
-const step = flow[index];
-document.getElementById('ex-title').innerText = step.t;
-document.getElementById('ex-desc').innerText = step.d;
-speak(step.v);
 
-let timeLeft = step.s;
-document.getElementById('timer-display').innerText = timeLeft;
+const s = steps[index];
+document.getElementById('ex-title').innerText = s.t;
+document.getElementById('ex-desc').innerText = s.d;
+speak(s.v);
+
+let sec = s.s;
+const timerDiv = document.getElementById('timer-display');
+timerDiv.innerText = sec;
 
 const interval = setInterval(() => {
-timeLeft--;
-document.getElementById('timer-display').innerText = timeLeft;
-if (timeLeft <= 0) {
+sec--;
+timerDiv.innerText = sec;
+if (sec <= 0) {
 clearInterval(interval);
-playFlow(flow, index + 1);
+runStep(steps, index + 1);
 }
 }, 1000);
 }
-
-function processFeedback(state) {
-if (state === "schlecht") {
-workDuration = Math.max(5, workDuration - 5);
-speak("Verstanden. Wir verkürzen die Arbeitszeit.");
-} else if (state === "gut") {
-workDuration = Math.min(25, workDuration + 2);
-}
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) planNextBreak();
-}
-
-// Initialer Voice-Check für Chrome
-window.speechSynthesis.onvoiceschanged = getSoftVoice;
 </script>
 </body>
 </html>
