@@ -3,96 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v2.7</title>
+<title>MeineAugen v2.9</title>
 <style>
-:root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
-.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: 20px auto; }
-button { border: none; padding: 18px; border-radius: 18px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; }
+:root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --bg: #fdfcfb; }
+body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
+.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
+button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
 .btn-main { background: var(--s); color: white; }
-.timer-val { font-size: 4.5rem; color: var(--a); margin: 15px 0; font-weight: 200; }
+.timer-val { font-size: 5rem; color: var(--a); margin: 20px 0; font-weight: 200; }
 .hidden { display: none; }
-.pulse-dot { width: 10px; height: 10px; background: #27ae60; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 1s infinite; }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1>👁️ MeineAugen v2.7</h1>
-<div id="alive-indicator" class="hidden"><span class="pulse-dot"></span> <small>Wächter aktiv...</small></div>
+<h1>👁️ MeineAugen v2.9</h1>
+<p><i>Start bei Arbeitsbeginn</i></p>
 <button class="btn-main" id="work-btn" onclick="toggleWorkMode()">🛡️ Begleiter starten</button>
-<div style="margin: 15px 0; font-size: 0.9rem;">
-Intervall: <b id="interval-val">10</b> Min.
+<div style="margin: 20px 0;">
+<label>Pause alle: <b id="interval-val">10</b> Min.</label>
 <input type="range" id="interval-slider" min="5" max="30" value="10" oninput="updateInterval(this.value)" style="width:100%">
 </div>
 
 <button style="background:#ecf0f1;" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<button style="background:#fff5f5; color:var(--d);" onclick="startRoutine('emergency')">⚠️ Notfall</button>
+<button style="background:#fff5f5; color:#c0392b;" onclick="startRoutine('emergency')">⚠️ Notfall</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
 <h2 id="ex-title">Pause</h2>
 <div class="timer-val" id="timer-display">--</div>
+<p id="ex-desc"></p>
 </div>
 
-<audio id="keep-alive-audio" loop>
-<source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-</audio>
+<audio id="silence" loop><source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav"></audio>
 
 <script>
 let workDuration = 10;
 let isWorkModeActive = false;
-let nextBreakTime;
+let timerId;
 const synth = window.speechSynthesis;
-const audio = document.getElementById('keep-alive-audio');
+const audio = document.getElementById('silence');
 
 function updateInterval(val) {
 workDuration = val;
 document.getElementById('interval-val').innerText = val;
 }
 
-function speak(text) {
+function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
 utter.rate = 0.8;
+if (callback) utter.onend = callback;
 synth.speak(utter);
 }
 
 function toggleWorkMode() {
-// WICHTIG: Audio-Freischaltung
-audio.play().catch(() => console.log("Audio braucht Klick"));
-isWorkModeActive = !isWorkModeActive;
-const btn = document.getElementById('work-btn');
-const indicator = document.getElementById('alive-indicator');
-
-if (isWorkModeActive) {
-btn.innerText = "🛑 Stoppen"
-indicator.classList.remove('hidden');
-speak("Begleiter aktiv. Ich melde mich.");
-setNextTimer();
+if (!isWorkModeActive) {
+isWorkModeActive = true;
+audio.play();
+document.getElementById('work-btn').innerText = "🛑 Stoppen"
+document.getElementById('work-btn').style.background = "#95a5a6"
+speak("Begleiter gestartet. Ich melde mich in " + workDuration + " Minuten.");
+schedule();
 } else {
-btn.innerText = "🛡️ Begleiter starten"
-indicator.classList.add('hidden');
-audio.pause();
 isWorkModeActive = false;
+audio.pause();
+document.getElementById('work-btn').innerText = "🛡️ Begleiter starten"
+document.getElementById('work-btn').style.background = "#27ae60"
+clearTimeout(timerId);
 }
 }
 
-function setNextTimer() {
-nextBreakTime = Date.now() + (workDuration * 60 * 1000);
-checkLoop();
-}
-
-function checkLoop() {
+function schedule() {
 if (!isWorkModeActive) return;
-if (Date.now() >= nextBreakTime) {
+timerId = setTimeout(() => {
+document.title = "⚠️ PAUSE!"
 startRoutine('break');
-} else {
-// Kurzes Intervall, um das Handy wach zu halten
-setTimeout(checkLoop, 10000);
-}
+}, workDuration * 60 * 1000);
 }
 
 function startRoutine(type) {
@@ -100,20 +88,24 @@ document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
 const steps = {
 break: [
-{ t: "Blinzeln", s: 20, v: "Zeit für deine Augen. Bitte 20 Sekunden blinzeln." },
-{ t: "Palmieren", s: 30, v: "Jetzt die Augen schließen und die Wärme genießen." }
+{ t: "Blinzeln", s: 20, v: "Zeit für die Augen. Bitte 20 Sekunden blinzeln." },
+{ t: "Palmieren", s: 30, v: "Jetzt die Augen schließen und palmieren." }
 ],
 emergency: [{ t: "Notstopp", s: 180, v: "Drei Minuten absolute Ruhe." }],
-morgen: [{ t: "Morgen", s: 60, v: "Guten Morgen. Erst blinzeln, dann Kompresse." }]
+morgen: [{ t: "Morgen", s: 60, v: "Guten Morgen. Erst blinzeln, dann die Kompresse." }]
 };
 runStep(steps[type] || steps.break, 0);
 }
 
 function runStep(steps, index) {
 if (index >= steps.length) {
+// END-INFO
+speak("Übung beendet. Deine Augen sind nun bereit für die nächste Etappe.", () => {
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) setNextTimer();
+document.title = "MeineAugen v2.9"
+if (isWorkModeActive) schedule();
+});
 return;
 }
 const s = steps[index];
