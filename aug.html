@@ -3,35 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v3.0</title>
+<title>MeineAugen v3.1</title>
 <style>
-:root { --p: #2c3e50; --s: #27ae60; --bg: #fdfcfb; }
+:root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
 .card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
-.btn-cal { background: #007aff; color: white; }
-.btn-start { background: var(--s); color: white; }
+button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
+.btn-guide { background: var(--s); color: white; }
+.timer-val { font-size: 5rem; color: var(--a); margin: 20px 0; font-weight: 200; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1>👁️ MeineAugen v3.0</h1>
-<p><i>iPhone-Hintergrund-Lösung</i></p>
-<div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 15px;">
-<label>Erinnerung alle: <b>20 Min.</b></label>
-<button class="btn-cal" onclick="generateICS()">📅 In Kalender eintragen</button>
-<small style="color: #666;">Erzeugt 8 Termine für die nächsten 3 Stunden.</small>
+<h1>👁️ MeineAugen v3.1</h1>
+<p style="color: #666; font-size: 0.9rem;">Nutze iPhone-Kurzbefehle für den 10-Min-Alarm.</p>
+<button class="btn-guide" onclick="startRoutine('break')">▶️ Pause-Guide starten</button>
+<button style="background:#ecf0f1;" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
+<button style="background:#fff5f5; color:var(--d);" onclick="startRoutine('emergency')">⚠️ Notfall</button>
 </div>
 
-<hr style="border:0; border-top:1px solid #eee;">
-<button class="btn-start" onclick="startRoutine('break')">▶️ Übung jetzt starten</button>
-<button style="background:#eee;" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-</div>
-
-<div id="exercise-card" class="card hidden" style="display:none;">
-<h2 id="ex-title">Übung läuft</h2>
-<div id="timer" style="font-size: 4rem; color: #e67e22;">--</div>
+<div id="exercise-card" class="card hidden">
+<h2 id="ex-title">Übung</h2>
+<div class="timer-val" id="timer-display">--</div>
+<p id="ex-desc"></p>
 </div>
 
 <script>
@@ -41,60 +37,43 @@ function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
+utter.rate = 0.85;
 if (callback) utter.onend = callback;
 synth.speak(utter);
 }
 
-function generateICS() {
-const interval = 20; // Minuten
-const count = 8; // Anzahl der Pausen
-let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MeineAugen//DE\n"
-let now = new Date();
-for (let i = 1; i <= count; i++) {
-let start = new Date(now.getTime() + i * interval * 60000);
-let end = new Date(start.getTime() + 2 * 60000);
-const stamp = start.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
-icsContent += "BEGIN:VEVENT\n"
-icsContent += `DTSTART:${stamp}\n`;
-icsContent += `DTEND:${stamp}\n`;
-icsContent += "SUMMARY:👁️ Augen-Pause einlegen!\n"
-icsContent += "DESCRIPTION:Bitte kurz blinzeln und palmieren.\n"
-icsContent += "BEGIN:VALARM\nTRIGGER:-PT0M\nACTION:DISPLAY\nDESCRIPTION:Augen-Pause\nEND:VALARM\n"
-icsContent += "END:VEVENT\n"
-}
-icsContent += "END:VCALENDAR"
-
-const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-const link = document.createElement('a');
-link.href = window.URL.createObjectURL(blob);
-link.download = "augen_pausen.ics"
-link.click();
-}
-
 function startRoutine(type) {
-document.getElementById('main-menu').style.display = 'none';
-document.getElementById('exercise-card').style.display = 'block';
-const steps = [
-{ t: "Blinzeln", s: 20, v: "Bitte 20 Sekunden locker blinzeln." },
-{ t: "Palmieren", s: 30, v: "Jetzt die Augen schließen und die Wärme genießen." }
-];
-runStep(steps, 0);
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('exercise-card').classList.remove('hidden');
+const steps = {
+break: [
+{ t: "Blinzeln", s: 20, v: "Blinzle jetzt 20 Sekunden ganz bewusst." }, //
+{ t: "Palmieren", s: 30, v: "Hände reiben und warm auf die Augen legen." }, //
+{ t: "Weitblick", s: 10, v: "Schau jetzt entspannt in die Ferne." } //
+],
+morgen: [
+{ t: "Morgengruß", s: 20, v: "Guten Morgen. Erst blinzeln, nicht reiben." }, //
+{ t: "Wärme", s: 60, v: "Lege nun die warme Kompresse auf." } //
+],
+emergency: [{ t: "Notstopp", s: 180, v: "Drei Minuten absolute Dunkelheit für deine Augen." }]
+};
+runStep(steps[type] || steps.break, 0);
 }
 
 function runStep(steps, index) {
 if (index >= steps.length) {
-speak("Übung beendet.", () => {
-document.getElementById('exercise-card').style.display = 'none';
-document.getElementById('main-menu').style.display = 'block';
-});
+speak("Übung beendet. Viel Erfolg beim Weiterarbeiten.");
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
 return;
 }
 const s = steps[index];
 document.getElementById('ex-title').innerText = s.t;
+document.getElementById('ex-desc').innerText = s.s + " Sekunden"
 speak(s.v);
 let sec = s.s;
 const int = setInterval(() => {
-document.getElementById('timer').innerText = sec;
+document.getElementById('timer-display').innerText = sec;
 if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
 sec--;
 }, 1000);
