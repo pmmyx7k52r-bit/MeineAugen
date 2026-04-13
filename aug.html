@@ -3,57 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v2.1</title>
+<title>MeineAugen v2.3</title>
 <style>
 :root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
 .card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: 20px auto; }
 button { border: none; padding: 18px; border-radius: 18px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; }
 .btn-main { background: var(--s); color: white; }
-.btn-notif { background: #ecf0f1; color: var(--p); font-size: 0.9rem; }
 .timer-val { font-size: 4.5rem; color: var(--a); margin: 15px 0; font-weight: 200; }
 .hidden { display: none; }
-.feedback-grid { display: flex; gap: 8px; margin-top: 15px; }
+.config-area { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 15px; }
+input[type=range] { width: 100%; margin: 10px 0; }
+.source-tag { font-size: 0.7rem; color: #95a5a6; margin-top: 5px; }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1>MeineAugen <span style="font-size: 0.8rem; color: var(--a);">v2.1</span></h1>
-<button id="notif-btn" class="btn-notif" onclick="requestPermission()">🔔 Benachrichtigungen erlauben</button>
-<hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+<h1>MeineAugen <span style="font-size: 0.8rem; color: var(--a);">v2.3</span></h1>
+<div class="config-area">
+<label>Pause alle: <b id="interval-val">10</b> Minuten</label>
+<input type="range" id="interval-slider" min="5" max="20" value="10" oninput="updateInterval(this.value)">
+</div>
+
 <button class="btn-main" id="work-btn" onclick="toggleWorkMode()">🛡️ Begleiter starten</button>
-<button class="btn-emergency" style="background:#fff5f5; color:var(--d); border:1px solid #fed7d7;" onclick="triggerEmergency()">⚠️ Augen schlecht</button>
+<button style="background:#ecf0f1; color:var(--p);" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
+<button style="background:#fff5f5; color:var(--d); border:1px solid #fed7d7;" onclick="startRoutine('break')">⚠️ Sofort-Hilfe</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h2 id="ex-title">Pause</h2>
-<p id="ex-desc">Augen schließen...</p>
+<h2 id="ex-title">Übung</h2>
+<p id="ex-desc">...</p>
 <div class="timer-val" id="timer-display">--</div>
-<div id="feedback-area" class="hidden">
-<p>Wie geht es den Augen?</p>
-<div class="feedback-grid">
-<button style="flex:1; background:#eafaf1; color:#27ae60" onclick="processFeedback('gut')">Gut</button>
-<button style="flex:1; background:#fef9e7; color:#f1c40f" onclick="processFeedback('mittel')">Mittel</button>
-<button style="flex:1; background:#fdedec; color:#e74c3c" onclick="processFeedback('schlecht')">Schlecht</button>
-</div>
-</div>
+<div id="ex-source" class="source-tag"></div>
 </div>
 
 <script>
-let workDuration = 15;
+let workDuration = 10;
 let isWorkModeActive = false;
 let timerTimeout;
 const synth = window.speechSynthesis;
 
-// 1. Berechtigung für Push-Nachrichten
-function requestPermission() {
-Notification.requestPermission().then(perm => {
-if (perm === "granted") {
-document.getElementById('notif-btn').innerText = "✅ Glocke aktiv"
-document.getElementById('notif-btn').style.color = "#27ae60"
+function updateInterval(val) {
+workDuration = val;
+document.getElementById('interval-val').innerText = val;
+if(isWorkModeActive) {
+clearTimeout(timerTimeout);
+scheduleNextPush();
 }
-});
 }
 
 function speak(text, callback) {
@@ -69,10 +66,10 @@ function toggleWorkMode() {
 isWorkModeActive = !isWorkModeActive;
 const btn = document.getElementById('work-btn');
 if (isWorkModeActive) {
-btn.innerText = "🛑 Begleiter stoppen"
+btn.innerText = "🛑 Stoppen"
 btn.style.background = "#95a5a6"
 scheduleNextPush();
-speak("Begleiter aktiv. Ich melde mich per Nachricht.");
+speak("Begleiter aktiv. Pausen alle " + workDuration + " Minuten.");
 } else {
 btn.innerText = "🛡️ Begleiter starten"
 btn.style.background = "#27ae60"
@@ -80,50 +77,44 @@ clearTimeout(timerTimeout);
 }
 }
 
-// 2. Der "Stupser" per Push-Nachricht
 function scheduleNextPush() {
 if (!isWorkModeActive) return;
-clearTimeout(timerTimeout);
 timerTimeout = setTimeout(() => {
 if (Notification.permission === "granted") {
-const n = new Notification("Augen-Pause!", {
-body: "Zeit für 60 Sekunden Dunkelheit & Ferne.",
-icon: "👁️"
-});
-n.onclick = () => { window.focus(); startRoutine('break'); };
+new Notification("Augen-Pause!", { body: "Zeit für Entlastung." });
 }
-// Akustisches Signal falls Tab offen
-speak("Zeit für deine Augen-Pause.");
 startRoutine('break');
 }, workDuration * 60 * 1000);
 }
 
-function triggerEmergency() { startRoutine('emergency'); }
-
 function startRoutine(type) {
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
-document.getElementById('feedback-area').classList.add('hidden');
 const flows = {
 break: [
-{ t: "Dunkelpause", d: "Augen zu. Pacing.", s: 40, v: "Schließe die Augen. Atme ruhig." },
-{ t: "Weitblick", d: "In die Ferne schauen.", s: 20, v: "Jetzt sanft in die Ferne schauen." }
+{ t: "Blinzeln", d: "Bewusst blinzeln, ohne zu reiben.", s: 20, v: "Blinzle jetzt 20 Sekunden lang.", q: "AOK" },
+{ t: "Palmieren", d: "Hände warm auf die Augen legen.", s: 30, v: "Decke deine Augen mit warmen Händen ab.", q: "Eyes and More" },
+{ t: "Ferne", d: "In die Ferne schauen.", s: 10, v: "Schau jetzt weit weg.", q: "AOK" }
 ],
-emergency: [
-{ t: "Sofort-Stopp", d: "Dunkelheit.", s: 180, v: "Notstopp. Drei Minuten Ruhe." }
+morgen: [
+{ t: "Lid-Check", d: "Erst blinzeln, nicht reiben.", s: 20, v: "Guten Morgen. Erst blinzeln, dann Augen öffnen.", q: "Hylo-Vision" },
+{ t: "Kompresse", d: "Feuchtes Tuch auflegen.", s: 60, v: "Lege jetzt die Kompresse auf.", q: "AOK" }
 ]
 };
-runStep(flows[type] || flows.break, 0);
+runStep(flows[type], 0);
 }
 
 function runStep(steps, index) {
 if (index >= steps.length) {
-document.getElementById('feedback-area').classList.remove('hidden');
-speak("Wie fühlen sich die Augen an?");
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+if (isWorkModeActive) scheduleNextPush();
 return;
 }
 const s = steps[index];
 document.getElementById('ex-title').innerText = s.t;
+document.getElementById('ex-desc').innerText = s.d;
+document.getElementById('ex-source').innerText = "Quelle: " + s.q;
 speak(s.v);
 let sec = s.s;
 const int = setInterval(() => {
@@ -131,14 +122,6 @@ document.getElementById('timer-display').innerText = sec;
 if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
 sec--;
 }, 1000);
-}
-
-function processFeedback(state) {
-if (state === "schlecht") workDuration = Math.max(5, workDuration - 5);
-else if (state === "gut") workDuration = Math.min(25, workDuration + 2);
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) scheduleNextPush();
 }
 </script>
 </body>
