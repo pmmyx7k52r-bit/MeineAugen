@@ -3,37 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v2.4</title>
+<title>MeineAugen v2.6</title>
 <style>
 :root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
 .card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: 20px auto; }
 button { border: none; padding: 18px; border-radius: 18px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 600; }
 .btn-main { background: var(--s); color: white; }
+.btn-emergency { background: #fff5f5; color: var(--d); border: 1px solid #fed7d7; }
 .timer-val { font-size: 4.5rem; color: var(--a); margin: 15px 0; font-weight: 200; }
 .hidden { display: none; }
-.config-area { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 15px; }
-.source-tag { font-size: 0.7rem; color: #95a5a6; margin-top: 5px; }
+.config-area { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 15px; font-size: 0.9rem; }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1>👁️ MeineAugen v2.4</h1>
+<h1>👁️ MeineAugen v2.6</h1>
+<p style="font-size: 0.8rem; color: #888; margin-top: -10px;">Start bei Arbeitsbeginn</p>
+<button class="btn-main" id="work-btn" onclick="toggleWorkMode()">🛡️ Begleiter starten</button>
 <div class="config-area">
-<label>Intervall: <b id="interval-val">10</b> Min.</label>
-<input type="range" id="interval-slider" min="5" max="20" value="10" oninput="updateInterval(this.value)" style="width:100%">
+Pause alle: <b id="interval-val">10</b> Min.
+<input type="range" id="interval-slider" min="5" max="30" value="10" oninput="updateInterval(this.value)" style="width:100%">
 </div>
 
-<button class="btn-main" id="work-btn" onclick="toggleWorkMode()">🛡️ Begleiter starten</button>
-<button style="background:#ecf0f1;" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
+<button style="background:#ecf0f1; color:var(--p);" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
+<button class="btn-emergency" onclick="startRoutine('emergency')">⚠️ NOTFALL: Augen entlasten</button>
 </div>
 
 <div id="exercise-card" class="card hidden">
 <h2 id="ex-title">Pause</h2>
-<p id="ex-desc">Bitte warten...</p>
+<p id="ex-desc">...</p>
 <div class="timer-val" id="timer-display">--</div>
-<div id="ex-source" class="source-tag"></div>
+<p id="ex-source" style="font-size: 0.7rem; color: #95a5a6;"></p>
 </div>
 
 <script>
@@ -51,21 +53,19 @@ function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
-utter.rate = 0.85;
+utter.rate = 0.8;
 if (callback) utter.onend = callback;
 synth.speak(utter);
 }
 
 function toggleWorkMode() {
-// WICHTIG: Erster Klick schaltet Audio frei
-speak("Begleiter wird vorbereitet.");
 isWorkModeActive = !isWorkModeActive;
 const btn = document.getElementById('work-btn');
 if (isWorkModeActive) {
 btn.innerText = "🛑 Begleiter stoppen"
 btn.style.background = "#95a5a6"
-scheduleNextPush();
-speak("Begleiter ist aktiv. Ich melde mich in " + workDuration + " Minuten.");
+scheduleNext();
+speak("Begleiter aktiv. Wir machen alle " + workDuration + " Minuten eine Pause.");
 } else {
 btn.innerText = "🛡️ Begleiter starten"
 btn.style.background = "#27ae60"
@@ -73,12 +73,12 @@ clearTimeout(timerTimeout);
 }
 }
 
-function scheduleNextPush() {
+function scheduleNext() {
 if (!isWorkModeActive) return;
 clearTimeout(timerTimeout);
 timerTimeout = setTimeout(() => {
 if ("Notification" in window && Notification.permission === "granted") {
-new Notification("Zeit für deine Augen!", { body: "Klicke hier für die Kurz-Übung." });
+new Notification("Augen-Pause!", { body: "Zeit für Entlastung." });
 }
 startRoutine('break');
 }, workDuration * 60 * 1000);
@@ -89,13 +89,16 @@ document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
 const flows = {
 break: [
-{ t: "Blinzeln", d: "Augen offen lassen und bewusst blinzeln.", s: 20, v: "Blinzle jetzt 20 Sekunden lang.", q: "AOK" },
-{ t: "Palmieren", d: "Augen schließen. Hände warm auflegen.", s: 30, v: "Schließe die Augen und lege deine warmen Hände auf.", q: "Eyes and More" },
-{ t: "Ferne", d: "Augen öffnen und weit weg schauen.", s: 10, v: "Öffne die Augen und schau entspannt in die Ferne.", q: "AOK" }
+{ t: "Blinzeln", d: "Bewusst blinzeln (nicht reiben).", s: 20, v: "Blinzle jetzt 20 Sekunden lang.", q: "AOK" },
+{ t: "Palmieren", d: "Augen zu. Warme Hände auflegen.", s: 30, v: "Hände auf die Augen legen und entspannen.", q: "Eyes and More" },
+{ t: "Ferne", d: "Augen öffnen und weit weg schauen.", s: 10, v: "Schau jetzt in die Ferne.", q: "AOK" }
 ],
 morgen: [
-{ t: "Blinzeln", d: "Nicht reiben! Erst locker blinzeln.", s: 20, v: "Guten Morgen. Erst blinzeln, nicht reiben.", q: "Hylo-Vision" },
-{ t: "Wärme", d: "Feuchtes Tuch auf die geschlossenen Augen.", s: 60, v: "Lege jetzt die warme Kompresse auf.", q: "AOK" }
+{ t: "Lid-Pflege", d: "Erst blinzeln, dann öffnen.", s: 20, v: "Guten Morgen. Bitte erst locker blinzeln.", q: "Hylo-Vision" },
+{ t: "Wärme", d: "Warme Kompresse auflegen.", s: 60, v: "Lege jetzt die Kompresse auf.", q: "AOK" }
+],
+emergency: [
+{ t: "Sofort-Stopp", d: "Augen sofort schließen!", s: 180, v: "Notstopp. Drei Minuten Ruhe in Dunkelheit.", q: "Experten-Empfehlung" }
 ]
 };
 runStep(flows[type], 0);
@@ -105,7 +108,7 @@ function runStep(steps, index) {
 if (index >= steps.length) {
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
-if (isWorkModeActive) scheduleNextPush();
+if (isWorkModeActive) scheduleNext();
 return;
 }
 const s = steps[index];
@@ -114,11 +117,10 @@ document.getElementById('ex-desc').innerText = s.d;
 document.getElementById('ex-source').innerText = "Quelle: " + s.q;
 speak(s.v);
 let sec = s.s;
-document.getElementById('timer-display').innerText = sec;
 const int = setInterval(() => {
-sec--;
 document.getElementById('timer-display').innerText = sec;
 if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
+sec--;
 }, 1000);
 }
 </script>
