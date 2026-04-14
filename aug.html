@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v4.6 - Smart Coach</title>
+<title>MeineAugen v4.8 - Regulator</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
@@ -12,8 +12,9 @@ button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cu
 button:active { transform: scale(0.96); }
 .btn-training { background: var(--s); color: white; }
 .btn-morgen { background: #f39c12; color: white; }
+.btn-skip { background: #eee; color: #7f8c8d; font-size: 0.9rem; padding: 10px; margin-top: 10px; }
 .timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
-#live-feedback { display: none; margin-top: 15px; }
+#live-feedback, #skip-box { display: none; margin-top: 15px; }
 .fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
 .hidden { display: none; }
 #stats-bar { font-size: 0.75rem; color: #7f8c8d; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
@@ -23,29 +24,30 @@ button:active { transform: scale(0.96); }
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin-bottom: 5px;">👁️ MeineAugen 4.6</h1>
-<p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px;">Aktives Pacing & Training</p>
-<button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen: Sanftes Öffnen</button>
-<button class="btn-training" onclick="startRoutine('break')">🚀 Aktiv-Training starten</button>
+<h1>👁️ Regulator 4.8</h1>
+<button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
+<button class="btn-training" onclick="startRoutine('break')">🚀 Aktiv-Training</button>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<button style="background:#ecf0f1; color: #2c3e50; font-size: 0.9rem;" onclick="startRoutine('reset')">🌿 Reset</button>
-<button style="background:#fff5f5; color:var(--d); font-size: 0.9rem;" onclick="startRoutine('emergency')">⚠️ Notfall</button>
+<button style="background:#ecf0f1; color: #2c3e50;" onclick="startRoutine('reset')">🌿 Reset</button>
+<button style="background:#fff5f5; color:var(--d);" onclick="startRoutine('emergency')">⚠️ Notfall</button>
 </div>
 
 <div id="stats-bar">
-Stress-Level: <span id="stress-lvl">Normal</span> |
-<span id="water-tip" style="color: var(--s); cursor:pointer;" onclick="alert('Trinken hält den Glaskörper und Tränenfilm stabil!')">💧 Wasser-Tipp</span>
+System-Belastung: <span id="stress-lvl">Berechne...</span> | 💧 Trink-Check
 </div>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h2 id="ex-title" style="color: var(--s);">Übung</h2>
+<h2 id="ex-title" style="color: var(--s);">Bereit?</h2>
 <div class="timer-val" id="timer-display">--</div>
 <p id="ex-desc"></p>
 <div id="live-feedback">
-<p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Gefühl in den Augen?</p>
 <button class="fb-btn" style="background: #27ae60; color: white;" onclick="liveCheck('ok')">👍</button>
 <button class="fb-btn" style="background: var(--d); color: white;" onclick="liveCheck('bad')">⚠️</button>
+</div>
+
+<div id="skip-box">
+<button class="btn-skip" onclick="skipStep()">⏭️ Übung überspringen</button>
 </div>
 </div>
 
@@ -53,12 +55,14 @@ Stress-Level: <span id="stress-lvl">Normal</span> |
 const synth = window.speechSynthesis;
 let currentInterval;
 let activeSteps = [];
+let activeIndex = 0;
+let sessionBadCount = 0;
 let stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
 
 function updateUI() {
-const label = stressScore > 3 ? "Erhöht (Kürzere Reize)" : "Normal"
+const label = stressScore > 4 ? "Erhöht" : "Normal"
 document.getElementById('stress-lvl').innerText = label;
-document.getElementById('stress-lvl').style.color = stressScore > 3 ? '#c0392b' : '#27ae60';
+document.getElementById('stress-lvl').style.color = stressScore > 4 ? '#c0392b' : '#27ae60';
 }
 updateUI();
 
@@ -73,46 +77,58 @@ synth.speak(utter);
 
 function liveCheck(state) {
 if (state === 'bad') {
-stressScore += 3;
-localStorage.setItem('eyeStressScore', stressScore);
+sessionBadCount++;
+stressScore = Math.min(10, stressScore + 2);
+if (sessionBadCount >= 2) {
 clearInterval(currentInterval);
-speak("Abbruch. Wir kühlen das System sofort herunter.", () => startRoutine('emergency'));
-} else {
-if(stressScore > 0) stressScore--;
-localStorage.setItem('eyeStressScore', stressScore);
+speak("Belastung zu hoch. Wir beenden das Training sofort.", () => startRoutine('emergency'));
+return;
 }
+} else {
+sessionBadCount = 0;
+stressScore = Math.max(0, stressScore - 1);
+}
+localStorage.setItem('eyeStressScore', stressScore);
 updateUI();
+}
+
+function skipStep() {
+clearInterval(currentInterval);
+runStep(activeIndex + 1);
 }
 
 function startRoutine(type) {
 clearInterval(currentInterval);
+sessionBadCount = 0;
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
-const penalty = stressScore > 3 ? 12 : 0;
+// Dämpfung: p darf max 15 sein (bei Score 10)
+const p = Math.floor(stressScore * 1.5);
 
 const steps = {
 break: [
-{ t: "1. Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Tränenfilm erneuern" },
-{ t: "2. Weicher Fokus", s: (40 - penalty), v: "Wähle ein Objekt in der Ferne. Halte den Blick ganz locker und nimm auch wahr, was links und rechts am Rand passiert.", d: "👁️ Ferne & Panorama-Blick" },
-{ t: "3. Nah-Fern", s: (35 - penalty), v: "Wechsle nun im Sekundentakt zwischen deinem Finger und der Ferne.", d: "Ziliarmuskel trainieren" },
-{ t: "4. Palmieren", s: (30 + penalty), v: "Hände warm reiben und auflegen. Atme tief in den Bauch.", d: "Regeneration & Dunkelheit" }
+{ t: "1. Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Tränenfilm-Reset" },
+{ t: "2. Weicher Fokus", s: Math.max(15, 45 - p), v: "Such dir einen Punkt in der Ferne. Halte den Blick ganz locker. Bewege deine Augen minimal um den Punkt herum. Nicht fixieren.", d: "👁️ Panorama & Fernsicht", fb: true },
+{ t: "3. Lid-Refresh", s: 20, v: "Massiere ganz sanft die Lidkanten.", d: "Ölschicht-Pflege (Optional)", skip: true },
+{ t: "4. Nah-Fern", s: Math.max(15, 35 - p), v: "Wechsle nun langsam zwischen deinem Finger und der Ferne.", d: "Ziliarmuskel-Training" },
+{ t: "5. Palmieren", s: Math.max(30, 30 + p), v: "Hände warm reiben und die Dunkelheit genießen.", d: "Regeneration" }
 ],
 morgen: [
-{ t: "1. Vorwärmen", s: 60, v: "Augen zu lassen. Die warme Kompresse löst jetzt den Klebe-Effekt deiner Lider.", d: "Wärme gegen Verklebungen" },
-{ t: "2. Sanftes Öffnen", s: 20, v: "Vorsichtig die Lider bewegen und erst jetzt ganz langsam öffnen.", d: "Keine Gewalt beim Öffnen" },
-{ t: "3. Reinigung", s: 30, v: "Wische gelöste Reste sanft mit einem feuchten Tuch von außen nach innen ab.", d: "Lidränder säubern" },
-{ t: "4. Massage", s: 40, v: "Streiche die Lider sanft aus, um frisches Öl für den Tag zu aktivieren.", d: "Lidrandpflege" }
+{ t: "1. Vorwärmen", s: 60, v: "Wärme löst den Klebe-Effekt deiner Lider.", d: "Kompresse wirkt..." },
+{ t: "2. Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanftes Öffnen (8-10 Sek.)" },
+{ t: "3. Massage", s: 40, v: "Streiche die Lidränder sanft aus.", d: "Ölschicht für den Tag" }
 ],
-reset: [{ t: "Quick Reset", s: 60, v: "Schließe die Augen oder schaue entspannt in die Weite.", d: "Kurze Auszeit" }],
-emergency: [{ t: "Notfall-Pause", s: 180, v: "Drei Minuten absolute Dunkelheit. Kopf ablegen und alles loslassen.", d: "System-Reset läuft" }]
+reset: [{ t: "Quick Reset", s: 60, v: "Schau entspannt in die Weite.", d: "Blick lösen" }],
+emergency: [{ t: "Notstopp", s: 180, v: "Absolute Ruhe. Drei Minuten Dunkelheit.", d: "Regeneration erzwingen" }]
 };
 activeSteps = steps[type] || steps.break;
 runStep(0);
 }
 
 function runStep(index) {
+activeIndex = index;
 if (index >= activeSteps.length) {
-speak("Training beendet. Mit klarem Blick zurück an die Arbeit.", () => {
+speak("Fertig.", () => {
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
 });
@@ -121,16 +137,15 @@ return;
 const s = activeSteps[index];
 document.getElementById('ex-title').innerText = s.t;
 document.getElementById('ex-desc').innerText = s.d;
-document.getElementById('live-feedback').style.display = (s.t.includes("Fokus")) ? "block" : "none"
+document.getElementById('timer-display').innerText = s.s; // UX Fix: Timer sofort anzeigen
+document.getElementById('live-feedback').style.display = s.fb ? "block" : "none"
+document.getElementById('skip-box').style.display = s.skip ? "block" : "none"
 
 speak(s.v, () => {
 let sec = s.s;
 currentInterval = setInterval(() => {
 document.getElementById('timer-display').innerText = sec;
-if (sec <= 0) {
-clearInterval(currentInterval);
-runStep(index + 1);
-}
+if (sec <= 0) { clearInterval(currentInterval); runStep(index + 1); }
 sec--;
 }, 1000);
 });
