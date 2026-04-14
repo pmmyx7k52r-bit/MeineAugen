@@ -3,80 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v3.1</title>
+<title>MeineAugen v4.6 - Smart Coach</title>
 <style>
-:root { --p: #2c3e50; --s: #27ae60; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
+:root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
-.card { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 20px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 10px 0; font-weight: 600; }
-.btn-guide { background: var(--s); color: white; }
-.timer-val { font-size: 5rem; color: var(--a); margin: 20px 0; font-weight: 200; }
+.card { background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
+button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 700; transition: transform 0.1s; }
+button:active { transform: scale(0.96); }
+.btn-training { background: var(--s); color: white; }
+.btn-morgen { background: #f39c12; color: white; }
+.timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
+#live-feedback { display: none; margin-top: 15px; }
+.fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
 .hidden { display: none; }
+#stats-bar { font-size: 0.75rem; color: #7f8c8d; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
+#ex-desc { font-size: 1.1rem; min-height: 4em; display: flex; align-items: center; justify-content: center; line-height: 1.4; color: var(--p); }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1>👁️ MeineAugen v3.1</h1>
-<p style="color: #666; font-size: 0.9rem;">Nutze iPhone-Kurzbefehle für den 10-Min-Alarm.</p>
-<button class="btn-guide" onclick="startRoutine('break')">▶️ Pause-Guide starten</button>
-<button style="background:#ecf0f1;" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<button style="background:#fff5f5; color:var(--d);" onclick="startRoutine('emergency')">⚠️ Notfall</button>
+<h1 style="margin-bottom: 5px;">👁️ MeineAugen 4.6</h1>
+<p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px;">Aktives Pacing & Training</p>
+<button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen: Sanftes Öffnen</button>
+<button class="btn-training" onclick="startRoutine('break')">🚀 Aktiv-Training starten</button>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<button style="background:#ecf0f1; color: #2c3e50; font-size: 0.9rem;" onclick="startRoutine('reset')">🌿 Reset</button>
+<button style="background:#fff5f5; color:var(--d); font-size: 0.9rem;" onclick="startRoutine('emergency')">⚠️ Notfall</button>
+</div>
+
+<div id="stats-bar">
+Stress-Level: <span id="stress-lvl">Normal</span> |
+<span id="water-tip" style="color: var(--s); cursor:pointer;" onclick="alert('Trinken hält den Glaskörper und Tränenfilm stabil!')">💧 Wasser-Tipp</span>
+</div>
 </div>
 
 <div id="exercise-card" class="card hidden">
-<h2 id="ex-title">Übung</h2>
+<h2 id="ex-title" style="color: var(--s);">Übung</h2>
 <div class="timer-val" id="timer-display">--</div>
 <p id="ex-desc"></p>
+<div id="live-feedback">
+<p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Gefühl in den Augen?</p>
+<button class="fb-btn" style="background: #27ae60; color: white;" onclick="liveCheck('ok')">👍</button>
+<button class="fb-btn" style="background: var(--d); color: white;" onclick="liveCheck('bad')">⚠️</button>
+</div>
 </div>
 
 <script>
 const synth = window.speechSynthesis;
+let currentInterval;
+let activeSteps = [];
+let stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
+
+function updateUI() {
+const label = stressScore > 3 ? "Erhöht (Kürzere Reize)" : "Normal"
+document.getElementById('stress-lvl').innerText = label;
+document.getElementById('stress-lvl').style.color = stressScore > 3 ? '#c0392b' : '#27ae60';
+}
+updateUI();
 
 function speak(text, callback) {
 synth.cancel();
 const utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
-utter.rate = 0.85;
-if (callback) utter.onend = callback;
+utter.rate = 0.9;
+utter.onend = callback;
 synth.speak(utter);
 }
 
-function startRoutine(type) {
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('exercise-card').classList.remove('hidden');
-const steps = {
-break: [
-{ t: "Blinzeln", s: 20, v: "Blinzle jetzt 20 Sekunden ganz bewusst." }, //
-{ t: "Palmieren", s: 30, v: "Hände reiben und warm auf die Augen legen." }, //
-{ t: "Weitblick", s: 10, v: "Schau jetzt entspannt in die Ferne." } //
-],
-morgen: [
-{ t: "Morgengruß", s: 20, v: "Guten Morgen. Erst blinzeln, nicht reiben." }, //
-{ t: "Wärme", s: 60, v: "Lege nun die warme Kompresse auf." } //
-],
-emergency: [{ t: "Notstopp", s: 180, v: "Drei Minuten absolute Dunkelheit für deine Augen." }]
-};
-runStep(steps[type] || steps.break, 0);
+function liveCheck(state) {
+if (state === 'bad') {
+stressScore += 3;
+localStorage.setItem('eyeStressScore', stressScore);
+clearInterval(currentInterval);
+speak("Abbruch. Wir kühlen das System sofort herunter.", () => startRoutine('emergency'));
+} else {
+if(stressScore > 0) stressScore--;
+localStorage.setItem('eyeStressScore', stressScore);
+}
+updateUI();
 }
 
-function runStep(steps, index) {
-if (index >= steps.length) {
-speak("Übung beendet. Viel Erfolg beim Weiterarbeiten.");
+function startRoutine(type) {
+clearInterval(currentInterval);
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('exercise-card').classList.remove('hidden');
+const penalty = stressScore > 3 ? 12 : 0;
+
+const steps = {
+break: [
+{ t: "1. Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Tränenfilm erneuern" },
+{ t: "2. Weicher Fokus", s: (40 - penalty), v: "Wähle ein Objekt in der Ferne. Halte den Blick ganz locker und nimm auch wahr, was links und rechts am Rand passiert.", d: "👁️ Ferne & Panorama-Blick" },
+{ t: "3. Nah-Fern", s: (35 - penalty), v: "Wechsle nun im Sekundentakt zwischen deinem Finger und der Ferne.", d: "Ziliarmuskel trainieren" },
+{ t: "4. Palmieren", s: (30 + penalty), v: "Hände warm reiben und auflegen. Atme tief in den Bauch.", d: "Regeneration & Dunkelheit" }
+],
+morgen: [
+{ t: "1. Vorwärmen", s: 60, v: "Augen zu lassen. Die warme Kompresse löst jetzt den Klebe-Effekt deiner Lider.", d: "Wärme gegen Verklebungen" },
+{ t: "2. Sanftes Öffnen", s: 20, v: "Vorsichtig die Lider bewegen und erst jetzt ganz langsam öffnen.", d: "Keine Gewalt beim Öffnen" },
+{ t: "3. Reinigung", s: 30, v: "Wische gelöste Reste sanft mit einem feuchten Tuch von außen nach innen ab.", d: "Lidränder säubern" },
+{ t: "4. Massage", s: 40, v: "Streiche die Lider sanft aus, um frisches Öl für den Tag zu aktivieren.", d: "Lidrandpflege" }
+],
+reset: [{ t: "Quick Reset", s: 60, v: "Schließe die Augen oder schaue entspannt in die Weite.", d: "Kurze Auszeit" }],
+emergency: [{ t: "Notfall-Pause", s: 180, v: "Drei Minuten absolute Dunkelheit. Kopf ablegen und alles loslassen.", d: "System-Reset läuft" }]
+};
+activeSteps = steps[type] || steps.break;
+runStep(0);
+}
+
+function runStep(index) {
+if (index >= activeSteps.length) {
+speak("Training beendet. Mit klarem Blick zurück an die Arbeit.", () => {
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
+});
 return;
 }
-const s = steps[index];
+const s = activeSteps[index];
 document.getElementById('ex-title').innerText = s.t;
-document.getElementById('ex-desc').innerText = s.s + " Sekunden"
-speak(s.v);
+document.getElementById('ex-desc').innerText = s.d;
+document.getElementById('live-feedback').style.display = (s.t.includes("Fokus")) ? "block" : "none"
+
+speak(s.v, () => {
 let sec = s.s;
-const int = setInterval(() => {
+currentInterval = setInterval(() => {
 document.getElementById('timer-display').innerText = sec;
-if (sec <= 0) { clearInterval(int); runStep(steps, index + 1); }
+if (sec <= 0) {
+clearInterval(currentInterval);
+runStep(index + 1);
+}
 sec--;
 }, 1000);
+});
 }
 </script>
 </body>
