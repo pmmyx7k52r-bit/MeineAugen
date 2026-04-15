@@ -5,122 +5,93 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Strategie 5.0">
-<title>Strategie 5.0 - Augen-Wächter</title>
+<title>Strategie 5.0</title>
 <style>
-:root {
---bg-color: #f8f9fa;
---card-bg: #ffffff;
---primary: #e67e22; /* Morgen-Routine */
---secondary: #2980b9; /* Training */
---accent: #27ae60; /* Reset */
---danger: #c0392b; /* Notfall */
---text: #2c3e50;
-}
-
-body {
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-background-color: var(--bg-color);
-color: var(--text);
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-margin: 0;
-overflow: hidden;
-}
-
-.container {
-background: var(--card-bg);
-padding: 2rem;
-border-radius: 30px;
-box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-width: 90%;
-max-width: 350px;
-text-align: center;
-}
-
-h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-.phase-indicator {
-color: #3498db;
-font-weight: bold;
-text-transform: uppercase;
-letter-spacing: 1px;
-margin-bottom: 1.5rem;
-font-size: 0.9rem;
-}
-
-.btn {
-display: block;
-width: 100%;
-padding: 15px;
-margin: 10px 0;
-border: none;
-border-radius: 15px;
-font-size: 1.1rem;
-font-weight: 600;
-cursor: pointer;
-transition: transform 0.1s;
-color: white;
-text-decoration: none;
-}
-
-.btn:active { transform: scale(0.98); }
-
-.btn-morgen { background-color: var(--primary); }
-.btn-training { background-color: var(--secondary); }
-.btn-reset { background-color: #ecf0f1; color: var(--text); flex: 1; margin-right: 5px; }
-.btn-notfall { background-color: #fdf2f2; color: var(--danger); flex: 1; margin-left: 5px; }
-
-.row { display: flex; justify-content: space-between; }
-
-.footer { margin-top: 2rem; font-size: 0.8rem; color: #95a5a6; }
-.status-dot { color: #27ae60; }
+:root { --bg: #f8f9fa; --card: #ffffff; --primary: #e67e22; --secondary: #2980b9; --text: #2c3e50; }
+body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+.container { background: var(--card); padding: 2rem; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; max-width: 350px; text-align: center; }
+.phase { color: #3498db; font-weight: bold; margin-bottom: 1.5rem; font-size: 0.9rem; text-transform: uppercase; }
+.btn { display: block; width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 600; color: white; transition: 0.2s; cursor: pointer; }
+.btn-morgen { background: var(--primary); }
+.btn-training { background: var(--secondary); }
+.timer-display { font-size: 3rem; font-weight: bold; margin: 1rem 0; color: var(--secondary); display: none; }
+#status { font-size: 0.8rem; color: #95a5a6; margin-top: 1rem; }
 </style>
 </head>
 <body>
 
 <div class="container">
 <h1>👁️ Strategie 5.0</h1>
-<div id="phase" class="phase-indicator">Lade Phase...</div>
+<div id="phase" class="phase">Lade...</div>
+<div id="timer" class="timer-display">15:00</div>
 
-<button class="btn btn-morgen" onclick="alert('Wärmemaske auf! 5 Min. Entspannung.')">☀️ Morgen-Routine</button>
-<button class="btn btn-training" onclick="alert('Starte 3D-Fokus Training...')">🚀 Training starten</button>
+<button id="mainBtn" class="btn btn-training" onclick="startEyeTimer()">🚀 Training starten</button>
+<button class="btn btn-morgen" onclick="window.location.reload()">☀️ Reset / Phase prüfen</button>
 
-<div class="row">
-<button class="btn btn-reset" onclick="location.reload()">🌿 Reset</button>
-<button class="btn btn-notfall" onclick="alert('NOTFALL: 2 Min. Palmieren & Maske kühlen!')">⚠️ Notfall</button>
-</div>
-
-<div class="footer">
-Level: <span class="status-dot">Normal</span> &nbsp;&nbsp;&nbsp; Score reset
-</div>
+<div id="status">Sound-Modus: Aktiviert 🔊</div>
 </div>
 
 <script>
-function updatePhase() {
-const now = new Date();
-const hour = now.getHours();
-const min = now.getMinutes();
-const time = hour + min/60;
-const display = document.getElementById('phase');
+let timeLeft = 900; // 15 Minuten
+let timerId = null;
+// Wir nutzen einen Standard-System-Beep per Audio-API
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-if (time >= 6 && time < 9) {
-display.innerText = "Early Bird"
-} else if (time >= 9 && time < 12) {
-display.innerText = "Deep Focus Work"
-} else if (time >= 12 && time < 14) {
-display.innerText = "Post-Lunch Reset"
-} else if (time >= 14 && time < 17) {
-display.innerText = "Final Focus"
-} else {
-display.innerText = "Offline / Regeneration"
+function playBeep() {
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.type = "sine"
+osc.frequency.value = 880; // Tonhöhe
+gain.gain.setValueAtTime(0, audioCtx.currentTime);
+gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+osc.start();
+osc.stop(audioCtx.currentTime + 1);
 }
+
+function updatePhase() {
+const hour = new Date().getHours();
+const display = document.getElementById('phase');
+if (hour < 9) display.innerText = "Early Bird ☀️"
+else if (hour < 14) display.innerText = "Post-Lunch Reset 🌿"
+else display.innerText = "Final Focus 🚀"
+}
+
+function startEyeTimer() {
+if (audioCtx.state === 'suspended') audioCtx.resume();
+const btn = document.getElementById('mainBtn');
+const timerDiv = document.getElementById('timer');
+if (timerId) return;
+
+btn.innerText = "Timer läuft..."
+btn.style.opacity = "0.5"
+timerDiv.style.display = "block"
+
+timerId = setInterval(() => {
+timeLeft--;
+let mins = Math.floor(timeLeft / 60);
+let secs = timeLeft % 60;
+timerDiv.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+if (timeLeft <= 0) {
+clearInterval(timerId);
+playBeep();
+setTimeout(() => alert("FERTIG! Bitte 20 Sek. in die Ferne schauen."), 100);
+resetTimer();
+}
+}, 1000);
+}
+
+function resetTimer() {
+timeLeft = 900;
+timerId = null;
+document.getElementById('mainBtn').innerText = "🚀 Erneut starten"
+document.getElementById('mainBtn').style.opacity = "1"
 }
 
 updatePhase();
-// Alle 1 Minute aktualisieren
-setInterval(updatePhase, 60000);
 </script>
 
 </body>
