@@ -2,168 +2,126 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen v5.0 - Strategischer Begleiter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Strategie 5.0">
+<title>Strategie 5.0 - Augen-Wächter</title>
 <style>
-:root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; }
-body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; }
-.card { background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 700; transition: transform 0.1s; }
-button:active { transform: scale(0.96); }
-.btn-training { background: var(--s); color: white; }
-.btn-morgen { background: #f39c12; color: white; }
-.btn-skip { background: #f8f9fa; color: #7f8c8d; font-size: 0.8rem; padding: 10px; border: 1px solid #eee; }
-.timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
-#live-feedback, #skip-box { display: none; margin-top: 15px; }
-.fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
-.hidden { display: none; }
-#stats-bar { font-size: 0.75rem; color: #7f8c8d; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
-#ex-desc { font-size: 1.1rem; min-height: 4em; display: flex; align-items: center; justify-content: center; line-height: 1.4; padding: 0 10px; }
+:root {
+--bg-color: #f8f9fa;
+--card-bg: #ffffff;
+--primary: #e67e22; /* Morgen-Routine */
+--secondary: #2980b9; /* Training */
+--accent: #27ae60; /* Reset */
+--danger: #c0392b; /* Notfall */
+--text: #2c3e50;
+}
+
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+background-color: var(--bg-color);
+color: var(--text);
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+overflow: hidden;
+}
+
+.container {
+background: var(--card-bg);
+padding: 2rem;
+border-radius: 30px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+width: 90%;
+max-width: 350px;
+text-align: center;
+}
+
+h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.phase-indicator {
+color: #3498db;
+font-weight: bold;
+text-transform: uppercase;
+letter-spacing: 1px;
+margin-bottom: 1.5rem;
+font-size: 0.9rem;
+}
+
+.btn {
+display: block;
+width: 100%;
+padding: 15px;
+margin: 10px 0;
+border: none;
+border-radius: 15px;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.1s;
+color: white;
+text-decoration: none;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn-morgen { background-color: var(--primary); }
+.btn-training { background-color: var(--secondary); }
+.btn-reset { background-color: #ecf0f1; color: var(--text); flex: 1; margin-right: 5px; }
+.btn-notfall { background-color: #fdf2f2; color: var(--danger); flex: 1; margin-left: 5px; }
+
+.row { display: flex; justify-content: space-between; }
+
+.footer { margin-top: 2rem; font-size: 0.8rem; color: #95a5a6; }
+.status-dot { color: #27ae60; }
 </style>
 </head>
 <body>
 
-<div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.0</h1>
-<p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;"></p>
-<button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<button class="btn-training" onclick="startRoutine('break')">🚀 Training starten</button>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<button style="background:#ecf0f1; color: #2c3e50;" onclick="startRoutine('reset')">🌿 Reset</button>
-<button style="background:#fff5f5; color:var(--d);" onclick="startRoutine('emergency')">⚠️ Notfall</button>
+<div class="container">
+<h1>👁️ Strategie 5.0</h1>
+<div id="phase" class="phase-indicator">Lade Phase...</div>
+
+<button class="btn btn-morgen" onclick="alert('Wärmemaske auf! 5 Min. Entspannung.')">☀️ Morgen-Routine</button>
+<button class="btn btn-training" onclick="alert('Starte 3D-Fokus Training...')">🚀 Training starten</button>
+
+<div class="row">
+<button class="btn btn-reset" onclick="location.reload()">🌿 Reset</button>
+<button class="btn btn-notfall" onclick="alert('NOTFALL: 2 Min. Palmieren & Maske kühlen!')">⚠️ Notfall</button>
 </div>
 
-<div id="stats-bar">
-<span>Level: <b id="stress-lvl">...</b></span>
-<span id="last-session" style="cursor:pointer" onclick="resetScore()">Score reset</span>
-</div>
-</div>
-
-<div id="exercise-card" class="card hidden">
-<h2 id="ex-title" style="color: var(--s); margin-bottom:0;">--</h2>
-<div class="timer-val" id="timer-display">--</div>
-<p id="ex-desc"></p>
-<div id="live-feedback">
-<button class="fb-btn" style="background: #27ae60; color: white;" onclick="liveCheck('ok')">👍</button>
-<button class="fb-btn" style="background: var(--d); color: white;" onclick="liveCheck('bad')">⚠️</button>
-</div>
-
-<div id="skip-box">
-<button class="btn-skip" onclick="skipStep()">⏭️ Überspringen</button>
+<div class="footer">
+Level: <span class="status-dot">Normal</span> &nbsp;&nbsp;&nbsp; Score reset
 </div>
 </div>
 
 <script>
-const synth = window.speechSynthesis;
-let currentInterval, activeSteps = [], activeIndex = 0, sessionBadCount = 0;
-let stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
-let lastTimestamp = parseInt(localStorage.getItem('lastEyeSession')) || Date.now();
+function updatePhase() {
+const now = new Date();
+const hour = now.getHours();
+const min = now.getMinutes();
+const time = hour + min/60;
+const display = document.getElementById('phase');
 
-function getDayPhase() {
-const h = new Date().getHours();
-const isWeekend = [0,6].includes(new Date().getDay());
-if (isWeekend) return { n: "REGENERATION", p: 0 };
-if (h < 9) return { n: "EARLY BIRD", p: -2 };
-if (h < 12) return { n: "HIGH PERFORMANCE", p: 0 };
-if (h < 14) return { n: "POST-LUNCH RESET", p: 5 };
-if (h < 17) return { n: "FINAL FOCUS", p: 8 };
-return { n: "EVENING CARE", p: 3 };
-}
-
-function updateUI() {
-const phase = getDayPhase();
-document.getElementById('day-phase').innerText = phase.n;
-document.getElementById('stress-lvl').innerText = stressScore > 4 ? "Erhöht" : "Normal"
-document.getElementById('stress-lvl').style.color = stressScore > 4 ? '#c0392b' : '#27ae60';
-}
-
-function resetScore() {
-if(confirm("Stress-Score wirklich zurücksetzen?")) {
-stressScore = 0; localStorage.setItem('eyeStressScore', 0); updateUI();
-}
-}
-
-function speak(text, callback) {
-synth.cancel();
-const utter = new SpeechSynthesisUtterance(text);
-utter.lang = 'de-DE'; utter.rate = 0.9; utter.onend = callback;
-synth.speak(utter);
-}
-
-function liveCheck(state) {
-if (state === 'bad') {
-sessionBadCount++;
-stressScore = Math.min(10, stressScore + 2);
-if (sessionBadCount >= 2) {
-clearInterval(currentInterval);
-speak("Belastung kritisch. Notfall-Modus aktiv.", () => startRoutine('emergency'));
-return;
-}
+if (time >= 6 && time < 9) {
+display.innerText = "Early Bird"
+} else if (time >= 9 && time < 12) {
+display.innerText = "Deep Focus Work"
+} else if (time >= 12 && time < 14) {
+display.innerText = "Post-Lunch Reset"
+} else if (time >= 14 && time < 17) {
+display.innerText = "Final Focus"
 } else {
-sessionBadCount = 0;
-stressScore = Math.max(0, stressScore - 1);
+display.innerText = "Offline / Regeneration"
 }
-localStorage.setItem('eyeStressScore', stressScore);
-updateUI();
 }
 
-function skipStep() { clearInterval(currentInterval); runStep(activeIndex + 1); }
-
-function startRoutine(type) {
-clearInterval(currentInterval);
-sessionBadCount = 0;
-const phase = getDayPhase();
-const p = Math.floor(stressScore * 1.5) + phase.p;
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('exercise-card').classList.remove('hidden');
-
-const steps = {
-break: [
-{ t: "1. Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Basis-Hydrierung" },
-{ t: "2. Weicher Fokus", s: Math.max(15, 45 - p), v: "Ferne fixieren. Blick locker lassen und minimal um den Punkt kreisen. Panorama wahrnehmen.", d: "👁️ Ziliarmuskel lösen", fb: true },
-{ t: "3. Lid-Refresh", s: 20, v: "Sanfte Massage der Lidkanten.", d: "Ölschicht pflegen", skip: true },
-{ t: "4. Nah-Fern", s: Math.max(15, 35 - p), v: "Wechsle langsam zwischen Finger und Ferne.", d: "Akkommodations-Training" },
-{ t: "5. Palmieren", s: Math.max(30, 30 + p), v: "Wärme und Dunkelheit genießen.", d: "Tiefenregeneration" }
-],
-morgen: [
-{ t: "1. Vorwärmen", s: 60, v: "Kompresse nutzen. Wärme löst den Klebeeffekt.", d: "Poren öffnen" },
-{ t: "2. Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanfter Start" },
-{ t: "3. Massage", s: 40, v: "Lidränder sanft ausstreichen.", d: "Ölfluss aktivieren" }
-],
-reset: [{ t: "Quick Reset", s: 60, v: "Entspannt in die Ferne schauen.", d: "Blick lösen" }],
-emergency: [{ t: "Notstopp", s: 180, v: "Drei Minuten Dunkelheit. Alles loslassen.", d: "System-Reset" }]
-};
-activeSteps = steps[type] || steps.break;
-localStorage.setItem('lastEyeSession', Date.now());
-runStep(0);
-}
-
-function runStep(index) {
-activeIndex = index;
-if (index >= activeSteps.length) {
-speak("Training beendet.", () => {
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-});
-return;
-}
-const s = activeSteps[index];
-document.getElementById('ex-title').innerText = s.t;
-document.getElementById('ex-desc').innerText = s.d;
-document.getElementById('timer-display').innerText = s.s;
-document.getElementById('live-feedback').style.display = s.fb ? "block" : "none"
-document.getElementById('skip-box').style.display = s.skip ? "block" : "none"
-
-speak(s.v, () => {
-let sec = s.s;
-currentInterval = setInterval(() => {
-document.getElementById('timer-display').innerText = sec;
-if (sec <= 0) { clearInterval(currentInterval); runStep(index + 1); }
-sec--;
-}, 1000);
-});
-}
-updateUI();
+updatePhase();
+// Alle 1 Minute aktualisieren
+setInterval(updatePhase, 60000);
 </script>
+
 </body>
 </html>
