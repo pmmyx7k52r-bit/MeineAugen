@@ -5,94 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Strategie 5.0</title>
+<title>Strategie 5.3</title>
 <style>
-:root { --bg: #f8f9fa; --card: #ffffff; --primary: #e67e22; --secondary: #2980b9; --text: #2c3e50; }
-body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-.container { background: var(--card); padding: 2rem; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; max-width: 350px; text-align: center; }
-.phase { color: #3498db; font-weight: bold; margin-bottom: 1.5rem; font-size: 0.9rem; text-transform: uppercase; }
-.btn { display: block; width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 600; color: white; transition: 0.2s; cursor: pointer; }
-.btn-morgen { background: var(--primary); }
-.btn-training { background: var(--secondary); }
-.timer-display { font-size: 3rem; font-weight: bold; margin: 1rem 0; color: var(--secondary); display: none; }
-#status { font-size: 0.8rem; color: #95a5a6; margin-top: 1rem; }
+:root { --bg: #f0f2f5; --card: #ffffff; --primary: #e67e22; --secondary: #2980b9; --accent: #27ae60; --text: #1a1a1a; }
+body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
+.container { background: var(--card); padding: 1.5rem; border-radius: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+h1 { font-size: 1.5rem; text-align: center; margin-bottom: 0.5rem; }
+.phase-tag { text-align: center; font-weight: bold; color: var(--secondary); font-size: 0.8rem; margin-bottom: 1.5rem; text-transform: uppercase; }
+.exercise-card { background: #f8f9fa; border-left: 5px solid var(--secondary); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+.exercise-card h2 { font-size: 1.1rem; margin: 0 0 8px 0; color: var(--secondary); }
+.exercise-card p { font-size: 0.9rem; margin: 0; line-height: 1.4; color: #444; }
+.step { font-weight: bold; color: var(--accent); }
+
+.btn-reset { display: block; width: 100%; padding: 15px; background: #eee; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 </style>
 </head>
 <body>
-
 <div class="container">
-<h1>👁️ Strategie 5.0</h1>
-<div id="phase" class="phase">Lade...</div>
-<div id="timer" class="timer-display">15:00</div>
+<h1>👁️ Strategie 5.3</h1>
+<div id="phase" class="phase-tag">Fokus-Modus</div>
 
-<button id="mainBtn" class="btn btn-training" onclick="startEyeTimer()">🚀 Training starten</button>
-<button class="btn btn-morgen" onclick="window.location.reload()">☀️ Reset / Phase prüfen</button>
+<div class="exercise-card">
+<h2>1. Der 20-20-Fernblick</h2>
+<p><span class="step">Was:</span> Suche ein Objekt in min. 6m Entfernung.<br>
+<span class="step">Wie:</span> Schaue 20 Sek. entspannt darauf. Blinzle dabei bewusst weich. Nicht starren!</p>
+</div>
 
-<div id="status">Sound-Modus: Aktiviert 🔊</div>
+<div class="exercise-card">
+<h2>2. 3D-Fokus (Nah-Fern)</h2>
+<p><span class="step">Was:</span> Daumen vor die Nase, dann Hintergrund.<br>
+<span class="step">Wie:</span> 2 Sek. Daumen scharf stellen, 2 Sek. den weitesten Punkt im Raum. 5x wiederholen.</p>
+</div>
+
+<div class="exercise-card">
+<h2>3. Palmieren (Notfall-Reset)</h2>
+<p><span class="step">Was:</span> Augen mit Handflächen abdecken.<br>
+<span class="step">Wie:</span> Hände reiben bis sie warm sind. Wölbe die Hände über die geschlossenen Augen (kein Druck). 1 Min. absolute Dunkelheit genießen.</p>
+</div>
+
+<button class="btn-reset" onclick="window.location.reload()">🔄 Ansicht aktualisieren</button>
 </div>
 
 <script>
-let timeLeft = 900; // 15 Minuten
-let timerId = null;
-// Wir nutzen einen Standard-System-Beep per Audio-API
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playBeep() {
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.type = "sine"
-osc.frequency.value = 880; // Tonhöhe
-gain.gain.setValueAtTime(0, audioCtx.currentTime);
-gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
-gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
-osc.start();
-osc.stop(audioCtx.currentTime + 1);
-}
-
-function updatePhase() {
 const hour = new Date().getHours();
 const display = document.getElementById('phase');
-if (hour < 9) display.innerText = "Early Bird ☀️"
-else if (hour < 14) display.innerText = "Post-Lunch Reset 🌿"
-else display.innerText = "Final Focus 🚀"
-}
-
-function startEyeTimer() {
-if (audioCtx.state === 'suspended') audioCtx.resume();
-const btn = document.getElementById('mainBtn');
-const timerDiv = document.getElementById('timer');
-if (timerId) return;
-
-btn.innerText = "Timer läuft..."
-btn.style.opacity = "0.5"
-timerDiv.style.display = "block"
-
-timerId = setInterval(() => {
-timeLeft--;
-let mins = Math.floor(timeLeft / 60);
-let secs = timeLeft % 60;
-timerDiv.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-if (timeLeft <= 0) {
-clearInterval(timerId);
-playBeep();
-setTimeout(() => alert("FERTIG! Bitte 20 Sek. in die Ferne schauen."), 100);
-resetTimer();
-}
-}, 1000);
-}
-
-function resetTimer() {
-timeLeft = 900;
-timerId = null;
-document.getElementById('mainBtn').innerText = "🚀 Erneut starten"
-document.getElementById('mainBtn').style.opacity = "1"
-}
-
-updatePhase();
+if (hour < 9) display.innerText = "EARLY BIRD: Sanfter Start"
+else if (hour < 14) display.innerText = "DEEP WORK: Starke Belastung"
+else display.innerText = "FINAL FOCUS: Regeneration nötig"
 </script>
-
 </body>
 </html>
