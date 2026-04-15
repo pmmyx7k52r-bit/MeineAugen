@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MeineAugen v5.0</title>
+<title>MeineAugen v5.0.3</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; }
 .card { background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0 2px 0; font-weight: 700; transition: transform 0.1s; }
+button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0 2px 0; font-weight: 700; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
 button:active { transform: scale(0.96); }
 .btn-training { background: var(--s); color: white; }
 .btn-morgen { background: #f39c12; color: white; }
@@ -18,7 +18,7 @@ button:active { transform: scale(0.96); }
 .btn-emergency { background: #fff5f5; color: var(--d); }
 .desc { font-size: 0.75rem; color: var(--sub); margin-bottom: 12px; line-height: 1.2; }
 .timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
-#live-feedback, #skip-box { display: none; margin-top: 15px; }
+#live-feedback { display: none; margin-top: 15px; }
 .fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
 .hidden { display: none; }
 #stats-bar { font-size: 0.75rem; color: var(--sub); margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
@@ -28,13 +28,13 @@ button:active { transform: scale(0.96); }
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.0</h1>
+<h1 style="margin:0;">👁️ Strategie 5.0.3</h1>
 <p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;"></p>
 <button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<div class="desc">Aktivierung & Wärmemaske (5 Min.)</div>
+<div class="desc">Wärme & Ölfluss (Morgens 1x)</div>
 
 <button class="btn-training" onclick="startRoutine('break')">🚀 Training starten</button>
-<div class="desc">Ziliarmuskel-Training gegen Starre</div>
+<div class="desc">Gezielte Entspannung für die Arbeit</div>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div class="col">
 <button class="btn-reset" onclick="startRoutine('reset')">🌿 Reset</button>
@@ -47,7 +47,7 @@ button:active { transform: scale(0.96); }
 </div>
 
 <div id="stats-bar">
-<span>Level: <b id="stress-lvl">...</b></span>
+<span>Stress: <b id="stress-lvl">...</b></span>
 <span id="last-session" style="cursor:pointer" onclick="resetScore()">Score reset</span>
 </div>
 </div>
@@ -57,12 +57,9 @@ button:active { transform: scale(0.96); }
 <div class="timer-val" id="timer-display">--</div>
 <p id="ex-desc"></p>
 <div id="live-feedback">
+<p style="font-size: 0.85rem; color: var(--sub);">Wie fühlen sich die Augen an?</p>
 <button class="fb-btn" style="background: #27ae60; color: white;" onclick="liveCheck('ok')">👍</button>
 <button class="fb-btn" style="background: var(--d); color: white;" onclick="liveCheck('bad')">⚠️</button>
-</div>
-
-<div id="skip-box">
-<button style="background: #f8f9fa; color: #7f8c8d; font-size: 0.8rem; padding: 10px; border: 1px solid #eee;" onclick="skipStep()">⏭️ Überspringen</button>
 </div>
 </div>
 
@@ -83,8 +80,8 @@ return { n: "REGENERATION", p: 3 };
 function updateUI() {
 const phase = getDayPhase();
 document.getElementById('day-phase').innerText = phase.n;
-document.getElementById('stress-lvl').innerText = stressScore > 4 ? "Erhöht" : "Normal"
-document.getElementById('stress-lvl').style.color = stressScore > 4 ? '#c0392b' : '#27ae60';
+document.getElementById('stress-lvl').innerText = stressScore > 5 ? "Hoch" : "Normal"
+document.getElementById('stress-lvl').style.color = stressScore > 5 ? '#c0392b' : '#27ae60';
 }
 
 function resetScore() {
@@ -106,7 +103,8 @@ sessionBadCount++;
 stressScore = Math.min(10, stressScore + 2);
 if (sessionBadCount >= 2) {
 clearInterval(currentInterval);
-speak("Belastung zu hoch. Notfall-Modus startet.", () => startRoutine('emergency'));
+speak("Belastung kritisch. Notfall-Programm.", () => startRoutine('emergency'));
+return;
 }
 } else {
 sessionBadCount = 0;
@@ -114,9 +112,9 @@ stressScore = Math.max(0, stressScore - 1);
 }
 localStorage.setItem('eyeStressScore', stressScore);
 updateUI();
+document.getElementById('live-feedback').style.display = "none"
+runStep(activeIndex + 1);
 }
-
-function skipStep() { clearInterval(currentInterval); runStep(activeIndex + 1); }
 
 function startRoutine(type) {
 clearInterval(currentInterval);
@@ -137,7 +135,7 @@ morgen: [
 { t: "Wärme", s: 60, v: "Kompresse auflegen. Wärme löst die Öle.", d: "Poren öffnen" },
 { t: "Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanfter Start" }
 ],
-reset: [{ t: "Quick Reset", s: 20, v: "20 Sekunden entspannt in die Ferne schauen.", d: "Blick lösen" }],
+reset: [{ t: "Quick Reset", s: 20, v: "20 Sekunden entspannt in die Ferne schauen.", d: "Blick lösen", fb: true }],
 emergency: [{ t: "Notstopp", s: 120, v: "Sofort Palmieren. 2 Minuten absolute Dunkelheit.", d: "System-Reset" }]
 };
 activeSteps = steps[type] || steps.break;
@@ -158,13 +156,22 @@ const s = activeSteps[index];
 document.getElementById('ex-title').innerText = s.t;
 document.getElementById('ex-desc').innerText = s.d;
 document.getElementById('timer-display').innerText = s.s;
-document.getElementById('live-feedback').style.display = s.fb ? "block" : "none"
+document.getElementById('live-feedback').style.display = "none"
 speak(s.v, () => {
 let sec = s.s;
 currentInterval = setInterval(() => {
 sec--;
 document.getElementById('timer-display').innerText = sec;
-if (sec <= 0) { clearInterval(currentInterval); runStep(index + 1); }
+if (sec <= 0) {
+clearInterval(currentInterval);
+if (s.fb) {
+document.getElementById('timer-display').innerText = "✓"
+document.getElementById('live-feedback').style.display = "block"
+speak("Check: Wie fühlen sich die Augen an?");
+} else {
+runStep(index + 1);
+}
+}
 }, 1000);
 });
 }
