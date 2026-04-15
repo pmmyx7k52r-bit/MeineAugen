@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MeineAugen v5.0.3</title>
+<title>MeineAugen v5.0.4</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; }
@@ -18,7 +18,7 @@ button:active { transform: scale(0.96); }
 .btn-emergency { background: #fff5f5; color: var(--d); }
 .desc { font-size: 0.75rem; color: var(--sub); margin-bottom: 12px; line-height: 1.2; }
 .timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
-#live-feedback { display: none; margin-top: 15px; }
+#final-feedback { display: none; margin-top: 15px; }
 .fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
 .hidden { display: none; }
 #stats-bar { font-size: 0.75rem; color: var(--sub); margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
@@ -28,7 +28,7 @@ button:active { transform: scale(0.96); }
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.0.3</h1>
+<h1 style="margin:0;">👁️ Strategie 5.0.4</h1>
 <p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;"></p>
 <button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
 <div class="desc">Wärme & Ölfluss (Morgens 1x)</div>
@@ -56,16 +56,16 @@ button:active { transform: scale(0.96); }
 <h2 id="ex-title" style="color: var(--s); margin-bottom:0;">--</h2>
 <div class="timer-val" id="timer-display">--</div>
 <p id="ex-desc"></p>
-<div id="live-feedback">
-<p style="font-size: 0.85rem; color: var(--sub);">Wie fühlen sich die Augen an?</p>
-<button class="fb-btn" style="background: #27ae60; color: white;" onclick="liveCheck('ok')">👍</button>
-<button class="fb-btn" style="background: var(--d); color: white;" onclick="liveCheck('bad')">⚠️</button>
+<div id="final-feedback">
+<p style="font-size: 0.85rem; color: var(--sub);">Wie fühlen sich die Augen jetzt an?</p>
+<button class="fb-btn" style="background: #27ae60; color: white;" onclick="finishSession('ok')">👍</button>
+<button class="fb-btn" style="background: var(--d); color: white;" onclick="finishSession('bad')">⚠️</button>
 </div>
 </div>
 
 <script>
 const synth = window.speechSynthesis;
-let currentInterval, activeSteps = [], activeIndex = 0, sessionBadCount = 0;
+let currentInterval, activeSteps = [], activeIndex = 0;
 let stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
 
 function getDayPhase() {
@@ -97,37 +97,30 @@ utter.lang = 'de-DE'; utter.rate = 0.95; utter.onend = callback;
 synth.speak(utter);
 }
 
-function liveCheck(state) {
+function finishSession(state) {
 if (state === 'bad') {
-sessionBadCount++;
 stressScore = Math.min(10, stressScore + 2);
-if (sessionBadCount >= 2) {
-clearInterval(currentInterval);
-speak("Belastung kritisch. Notfall-Programm.", () => startRoutine('emergency'));
-return;
-}
 } else {
-sessionBadCount = 0;
 stressScore = Math.max(0, stressScore - 1);
 }
 localStorage.setItem('eyeStressScore', stressScore);
+document.getElementById('exercise-card').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
 updateUI();
-document.getElementById('live-feedback').style.display = "none"
-runStep(activeIndex + 1);
 }
 
 function startRoutine(type) {
 clearInterval(currentInterval);
-sessionBadCount = 0;
 const phase = getDayPhase();
 const p = Math.floor(stressScore * 1.5) + phase.p;
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
+document.getElementById('final-feedback').style.display = "none"
 
 const steps = {
 break: [
 { t: "Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Basis-Hydrierung" },
-{ t: "Fernblick", s: Math.max(20, 45 - p), v: "Ferne fixieren. Blick locker lassen.", d: "Ziliarmuskel lösen", fb: true },
+{ t: "Fernblick", s: Math.max(20, 45 - p), v: "Ferne fixieren. Blick locker lassen.", d: "Ziliarmuskel lösen" },
 { t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne.", d: "Akkommodations-Training" },
 { t: "Palmieren", s: Math.max(30, 30 + p), v: "Wärme und Dunkelheit genießen.", d: "Tiefenregeneration" }
 ],
@@ -135,7 +128,7 @@ morgen: [
 { t: "Wärme", s: 60, v: "Kompresse auflegen. Wärme löst die Öle.", d: "Poren öffnen" },
 { t: "Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanfter Start" }
 ],
-reset: [{ t: "Quick Reset", s: 20, v: "20 Sekunden entspannt in die Ferne schauen.", d: "Blick lösen", fb: true }],
+reset: [{ t: "Quick Reset", s: 20, v: "20 Sekunden entspannt in die Ferne schauen.", d: "Blick lösen" }],
 emergency: [{ t: "Notstopp", s: 120, v: "Sofort Palmieren. 2 Minuten absolute Dunkelheit.", d: "System-Reset" }]
 };
 activeSteps = steps[type] || steps.break;
@@ -145,18 +138,18 @@ runStep(0);
 function runStep(index) {
 activeIndex = index;
 if (index >= activeSteps.length) {
-speak("Training beendet.", () => {
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-updateUI();
-});
+// HIER ist das Training zu Ende -> Jetzt Feedback zeigen
+document.getElementById('ex-title').innerText = "Fertig"
+document.getElementById('timer-display').innerText = "✓"
+document.getElementById('ex-desc').innerText = "Training abgeschlossen."
+document.getElementById('final-feedback').style.display = "block"
+speak("Training beendet. Wie fühlen sich deine Augen jetzt an?");
 return;
 }
 const s = activeSteps[index];
 document.getElementById('ex-title').innerText = s.t;
 document.getElementById('ex-desc').innerText = s.d;
 document.getElementById('timer-display').innerText = s.s;
-document.getElementById('live-feedback').style.display = "none"
 speak(s.v, () => {
 let sec = s.s;
 currentInterval = setInterval(() => {
@@ -164,13 +157,7 @@ sec--;
 document.getElementById('timer-display').innerText = sec;
 if (sec <= 0) {
 clearInterval(currentInterval);
-if (s.fb) {
-document.getElementById('timer-display').innerText = "✓"
-document.getElementById('live-feedback').style.display = "block"
-speak("Check: Wie fühlen sich die Augen an?");
-} else {
 runStep(index + 1);
-}
 }
 }, 1000);
 });
