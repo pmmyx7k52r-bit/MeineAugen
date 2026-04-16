@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MeineAugen v5.0.4</title>
+<title>MeineAugen v5.0.7</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; }
@@ -28,21 +28,21 @@ button:active { transform: scale(0.96); }
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.0.4</h1>
+<h1 style="margin:0;">👁️ Strategie 5.0.7</h1>
 <p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;"></p>
 <button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<div class="desc">Wärme & Ölfluss (Morgens 1x)</div>
+<div class="desc">Wärme & Ölfluss aktivieren</div>
 
 <button class="btn-training" onclick="startRoutine('break')">🚀 Training starten</button>
-<div class="desc">Gezielte Entspannung für die Arbeit</div>
+<div class="desc">Dynamisches Sehen & Fokus</div>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div class="col">
 <button class="btn-reset" onclick="startRoutine('reset')">🌿 Reset</button>
-<div class="desc">20s Fernblick</div>
+<div class="desc">20s Weicher Fokus</div>
 </div>
 <div class="col">
 <button class="btn-emergency" onclick="startRoutine('emergency')">⚠️ Notfall</button>
-<div class="desc">Bei Schmerz/Brennen</div>
+<div class="desc">Soforthilfe & Massage</div>
 </div>
 </div>
 
@@ -112,24 +112,34 @@ updateUI();
 function startRoutine(type) {
 clearInterval(currentInterval);
 const phase = getDayPhase();
-const p = Math.floor(stressScore * 1.5) + phase.p;
+// Optimiertes Stress-Modell mit Deckel bei 10
+const p = Math.min(10, Math.floor(stressScore * 1.2) + phase.p);
 document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
 document.getElementById('final-feedback').style.display = "none"
 
+const useClock = Math.random() > 0.5;
+const focusExercise = useClock ?
+{ t: "Mikro-Kreise", s: 30, v: "Bewege deine Augen ganz langsam und klein im Kreis. Kein Ziehen, keine Spannung.", d: "Sanfte Mobilisation" } :
+{ t: "Nah-Fern", s: 30, v: "Wechsle langsam zwischen Daumen und Ferne. Halte jeden Punkt kurz scharf.", d: "Akkommodations-Training" };
+
 const steps = {
 break: [
 { t: "Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Basis-Hydrierung" },
-{ t: "Fernblick", s: Math.max(20, 45 - p), v: "Ferne fixieren. Blick locker lassen.", d: "Ziliarmuskel lösen" },
-{ t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne.", d: "Akkommodations-Training" },
+{ t: "Weicher Fokus", s: Math.max(25, 45 - p), v: "Such dir einen Punkt in der Ferne. Halte den Blick locker und bewege deine Augen minimal um den Punkt herum. Nicht fixieren.", d: "Dynamisches Sehen aktivieren" },
+focusExercise,
 { t: "Palmieren", s: Math.max(30, 30 + p), v: "Wärme und Dunkelheit genießen.", d: "Tiefenregeneration" }
 ],
 morgen: [
 { t: "Wärme", s: 60, v: "Kompresse auflegen. Wärme löst die Öle.", d: "Poren öffnen" },
-{ t: "Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanfter Start" }
+{ t: "Öffnen", s: 10, v: "Augen jetzt ganz vorsichtig öffnen.", d: "Sanfter Start" },
+{ t: "Massage", s: 30, v: "Lidränder sanft ausstreichen. Ölfluss aktivieren.", d: "Drüsenpflege" }
 ],
-reset: [{ t: "Quick Reset", s: 20, v: "20 Sekunden entspannt in die Ferne schauen.", d: "Blick lösen" }],
-emergency: [{ t: "Notstopp", s: 120, v: "Sofort Palmieren. 2 Minuten absolute Dunkelheit.", d: "System-Reset" }]
+reset: [{ t: "Weicher Fokus", s: 20, v: "Punkt in der Ferne suchen, Blick locker lassen und minimal um den Punkt wandern.", d: "Schneller Reset" }],
+emergency: [
+{ t: "Lid-Massage", s: 30, v: "Massiere sanft deine Lidkanten, um den Ölfluss zu fördern.", d: "Tränenfilm retten" },
+{ t: "Palmieren", s: 120, v: "Jetzt 2 Minuten absolute Dunkelheit. Alles loslassen.", d: "System-Reset" }
+]
 };
 activeSteps = steps[type] || steps.break;
 runStep(0);
@@ -138,12 +148,13 @@ runStep(0);
 function runStep(index) {
 activeIndex = index;
 if (index >= activeSteps.length) {
-// HIER ist das Training zu Ende -> Jetzt Feedback zeigen
 document.getElementById('ex-title').innerText = "Fertig"
 document.getElementById('timer-display').innerText = "✓"
-document.getElementById('ex-desc').innerText = "Training abgeschlossen."
+document.getElementById('ex-desc').innerText = "Haptisches Signal erfolgt."
+// Haptisches Feedback (Vibration)
+if (navigator.vibrate) navigator.vibrate(200);
 document.getElementById('final-feedback').style.display = "block"
-speak("Training beendet. Wie fühlen sich deine Augen jetzt an?");
+speak("Training beendet. Wie fühlen sich deine Augen an?");
 return;
 }
 const s = activeSteps[index];
