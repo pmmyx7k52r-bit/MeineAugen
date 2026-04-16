@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Strategie 5.1.0</title>
+<title>Strategie 5.0.8</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; }
@@ -21,20 +21,20 @@ button:active { transform: scale(0.96); }
 #final-feedback, #stats-view { display: none; margin-top: 15px; }
 .fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; margin: 0 1%; border-radius: 15px; }
 .hidden { display: none; }
-#stats-bar { font-size: 0.75rem; color: var(--sub); margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+#stats-bar { font-size: 0.75rem; color: var(--sub); margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
 #ex-desc { font-size: 1.1rem; min-height: 4em; display: flex; align-items: center; justify-content: center; line-height: 1.4; padding: 0 10px; }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.1.0</h1>
+<h1 style="margin:0;">👁️ Strategie 5.0.8</h1>
 <p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;"></p>
 <button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<div class="desc">Wärme & Ölfluss</div>
+<div class="desc">Aktivierung & Ölfluss</div>
 
 <button class="btn-training" onclick="startRoutine('break')">🚀 Training starten</button>
-<div class="desc">Dynamischer Fokus & Mobilisation</div>
+<div class="desc">Wechselnde Fokus-Übungen</div>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div class="col">
 <button class="btn-reset" onclick="startRoutine('reset')">🌿 Reset</button>
@@ -42,18 +42,18 @@ button:active { transform: scale(0.96); }
 </div>
 <div class="col">
 <button class="btn-emergency" onclick="startRoutine('emergency')">⚠️ Notfall</button>
-<div class="desc">Massage & System-Stop</div>
+<div class="desc">Soforthilfe & Massage</div>
 </div>
 </div>
 
 <div id="stats-bar">
-<span onclick="toggleStats()" style="cursor:pointer; background:#eee; padding:4px 8px; border-radius:10px;">📊 Analyse</span>
+<span onclick="toggleStats()" style="cursor:pointer">📊 Stats</span>
 <span>Stress: <b id="stress-lvl">...</b></span>
-<span onclick="resetScore()" style="cursor:pointer">Reset</span>
+<span onclick="resetScore()" style="cursor:pointer">Score reset</span>
 </div>
 
 <div id="stats-view">
-<div id="stats-content" style="font-size: 0.75rem; color: var(--sub); background: #f8f9fa; padding: 12px; border-radius: 15px; margin-top: 10px; text-align: left;"></div>
+<div id="stats-content" style="font-size: 0.75rem; color: var(--sub); background: #f8f9fa; padding: 10px; border-radius: 15px; margin-top: 10px;"></div>
 </div>
 </div>
 
@@ -73,7 +73,6 @@ const synth = window.speechSynthesis;
 let currentInterval, activeSteps = [], activeIndex = 0;
 let stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
 let history = JSON.parse(localStorage.getItem('eyeHistory')) || [];
-let currentFocusExName = ""
 
 function getDayPhase() {
 const h = new Date().getHours();
@@ -94,34 +93,15 @@ document.getElementById('stress-lvl').style.color = stressScore > 5 ? '#c0392b' 
 function toggleStats() {
 const view = document.getElementById('stats-view');
 const content = document.getElementById('stats-content');
-if (view.style.display === "block") { view.style.display = "none" }
-else {
+if (view.style.display === "block") {
+view.style.display = "none"
+} else {
 view.style.display = "block"
-renderStats(content);
+const lastFive = history.slice(-5).reverse();
+content.innerHTML = lastFive.length ?
+lastFive.map(h => `${new Date(h.t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}: ${h.r} (${h.f === 'ok' ? '👍' : '⚠️'})`).join('<br>') :
+"Noch keine Daten vorhanden."
 }
-}
-
-function renderStats(container) {
-if (!history.length) { container.innerHTML = "Keine Daten vorhanden." return; }
-const stats = history.reduce((acc, curr) => {
-if (curr.ex) {
-if (!acc[curr.ex]) acc[curr.ex] = { ok: 0, bad: 0 };
-acc[curr.ex][curr.f]++;
-}
-return acc;
-}, {});
-
-let html = "<b>Erfolgsrate Fokus-Übungen:</b><br>"
-for (let ex in stats) {
-const total = stats[ex].ok + stats[ex].bad;
-const rate = Math.round((stats[ex].ok / total) * 100);
-html += `${ex}: ${rate}% 👍 (${total}x)<br>`;
-}
-html += "<br><b>Letzte Sessions:</b><br>"
-html += history.slice(-3).reverse().map(h =>
-`${new Date(h.t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}: ${h.f === 'ok' ? '👍' : '⚠️'}`
-).join('<br>');
-container.innerHTML = html;
 }
 
 function resetScore() {
@@ -143,7 +123,7 @@ synth.speak(utter);
 function finishSession(state) {
 if (state === 'bad') { stressScore = Math.min(10, stressScore + 2); }
 else { stressScore = Math.max(0, stressScore - 1); }
-history.push({ t: Date.now(), f: state, r: document.getElementById('ex-title').dataset.routine, ex: currentFocusExName });
+history.push({ t: Date.now(), f: state, r: document.getElementById('ex-title').dataset.routine });
 if (history.length > 50) history.shift();
 localStorage.setItem('eyeStressScore', stressScore);
 localStorage.setItem('eyeHistory', JSON.stringify(history));
@@ -160,35 +140,32 @@ document.getElementById('main-menu').classList.add('hidden');
 document.getElementById('exercise-card').classList.remove('hidden');
 document.getElementById('final-feedback').style.display = "none"
 document.getElementById('ex-title').dataset.routine = type;
-currentFocusExName = ""
 
+// Variation zwischen 3 Fokus-Übungen
 const rand = Math.random();
 let focusEx;
 if (rand < 0.33) {
-focusEx = { t: "Mikro-Kreise", s: 30, v: "Bewege deine Augen ganz langsam und klein im Kreis. Richtungswechsel folgt.", d: "Sanfte Mobilisation", switch: true };
-currentFocusExName = "Kreise"
+focusEx = { t: "Mikro-Kreise", s: 30, v: "Bewege deine Augen ganz langsam und klein im Kreis. Keine Spannung.", d: "Sanfte Mobilisation" };
 } else if (rand < 0.66) {
-focusEx = { t: "Die Acht", s: 30, v: "Male eine liegende Acht in die Ferne. Richtungswechsel folgt.", d: "Koordination", switch: true };
-currentFocusExName = "Acht"
+focusEx = { t: "Die Acht", s: 30, v: "Male mit den Augen eine liegende Acht in die Ferne. Fließend und ohne Druck.", d: "Koordinationstraining" };
 } else {
-focusEx = { t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne. Halte kurz scharf.", d: "Akkommodation" };
-currentFocusExName = "Nah-Fern"
+focusEx = { t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne. Halte kurz scharf.", d: "Akkommodations-Training" };
 }
 
 const steps = {
 break: [
 { t: "Blinzeln", s: 15, v: "Locker blinzeln. Befeuchte deine Augen.", d: "Basis-Hydrierung" },
-{ t: "Weicher Fokus", s: Math.max(25, 45 - p), v: "Ferne suchen. Blick locker lassen und minimal um den Punkt wandern.", d: "Dynamisches Sehen" },
+{ t: "Weicher Fokus", s: Math.max(25, 45 - p), v: "Such dir einen Punkt in der Ferne. Halte den Blick locker und wandere minimal um den Punkt herum.", d: "Dynamisches Sehen" },
 focusEx,
 { t: "Palmieren", s: Math.max(30, 30 + p), v: "Wärme und Dunkelheit genießen.", d: "Tiefenregeneration" }
 ],
 morgen: [
 { t: "Wärme", s: 60, v: "Kompresse auflegen.", d: "Poren öffnen" },
-{ t: "Massage", s: 30, v: "Lidränder sanft ausstreichen.", d: "Ölfluss" }
+{ t: "Massage", s: 30, v: "Lidränder sanft ausstreichen.", d: "Ölfluss aktivieren" }
 ],
 reset: [{ t: "Weicher Fokus", s: 20, v: "Ferne suchen, Blick locker lassen und minimal bewegen.", d: "Schneller Reset" }],
 emergency: [
-{ t: "Lid-Massage", s: 30, v: "Massiere sanft deine Lidkanten.", d: "Tränenfilm-Rettung" },
+{ t: "Lid-Massage", s: 30, v: "Massiere sanft deine Lidkanten.", d: "Tränenfilm retten" },
 { t: "Palmieren", s: 120, v: "2 Minuten absolute Dunkelheit.", d: "System-Reset" }
 ]
 };
@@ -210,16 +187,9 @@ document.getElementById('ex-desc').innerText = s.d;
 document.getElementById('timer-display').innerText = s.s;
 speak(s.v, () => {
 let sec = s.s;
-let switched = false;
 currentInterval = setInterval(() => {
 sec--;
 document.getElementById('timer-display').innerText = sec;
-if (s.switch && sec === Math.floor(s.s / 2) && !switched) {
-switched = true;
-if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-speak("Und jetzt die Richtung wechseln.");
-}
-
 if (sec <= 0) { clearInterval(currentInterval); runStep(index + 1); }
 }, 1000);
 });
