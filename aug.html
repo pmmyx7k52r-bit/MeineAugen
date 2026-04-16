@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 5.1.7</title>
+<title>MeineAugen 5.1.8</title>
 <style>
 :root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
 body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; -webkit-user-select: none; }
@@ -27,7 +27,7 @@ button:active { transform: scale(0.96); opacity: 0.8; }
 <body>
 
 <div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.1.7</h1>
+<h1 style="margin:0;">👁️ Strategie 5.1.8</h1>
 <p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;">Lade...</p>
 <button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
 <div class="desc">Wärme & Ölfluss</div>
@@ -69,7 +69,6 @@ var synth = window.speechSynthesis;
 var currentInterval = null;
 var activeSteps = [];
 var currentFocusExName = "Allgemein"
-// Umbenannt von 'history' zu 'eyeHistoryData' um Browser-Konflikte zu vermeiden
 var stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
 var eyeHistoryData = [];
 try {
@@ -176,7 +175,7 @@ break: [
 { t: "Blinzeln", s: 15, v: "Locker blinzeln.", d: "Befeuchten" },
 { t: "Weicher Fokus", s: Math.max(20, 40 - p), v: "In die Ferne schauen.", d: "Entspannung" },
 focusEx,
-{ t: "Palmieren", s: Math.max(30, 30 + p), v: "Augen mit Händen abdecken.", d: "Regeneration" }
+{ t: "Palmieren", s: Math.max(30, 30 + p), v: "Hände kräftig warmreiben und Augen sanft abdecken.", d: "Regeneration" }
 ],
 morgen: [
 { t: "Wärme", s: 60, v: "Warme Kompresse auflegen.", d: "Vorbereitung" },
@@ -185,7 +184,7 @@ morgen: [
 reset: [{ t: "Ferne", s: 20, v: "20 Sekunden in die Ferne.", d: "Quick Reset" }],
 emergency: [
 { t: "Lid-Massage", s: 30, v: "Sanft Lidkanten massieren.", d: "Tränenfilm" },
-{ t: "Palmieren", s: 120, v: "2 Minuten Dunkelheit.", d: "System-Reset" }
+{ t: "Palmieren", s: 120, v: "Hände kräftig warmreiben. Dann 2 Minuten die Dunkelheit genießen.", d: "System-Reset" }
 ]
 };
 activeSteps = steps[type] || steps.break;
