@@ -68,7 +68,7 @@ button:active { transform: scale(0.96); opacity: 0.8; }
 var synth = window.speechSynthesis;
 var currentInterval = null;
 var activeSteps = [];
-var currentFocusExName = ""
+var currentFocusExName = "Allgemein"
 var stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
 var history = [];
 try {
@@ -100,17 +100,16 @@ if (view.style.display === "block") renderStats(view);
 }
 
 function renderStats(container) {
-if (history.length === 0) {
+if (!history || history.length === 0) {
 container.innerHTML = "Keine Daten vorhanden."
 return;
 }
 var stats = {};
 for (var i = 0; i < history.length; i++) {
 var item = history[i];
-if (item.ex) {
-if (!stats[item.ex]) stats[item.ex] = { ok: 0, bad: 0 };
-stats[item.ex][item.f]++;
-}
+var name = item.ex || "Andere"
+if (!stats[name]) stats[name] = { ok: 0, bad: 0 };
+stats[name][item.f]++;
 }
 var html = "<b>Erfolg Fokus-Übungen:</b><br>"
 for (var ex in stats) {
@@ -134,7 +133,6 @@ synth.cancel();
 var utter = new SpeechSynthesisUtterance(text);
 utter.lang = 'de-DE';
 utter.rate = 1.0;
-// Callback Schutz: Timer startet nach 1.5s auch wenn Sprache hängt
 var safetyTimer = setTimeout(() => {
 if(callback) { callback(); callback = null; }
 }, 1500);
@@ -166,6 +164,10 @@ currentFocusExName = "Acht"
 focusEx = { t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne.", d: "Akkommodation" };
 currentFocusExName = "Nah-Fern"
 }
+
+if(type === 'morgen') currentFocusExName = "Morgen"
+if(type === 'reset') currentFocusExName = "Reset"
+if(type === 'emergency') currentFocusExName = "Notfall"
 
 var steps = {
 break: [
@@ -222,9 +224,13 @@ runStep(index + 1);
 function finishSession(state) {
 if (state === 'bad') stressScore = Math.min(10, stressScore + 2);
 else stressScore = Math.max(0, stressScore - 1);
-history.push({ t: Date.now(), f: state, ex: currentFocusExName });
+history.push({
+t: Date.now(),
+f: state,
+ex: currentFocusExName || "Allgemein"
+});
 if (history.length > 50) history.shift();
-localStorage.setItem('eyeStressScore', stressScore);
+localStorage.setItem('eyeStressScore', stressScore.toString());
 localStorage.setItem('eyeHistory', JSON.stringify(history));
 document.getElementById('exercise-card').classList.add('hidden');
 document.getElementById('main-menu').classList.remove('hidden');
