@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6</title>
+<title>MeineAugen 5.5</title>
 
 <style>
 body{font-family:-apple-system;text-align:center;background:#fdfcfb;}
@@ -11,6 +11,7 @@ body{font-family:-apple-system;text-align:center;background:#fdfcfb;}
 button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-weight:bold;}
 .hidden{display:none;}
 .timer{font-size:50px;}
+.fb{width:30%;}
 .warn{color:#c0392b;font-weight:bold;}
 .good{color:#27ae60;font-weight:bold;}
 </style>
@@ -19,11 +20,21 @@ button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-we
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ 5.6</h2>
+<h2>👁️ 5.5</h2>
 
-<div id="live"></div>
+<div id="stateBox">
+<p><b>Zustand:</b></p>
+<label><input type="checkbox" value="trocken"> Trocken</label><br>
+<label><input type="checkbox" value="druck"> Druck</label><br>
+<label><input type="checkbox" value="muede"> Müde</label><br>
+<label><input type="checkbox" value="fokus"> Fokus schlecht</label>
+</div>
 
-<button onclick="startManual()">Jetzt starten</button>
+<div id="recommendation"></div>
+
+<button onclick="start('morgen')">☀️ Morgen</button>
+<button onclick="start('train')">🚀 Training</button>
+<button onclick="start('reset')">🌿 Reset</button>
 <button onclick="showStats()">📊 Analyse</button>
 </div>
 
@@ -35,9 +46,9 @@ button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-we
 <button onclick="abort()">Abbrechen</button>
 
 <div id="fb" class="hidden">
-<button onclick="finish('good')">👍</button>
-<button onclick="finish('neutral')">😐</button>
-<button onclick="finish('bad')">⚠️</button>
+<button class="fb" onclick="finish('good')">👍</button>
+<button class="fb" onclick="finish('neutral')">😐</button>
+<button class="fb" onclick="finish('bad')">⚠️</button>
 </div>
 </div>
 
@@ -46,88 +57,136 @@ button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-we
 <script>
 
 let interval;
-let stats = JSON.parse(localStorage.getItem('exStatsV4')||"{}");
-let lastAction = parseInt(localStorage.getItem('lastAction')||Date.now());
-let fatigue = 0;
+let steps=[];
 let currentExercise=""
+let currentState=[];
 
-function save(){
-localStorage.setItem('exStatsV4',JSON.stringify(stats));
-localStorage.setItem('lastAction',Date.now());
+let stats = JSON.parse(localStorage.getItem('exStatsV3')||"{}");
+
+function save(){localStorage.setItem('exStatsV3',JSON.stringify(stats));}
+
+function getState(){
+let arr=[];
+document.querySelectorAll('#stateBox input').forEach(cb=>{
+if(cb.checked) arr.push(cb.value);
+});
+return arr.length?arr:["neutral"];
 }
 
-function score(ex){
-if(!stats[ex]) return 0;
-
-let s=stats[ex];
-let total=0;
-
-for(let k in s){
-total += (s[k].good||0) - (s[k].bad||0);
+function getScore(ex,state){
+if(!stats[ex]||!stats[ex][state]) return 0;
+let s=stats[ex][state];
+return (s.good||0)-(s.bad||0);
 }
 
-return total;
+function evaluate(){
+
+let state = getState();
+let list=["Kreise","Acht","NahFern","Palmieren"];
+
+let best={ex:null,score:-999};
+let warnings=[];
+
+list.forEach(ex=>{
+let score=0;
+
+state.forEach(s=>{
+score+=getScore(ex,s);
+});
+
+if(score>best.score) best={ex,score};
+
+if(score<-2) warnings.push(ex);
+});
+
+let html=""
+
+if(best.ex){
+html += "<div class='good'>Empfehlung: "+best.ex+"</div>"
 }
 
-function recommend(){
-
-let time = (Date.now()-lastAction)/60000;
-
-fatigue = Math.min(10, time / 5); // steigt alle 5 min
-
-let list=["Palmieren","Blinzeln","Wärme","NahFern"];
-
-list.sort((a,b)=>score(b)-score(a));
-
-let best = list[0];
-
-let action = ""
-
-if(fatigue < 2){
-action = "Alles stabil"
-} else if(fatigue < 5){
-action = "Kurzpause: Blinzeln 20s"
-best="Blinzeln"
-} else if(fatigue < 8){
-action = "Reset: Palmieren 60s"
-best="Palmieren"
-} else {
-action = "Starke Belastung → Pause + Wärme"
-best="Wärme"
+if(warnings.length){
+html += "<div class='warn'>Vermeiden: "+warnings.join(", ")+"</div>"
 }
 
-document.getElementById("live").innerHTML =
-"<div class='good'>"+action+"</div>"
-
-currentExercise = best;
+document.getElementById('recommendation').innerHTML = html;
 }
 
-setInterval(recommend,3000);
+setInterval(evaluate,2000);
 
-function startManual(){
-start(currentExercise || "Palmieren");
+function updateStat(ex,stateArr,fb){
+if(!stats[ex]) stats[ex]={};
+
+stateArr.forEach(s=>{
+if(!stats[ex][s]) stats[ex][s]={good:0,neutral:0,bad:0};
+stats[ex][s][fb]++;
+});
+
+save();
 }
 
-function start(ex){
+function pickExercise(){
+
+let list=["Kreise","Acht","NahFern","Palmieren"];
+
+list.sort((a,b)=>{
+let scoreA=0, scoreB=0;
+
+currentState.forEach(s=>{
+scoreA+=getScore(a,s);
+scoreB+=getScore(b,s);
+});
+
+return scoreB-scoreA;
+});
+
+return list[0];
+}
+
+function start(type){
+
+currentState = getState();
 
 document.getElementById('menu').classList.add('hidden');
 document.getElementById('run').classList.remove('hidden');
 document.getElementById('fb').classList.add('hidden');
 
-let step;
+let ex = pickExercise();
 
-if(ex==="Palmieren") step={t:"Palmieren",s:60,d:"Augen abdunkeln"};
-if(ex==="Blinzeln") step={t:"Blinzeln",s:20,d:"Locker blinzeln"};
-if(ex==="Wärme") step={t:"Wärme",s:60,d:"Warme Kompresse"};
-if(ex==="NahFern") step={t:"Nah-Fern",s:30,d:"Nähe/Ferne wechseln"};
+let focus;
 
-currentExercise = ex;
+if(ex==="Kreise") focus={t:"Kreise",s:30,d:"Langsame Augenkreise",sw:true};
+if(ex==="Acht") focus={t:"Acht",s:30,d:"Acht verfolgen",sw:true};
+if(ex==="NahFern") focus={t:"Nah-Fern",s:30,d:"Nähe/Ferne wechseln"};
+if(ex==="Palmieren") focus={t:"Palmieren",s:60,d:"Augen abdunkeln"};
 
-runStep(step);
+currentExercise = focus.t;
+
+const train=[
+{t:"Blinzeln",s:15,d:"Locker blinzeln"},
+focus
+];
+
+const morgen=[
+{t:"Augen zu",s:40,d:"Augen geschlossen lassen"},
+{t:"Blinzeln",s:20,d:"Sanft blinzeln"},
+{t:"Wärme",s:60,d:"Warme Kompresse"},
+{t:"Massage",s:30,d:"Lidränder massieren"}
+];
+
+steps = type==="morgen"?morgen:type==="reset"?[{t:"Ferne",s:20,d:"In die Ferne"}]:train;
+
+run(0);
 }
 
-function runStep(s){
+function run(i){
+if(i>=steps.length){
+document.getElementById('timer').innerText="✓"
+document.getElementById('fb').classList.remove('hidden');
+return;
+}
 
+let s=steps[i];
 document.getElementById('title').innerText=s.t;
 document.getElementById('desc').innerText=s.d;
 document.getElementById('timer').innerText=s.s;
@@ -138,10 +197,11 @@ interval=setInterval(()=>{
 sec--;
 document.getElementById('timer').innerText=sec;
 
+if(s.sw && sec===15) alert("Richtung wechseln");
+
 if(sec<=0){
 clearInterval(interval);
-document.getElementById('timer').innerText="✓"
-document.getElementById('fb').classList.remove('hidden');
+run(i+1);
 }
 },1000);
 }
@@ -153,11 +213,7 @@ document.getElementById('menu').classList.remove('hidden');
 }
 
 function finish(fb){
-
-if(!stats[currentExercise]) stats[currentExercise]={neutral:{good:0,neutral:0,bad:0}};
-stats[currentExercise].neutral[fb]++;
-
-save();
+updateStat(currentExercise,currentState,fb);
 
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
@@ -172,13 +228,21 @@ box.classList.remove('hidden');
 let html="<h3>Analyse</h3>"
 
 for(let ex in stats){
-let s=stats[ex].neutral;
+html+="<b>"+ex+"</b><br>"
+
+for(let st in stats[ex]){
+let s=stats[ex][st];
 let total=s.good+s.bad+s.neutral;
+if(total===0) continue;
+
 let rate=Math.round((s.good/total)*100);
-html+=ex+": "+rate+"% ("+total+")<br>"
+html+=st+": "+rate+"% ("+total+")<br>"
 }
 
-html+="<br><button onclick='back()'>Zurück</button>"
+html+="<br>"
+}
+
+html+="<button onclick='back()'>Zurück</button>"
 
 box.innerHTML=html;
 }
