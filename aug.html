@@ -3,204 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Augen App v5.1.9</title>
+<title>Augen App v5.1.12</title>
 <style>
-:root {
---bg-color: #121212;
---card-bg: #1e1e1e;
---text-color: #e0e0e0;
---accent-color: #00adb5;
---emergency-color: #ff4d4d;
-}
-
-body {
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background-color: var(--bg-color);
-color: var(--text-color);
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 20px;
-margin: 0;
-}
-
-.container {
-width: 100%;
-max-width: 400px;
-}
-
-.card {
-background: var(--card-bg);
-padding: 20px;
-border-radius: 15px;
-margin-bottom: 20px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-h2 { color: var(--accent-color); margin-top: 0; }
-
-.btn {
-background: var(--accent-color);
-color: white;
-border: none;
-padding: 12px 20px;
-border-radius: 8px;
-cursor: pointer;
-width: 100%;
-font-size: 16px;
-font-weight: bold;
-margin-bottom: 10px;
-}
-
-.btn-emergency { background: var(--emergency-color); }
-
-.reason-grid {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 10px;
-margin-bottom: 15px;
-display: none; /* Hidden by default */
-}
-
-.reason-btn {
-background: #333;
-color: white;
-border: 1px solid #444;
-padding: 10px;
-border-radius: 5px;
-cursor: pointer;
-font-size: 14px;
-}
-
-.reason-btn.active {
-background: var(--accent-color);
-border-color: #fff;
-}
-
-#log-display {
-font-size: 12px;
-max-height: 200px;
-overflow-y: auto;
-background: #000;
-padding: 10px;
-border-radius: 5px;
-}
-
-.status-msg {
-font-style: italic;
-color: #888;
-margin-bottom: 10px;
-text-align: center;
-}
+:root { --bg: #111; --card: #1e1e1e; --accent: #00adb5; --morning: #ffb300; --emergency: #d32f2f; --text: #eee; }
+body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+.card { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; }
+button { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; width: 100%; }
+.btn-morning { background: var(--morning); color: #000; font-size: 1.1em; }
+.btn-emergency { background: var(--emergency); color: white; font-size: 1.1em; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.btn-reason { background: #333; color: white; border: 1px solid #444; }
+.btn-reason.active { background: var(--accent); }
+details { background: #282828; padding: 10px; border-radius: 10px; margin-top: 10px; text-align: left; font-size: 0.9em; }
+#log-container { background: #000; padding: 10px; border-radius: 10px; max-height: 150px; overflow-y: auto; font-size: 0.8em; text-align: left; }
 </style>
 </head>
 <body>
 
-<div class="container">
-<h2>Augen App <small style="font-size: 0.5em; color: #666;">v5.1.9</small></h2>
-
-<div class="card">
-<h3>Tages-Status</h3>
-<p>Schlafqualität: <strong id="sleep-val">70</strong> Punkte</p>
-<div class="status-msg" id="status-display">Bereit für Übung</div>
+<div class="card" style="border-top: 4px solid var(--morning);">
+<h3>☀️ Morgen-Routine</h3>
+<p>Start im Bett, Ende am Waschbecken:</p>
+<button class="btn-morning" onclick="startMorningRoutine()">Routine Starten</button>
+<details>
+<summary>Info: Ablauf & Reinigung</summary>
+<ul>
+<li><strong>1. Massage (im Bett):</strong> Sanft zur Lidkante streichen. Das schützt die Hornhaut vor dem ersten Öffnen.</li>
+<li><strong>2. Aufstehen:</strong> Erst jetzt Augen öffnen und zum Bad gehen.</li>
+<li><strong>3. Reinigung (Bad):</strong> Mit warmem Wasser Verkrustungen an der Lidkante sanft zur Nase hin abwischen.</li>
+</ul>
+</details>
 </div>
 
-<div class="card">
-<h3>Notfall / Soforthilfe</h3>
-<p>Was ist der Grund für die Belastung?</p>
-<div id="reason-selection" class="reason-grid" style="display: grid;">
-<button class="reason-btn" onclick="selectReason(this, 'Konzentration/Auto')">🚗 Konzentration</button>
-<button class="reason-btn" onclick="selectReason(this, 'Heizung/Luft')">🔥 Heizung/Luft</button>
-<button class="reason-btn" onclick="selectReason(this, 'Zugluft')">💨 Zugluft</button>
-<button class="reason-btn" onclick="selectReason(this, 'Müdigkeit')">😴 Müdigkeit</button>
+<div class="card" style="border-top: 4px solid var(--emergency);">
+<h3>🚨 Notfall-Stop</h3>
+<div class="grid">
+<button class="btn-reason" onclick="setReason(this, '🚗 Konzentration')">Konzentration</button>
+<button class="btn-reason" onclick="setReason(this, '🔥 Heizung/Luft')">Heizung/Luft</button>
+<button class="btn-reason" onclick="setReason(this, '💻 Monitor')">Monitor</button>
+<button class="btn-reason" onclick="setReason(this, '💨 Zugluft')">Zugluft</button>
 </div>
-<button id="start-btn" class="btn btn-emergency" onclick="startExercise()">Übung starten</button>
+<button class="btn-emergency" onclick="startEmergencyExercise()">Übung starten</button>
 </div>
 
 <div class="card">
-<h3>Log (Persistent)</h3>
-<div id="log-display">Lade Daten...</div>
-<button class="btn" style="margin-top:10px; background:#444;" onclick="clearLog()">Log leeren</button>
-</div>
+<h3>Historie</h3>
+<div id="log-container">Lade Daten...</div>
 </div>
 
 <script>
 let selectedReason = ""
-const SLEEP_SCORE = 70;
-
-// Initialisierung beim Laden
-document.addEventListener('DOMContentLoaded', () => {
-document.getElementById('sleep-val').innerText = SLEEP_SCORE;
-updateLogDisplay();
-});
-
-function selectReason(btn, reason) {
-// Alle Buttons zurücksetzen
-document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('active'));
-// Aktuellen Button markieren
+function setReason(btn, reason) {
+document.querySelectorAll('.btn-reason').forEach(b => b.classList.remove('active'));
 btn.classList.add('active');
 selectedReason = reason;
 }
 
-function startExercise() {
-if (!selectedReason) {
-alert("Bitte wähle erst einen Grund aus!");
-return;
-}
-
-const msg = new SpeechSynthesisUtterance();
+function speak(text) {
+window.speechSynthesis.cancel();
+const msg = new SpeechSynthesisUtterance(text);
 msg.lang = 'de-DE';
-msg.text = `Übung Fernblick gestartet. Grund: ${selectedReason}. Suche dir einen Punkt in der Ferne. Werde weich im Blick. Blinzle jetzt bewusst, um deine Augen zu befeuchten. Entspanne deinen Kiefer. Nimm wahr, was links und rechts passiert. Sehr gut. Halte diesen weichen Fokus und blinzle weiter.`;
 window.speechSynthesis.speak(msg);
-
-// UI Feedback
-document.getElementById('status-display').innerText = "Sprachansage läuft..."
-document.getElementById('start-btn').disabled = true;
-
-msg.onend = () => {
-document.getElementById('status-display').innerText = "Übung beendet & gespeichert"
-document.getElementById('start-btn').disabled = false;
-saveLog(selectedReason);
-};
 }
 
-function saveLog(reason) {
-const now = new Date();
-const entry = {
-time: now.toLocaleString('de-DE'),
-type: "Notfall",
-reason: reason,
-sleep: SLEEP_SCORE
-};
-
-// Persistent laden und speichern
-let history = JSON.parse(localStorage.getItem('eye_app_history')) || [];
-history.unshift(entry); // Neueste oben
-localStorage.setItem('eye_app_history', JSON.stringify(history));
-
-updateLogDisplay();
+function startMorningRoutine() {
+speak("Morgen Routine. Lass die Augen zu. Streiche deine Lider sanft zur Mitte aus. Reibe die Hände warm und lege sie auf die Augen. Jetzt steh auf und reinige deine Lidkanten am Waschbecken vorsichtig mit warmem Wasser. Fertig für den Tag.");
+saveEntry("☀️ Morgen-Routine");
 }
 
-function updateLogDisplay() {
-const history = JSON.parse(localStorage.getItem('eye_app_history')) || [];
-const display = document.getElementById('log-display');
-if (history.length === 0) {
-display.innerHTML = "Noch keine Einträge vorhanden."
-return;
+function startEmergencyExercise() {
+if (!selectedReason) return alert("Grund wählen!");
+speak(`Übung Fernblick. Grund: ${selectedReason}. Such dir ein Ziel in der Ferne. Blick weich werden lassen. Blinzle jetzt locker und atme tief durch.`);
+saveEntry(selectedReason);
 }
 
-display.innerHTML = history.map(item =>
-`<div><strong>${item.time}</strong>: ${item.reason} (Schlaf: ${item.sleep})</div>`
-).join('<hr style="border:0; border-top:1px solid #333;">');
+function saveEntry(text) {
+const entry = { t: new Date().toLocaleString('de-DE'), m: text };
+let h = JSON.parse(localStorage.getItem('eye_v12')) || [];
+h.unshift(entry);
+localStorage.setItem('eye_v12', JSON.stringify(h));
+renderLogs();
 }
 
-function clearLog() {
-if(confirm("Wirklich alle Daten löschen?")) {
-localStorage.removeItem('eye_app_history');
-updateLogDisplay();
+function renderLogs() {
+const h = JSON.parse(localStorage.getItem('eye_v12')) || [];
+document.getElementById('log-container').innerHTML = h.map(e => `<div><b>${e.t}</b>: ${e.m}</div>`).join('');
 }
-}
+renderLogs();
 </script>
-
 </body>
 </html>
