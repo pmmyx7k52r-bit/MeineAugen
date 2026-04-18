@@ -2,243 +2,232 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 5.1.8</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategie 5.1.19</title>
 <style>
-:root { --p: #2c3e50; --s: #2980b9; --a: #e67e22; --d: #c0392b; --bg: #fdfcfb; --sub: #7f8c8d; }
-body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--p); text-align: center; padding: 20px; margin: 0; -webkit-user-select: none; }
-.card { background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; margin: auto; }
-button { border: none; padding: 18px; border-radius: 20px; font-size: 1.1rem; cursor: pointer; width: 100%; margin: 8px 0; font-weight: 700; transition: transform 0.1s; display: block; -webkit-tap-highlight-color: transparent; }
-button:active { transform: scale(0.96); opacity: 0.8; }
-.btn-training { background: var(--s); color: white; }
-.btn-morgen { background: #f39c12; color: white; }
-.btn-reset { background: #ecf0f1; color: var(--p); }
-.btn-emergency { background: #c0392b; color: white; }
-.desc { font-size: 0.75rem; color: var(--sub); margin-bottom: 12px; line-height: 1.2; }
-.timer-val { font-size: 4.5rem; color: var(--a); margin: 10px 0; font-weight: 200; }
-#final-feedback { display: none; padding-top: 10px; }
-.fb-btn { width: 46%; font-size: 1.5rem; padding: 12px; display: inline-block; margin: 5px 1%; border-radius: 15px; color: white; border: none; }
-.hidden { display: none !important; }
-#stats-bar { font-size: 0.75rem; color: var(--sub); margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-#ex-desc { font-size: 1.1rem; min-height: 4em; display: flex; align-items: center; justify-content: center; line-height: 1.4; padding: 0 10px; }
-#stats-view { display: none; margin-top: 15px; text-align: left; background: #f8f9fa; padding: 12px; border-radius: 15px; font-size: 0.75rem; }
+:root {
+--bg-page: #d1d5db;
+--card-bg: #f8f9fa;
+--morgen: #c58e2d;
+--training: #255595;
+--reset: #e2e4e2;
+--notfall: #932a22;
+--accent-blue: #3b5998;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background-color: var(--bg-page);
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+overflow: hidden;
+}
+
+/* HAUPTMENÜ (GERÜST 5.1.8) */
+.app-card {
+background: var(--card-bg);
+width: 360px;
+padding: 40px 30px;
+border-radius: 40px;
+box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+text-align: center;
+}
+
+.header h1 { font-size: 26px; margin: 0; color: #1a1a1a; }
+.sub-title { color: var(--accent-blue); font-size: 11px; font-weight: bold; letter-spacing: 1.5px; margin-top: 5px; margin-bottom: 30px; }
+
+.btn { width: 100%; padding: 18px; border-radius: 25px; border: none; font-size: 18px; font-weight: 600; cursor: pointer; margin-bottom: 4px; }
+.btn-morgen { background-color: var(--morgen); color: white; }
+.btn-training { background-color: var(--training); color: white; }
+.row { display: flex; gap: 12px; margin-top: 15px; }
+.btn-half { width: 50%; padding: 15px; border-radius: 20px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
+.btn-reset { background-color: var(--reset); color: #222; }
+.btn-notfall { background-color: var(--notfall); color: white; }
+
+.caption { font-size: 11px; color: #888; margin-bottom: 20px; }
+/* ÜBUNGS-SCREEN OVERLAY (DEINE NEUEN FOTOS) */
+#exercise-overlay {
+display: none;
+position: fixed;
+top: 0; left: 0; width: 100%; height: 100%;
+background: white;
+z-index: 1000;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+animation: fadeIn 0.3s;
+}
+
+.ex-container {
+width: 340px;
+height: 400px;
+background: white;
+border-radius: 40px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+position: relative;
+}
+
+.ex-title { color: #2e6fa5; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+.ex-counter { color: #d49a2d; font-size: 80px; margin: 20px 0; }
+.ex-subtitle { color: #555; font-size: 18px; margin-top: 10px; }
+/* FEEDBACK SCREEN */
+#feedback-area { display: none; text-align: center; margin-top: 30px; }
+.feedback-btns { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+.f-btn { width: 140px; padding: 15px; border-radius: 15px; border: none; cursor: pointer; font-size: 24px; }
+.f-good { background-color: #38b473; color: white; }
+.f-bad { background-color: #ca4438; color: white; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; font-size: 12px; color: #555; border-top: 1px solid #eee; padding-top: 15px; width: 100%; }
+.status-normal { color: #28a745; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<div id="main-menu" class="card">
-<h1 style="margin:0;">👁️ Strategie 5.1.8</h1>
-<p id="day-phase" style="font-size: 0.8rem; color: var(--s); font-weight: 700; margin-bottom: 20px; text-transform: uppercase;">Lade...</p>
-<button class="btn-morgen" onclick="startRoutine('morgen')">☀️ Morgen-Routine</button>
-<div class="desc">Wärme & Ölfluss</div>
-
-<button class="btn-training" onclick="startRoutine('break')">🚀 Training starten</button>
-<div class="desc">Dynamischer Fokus & Mobilisation</div>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<div>
-<button class="btn-reset" onclick="startRoutine('reset')">🌿 Reset</button>
-<div class="desc">Weicher Fokus</div>
-</div>
-<div>
-<button class="btn-emergency" onclick="startRoutine('emergency')">⚠️ Notfall</button>
-<div class="desc">Sofort-Hilfe</div>
-</div>
+<div class="app-card">
+<div class="header">
+<h1>👁️ Strategie 5.1.8</h1>
+<div class="sub-title">DEEP FOCUS WORK</div>
 </div>
 
-<div id="stats-bar">
-<span onclick="toggleStats()" style="cursor:pointer; background:#eee; padding:5px 10px; border-radius:10px;">📊 Analyse</span>
-<span>Stress: <b id="stress-lvl">...</b></span>
-<span onclick="resetScore()" style="cursor:pointer">Reset</span>
+<button class="btn btn-morgen" onclick="startMorgen()">🟡 Morgen-Routine</button>
+<div class="caption">Wärme & Ölfluss</div>
+
+<button class="btn btn-training" onclick="runSimple('Training', 'Training startet. Nah Fern Wechsel.')">🚀 Training starten</button>
+<div class="caption">Dynamischer Fokus & Mobilisation</div>
+
+<div class="row">
+<div style="width: 50%;">
+<button class="btn-half btn-reset" onclick="runReset()">🌿 Reset</button>
+<div class="caption" style="margin-top: 5px;">Weicher Fokus</div>
 </div>
-<div id="stats-view"></div>
+<div style="width: 50%;">
+<button class="btn-half btn-notfall" onclick="runSimple('Notfall', 'Soforthilfe aktiviert. Blick in die Ferne.')">⚠️ Notfall</button>
+<div class="caption" style="margin-top: 5px;">Sofort-Hilfe</div>
+</div>
 </div>
 
-<div id="exercise-card" class="card hidden">
-<h2 id="ex-title" style="color: var(--s); margin-bottom:0;">--</h2>
-<div class="timer-val" id="timer-display">--</div>
-<p id="ex-desc"></p>
-<div id="final-feedback">
-<p style="font-size: 0.85rem; color: var(--sub);">Wie fühlen sich die Augen jetzt an?</p>
-<button class="fb-btn" style="background: #27ae60;" onclick="finishSession('ok')">👍</button>
-<button class="fb-btn" style="background: #c0392b;" onclick="finishSession('bad')">⚠️</button>
+<div class="footer">
+<div>📊 Analyse</div>
+<div>Stress: <span class="status-normal">Normal</span></div>
+<div style="cursor:pointer" onclick="localStorage.clear(); location.reload();">Reset</div>
+</div>
+</div>
+
+<div id="exercise-overlay">
+<div class="ex-container" id="ex-main">
+<div class="ex-title" id="ex-title">Wärme</div>
+<div class="ex-counter" id="ex-counter">60</div>
+<div class="ex-subtitle" id="ex-subtitle">Vorbereitung</div>
+<div id="feedback-area">
+<p style="color: #888; font-size: 14px;">Wie fühlen sich die Augen jetzt an?</p>
+<div class="feedback-btns">
+<button class="f-btn f-good" onclick="endExercise()">👍</button>
+<button class="f-btn f-bad" onclick="endExercise(true)">⚠️</button>
+</div>
+</div>
 </div>
 </div>
 
 <script>
-var synth = window.speechSynthesis;
-var currentInterval = null;
-var activeSteps = [];
-var currentFocusExName = "Allgemein"
-var stressScore = parseInt(localStorage.getItem('eyeStressScore')) || 0;
-var eyeHistoryData = [];
-try {
-var saved = localStorage.getItem('eyeHistory');
-if (saved) eyeHistoryData = JSON.parse(saved);
-if (!Array.isArray(eyeHistoryData)) eyeHistoryData = [];
-} catch(e) { eyeHistoryData = []; }
+const synth = window.speechSynthesis;
+let timerInterval;
 
-function getDayPhase() {
-var h = new Date().getHours();
-if (h < 9) return { n: "EARLY BIRD", p: -2 };
-if (h < 13) return { n: "DEEP FOCUS WORK", p: 0 };
-if (h < 15) return { n: "POST-LUNCH RESET", p: 5 };
-if (h < 18) return { n: "FINAL FOCUS", p: 8 };
-return { n: "REGENERATION", p: 3 };
-}
-
-function updateUI() {
-var phase = getDayPhase();
-document.getElementById('day-phase').innerText = phase.n;
-var lvl = document.getElementById('stress-lvl');
-lvl.innerText = stressScore > 5 ? "Hoch" : "Normal"
-lvl.style.color = stressScore > 5 ? '#c0392b' : '#27ae60';
-}
-
-function toggleStats() {
-var view = document.getElementById('stats-view');
-view.style.display = (view.style.display === "block") ? "none" : "block"
-if (view.style.display === "block") renderStats(view);
-}
-
-function renderStats(container) {
-if (!eyeHistoryData || eyeHistoryData.length === 0) {
-container.innerHTML = "Keine Daten vorhanden."
-return;
-}
-var stats = {};
-for (var i = 0; i < eyeHistoryData.length; i++) {
-var item = eyeHistoryData[i];
-var name = item.ex || "Andere"
-if (!stats[name]) stats[name] = { ok: 0, bad: 0 };
-stats[name][item.f]++;
-}
-var html = "<b>Erfolg Fokus-Übungen:</b><br>"
-for (var ex in stats) {
-var total = stats[ex].ok + stats[ex].bad;
-var rate = Math.round((stats[ex].ok / total) * 100);
-html += ex + ": " + rate + "% 👍 (" + total + "x)<br>"
-}
-container.innerHTML = html;
-}
-
-function resetScore() {
-if(confirm("Daten löschen?")) {
-localStorage.clear();
-location.reload();
-}
-}
-
-function speak(text, callback) {
-if (!synth) { if(callback) callback(); return; }
+function speak(text) {
 synth.cancel();
-var utter = new SpeechSynthesisUtterance(text);
-utter.lang = 'de-DE';
-utter.rate = 1.0;
-var safetyTimer = setTimeout(() => {
-if(callback) { callback(); callback = null; }
-}, 1500);
-
-utter.onend = function() {
-clearTimeout(safetyTimer);
-if(callback) { callback(); callback = null; }
-};
-synth.speak(utter);
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.lang = 'de-DE';
+synth.speak(utterance);
 }
 
-function startRoutine(type) {
-if(currentInterval) clearInterval(currentInterval);
-var phase = getDayPhase();
-var p = Math.min(10, Math.floor(stressScore * 1.2) + phase.p);
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('exercise-card').classList.remove('hidden');
-document.getElementById('final-feedback').style.display = "none"
+// MORGENROUTINE: Kombiniert Optik & korrekte Logik
+function startMorgen() {
+const overlay = document.getElementById('exercise-overlay');
+overlay.style.display = 'flex';
+document.getElementById('feedback-area').style.display = 'none';
+document.getElementById('ex-counter').style.display = 'block';
 
-var rand = Math.random();
-var focusEx;
-if (rand < 0.33) {
-focusEx = { t: "Mikro-Kreise", s: 30, v: "Kleine langsame Kreise. Richtungswechsel folgt.", d: "Sanfte Mobilisation", switch: true };
-currentFocusExName = "Kreise"
-} else if (rand < 0.66) {
-focusEx = { t: "Die Acht", s: 30, v: "Male eine liegende Acht. Richtungswechsel folgt.", d: "Koordination", switch: true };
-currentFocusExName = "Acht"
-} else {
-focusEx = { t: "Nah-Fern", s: 30, v: "Wechsle zwischen Daumen und Ferne.", d: "Akkommodation" };
-currentFocusExName = "Nah-Fern"
+// Phase 1: Wärme (60s)
+updateScreen("Wärme", 60, "Hände reiben & auflegen");
+speak("Morgen-Routine. Lass die Augen noch zu. Reibe deine Hände fest warm und lege sie auf deine Augen.");
+
+runCountdown(60, () => {
+// Phase 2: Massage (15s)
+updateScreen("Massage", 15, "Sanft zur Mitte ausstreichen");
+speak("Wärme beendet. Jetzt Massage. Streiche deine Lider sanft von oben und unten zur Mitte aus.");
+runCountdown(15, () => {
+// Phase 3: Check & Reinigung
+showFeedback();
+});
+});
 }
 
-if(type === 'morgen') currentFocusExName = "Morgen"
-if(type === 'reset') currentFocusExName = "Reset"
-if(type === 'emergency') currentFocusExName = "Notfall"
-
-var steps = {
-break: [
-{ t: "Blinzeln", s: 15, v: "Locker blinzeln.", d: "Befeuchten" },
-{ t: "Weicher Fokus", s: Math.max(20, 40 - p), v: "In die Ferne schauen.", d: "Entspannung" },
-focusEx,
-{ t: "Palmieren", s: Math.max(30, 30 + p), v: "Hände kräftig warmreiben und Augen sanft abdecken.", d: "Regeneration" }
-],
-morgen: [
-{ t: "Wärme", s: 60, v: "Warme Kompresse auflegen.", d: "Vorbereitung" },
-{ t: "Massage", s: 30, v: "Lidränder sanft ausstreichen.", d: "Ölfluss" }
-],
-reset: [{ t: "Ferne", s: 20, v: "20 Sekunden in die Ferne.", d: "Quick Reset" }],
-emergency: [
-{ t: "Lid-Massage", s: 30, v: "Sanft Lidkanten massieren.", d: "Tränenfilm" },
-{ t: "Palmieren", s: 120, v: "Hände kräftig warmreiben. Dann 2 Minuten die Dunkelheit genießen.", d: "System-Reset" }
-]
-};
-activeSteps = steps[type] || steps.break;
-runStep(0);
-}
-
-function runStep(index) {
-if (index >= activeSteps.length) {
-if (navigator.vibrate) navigator.vibrate(200);
-document.getElementById('timer-display').innerText = "✓"
-document.getElementById('final-feedback').style.display = "block"
-speak("Training beendet.");
-return;
-}
-var s = activeSteps[index];
-document.getElementById('ex-title').innerText = s.t;
-document.getElementById('ex-desc').innerText = s.d;
-document.getElementById('timer-display').innerText = s.s;
-speak(s.v, function() {
-var sec = s.s;
-var switched = false;
-currentInterval = setInterval(function() {
-sec--;
-if(sec >= 0) document.getElementById('timer-display').innerText = sec;
-if (s.switch && sec === 15 && !switched) {
-switched = true;
-if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-speak("Jetzt die Richtung wechseln.");
-}
-if (sec <= 0) {
-clearInterval(currentInterval);
-runStep(index + 1);
+function runCountdown(seconds, callback) {
+let timeLeft = seconds;
+const display = document.getElementById('ex-counter');
+display.innerText = timeLeft;
+clearInterval(timerInterval);
+timerInterval = setInterval(() => {
+timeLeft--;
+display.innerText = timeLeft;
+if (timeLeft <= 0) {
+clearInterval(timerInterval);
+callback();
 }
 }, 1000);
-});
 }
 
-function finishSession(state) {
-if (state === 'bad') stressScore = Math.min(10, stressScore + 2);
-else stressScore = Math.max(0, stressScore - 1);
-eyeHistoryData.push({
-t: Date.now(),
-f: state,
-ex: currentFocusExName || "Allgemein"
-});
-if (eyeHistoryData.length > 50) eyeHistoryData.shift();
-localStorage.setItem('eyeStressScore', stressScore.toString());
-localStorage.setItem('eyeHistory', JSON.stringify(eyeHistoryData));
-document.getElementById('exercise-card').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-updateUI();
+function updateScreen(title, time, sub) {
+document.getElementById('ex-title').innerText = title;
+document.getElementById('ex-counter').innerText = time;
+document.getElementById('ex-subtitle').innerText = sub;
 }
 
-updateUI();
+function showFeedback() {
+document.getElementById('ex-title').innerText = "Massage"
+document.getElementById('ex-counter').innerText = "✓"
+document.getElementById('ex-subtitle').innerText = "Ölfluss"
+document.getElementById('feedback-area').style.display = 'block';
+speak("Übung im Bett beendet. Wie fühlen sich deine Augen an?");
+}
+
+function endExercise(wasBad = false) {
+document.getElementById('exercise-overlay').style.display = 'none';
+if (wasBad) {
+speak("Alles klar. Achte besonders auf die Reinigung am Waschbecken.");
+} else {
+speak("Sehr gut. Jetzt aufstehen und Lider am Waschbecken reinigen.");
+}
+saveEntry("☀️ Morgenroutine beendet");
+}
+
+// EINFACHE AKTIONEN FÜR TRAINING & NOTFALL
+function runSimple(action, voice) {
+speak(voice);
+saveEntry(action);
+}
+
+function runReset() {
+synth.cancel();
+clearInterval(timerInterval);
+document.getElementById('exercise-overlay').style.display = 'none';
+speak("Reset. Weicher Fokus. Entspanne die Augen.");
+saveEntry("🌿 Reset");
+}
+
+function saveEntry(action) {
+const history = JSON.parse(localStorage.getItem('eye_log_518')) || [];
+history.unshift({ t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), a: action });
+localStorage.setItem('eye_log_518', JSON.stringify(history.slice(0, 10)));
+}
 </script>
+
 </body>
 </html>
