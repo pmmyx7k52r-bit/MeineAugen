@@ -3,230 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Strategie 5.1.19</title>
+<title>MeineAugen 5.6</title>
+
 <style>
-:root {
---bg-page: #d1d5db;
---card-bg: #f8f9fa;
---morgen: #c58e2d;
---training: #255595;
---reset: #e2e4e2;
---notfall: #932a22;
---accent-blue: #3b5998;
-}
-
-body {
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background-color: var(--bg-page);
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-margin: 0;
-overflow: hidden;
-}
-
-/* HAUPTMENÜ (GERÜST 5.1.8) */
-.app-card {
-background: var(--card-bg);
-width: 360px;
-padding: 40px 30px;
-border-radius: 40px;
-box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-text-align: center;
-}
-
-.header h1 { font-size: 26px; margin: 0; color: #1a1a1a; }
-.sub-title { color: var(--accent-blue); font-size: 11px; font-weight: bold; letter-spacing: 1.5px; margin-top: 5px; margin-bottom: 30px; }
-
-.btn { width: 100%; padding: 18px; border-radius: 25px; border: none; font-size: 18px; font-weight: 600; cursor: pointer; margin-bottom: 4px; }
-.btn-morgen { background-color: var(--morgen); color: white; }
-.btn-training { background-color: var(--training); color: white; }
-.row { display: flex; gap: 12px; margin-top: 15px; }
-.btn-half { width: 50%; padding: 15px; border-radius: 20px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
-.btn-reset { background-color: var(--reset); color: #222; }
-.btn-notfall { background-color: var(--notfall); color: white; }
-
-.caption { font-size: 11px; color: #888; margin-bottom: 20px; }
-/* ÜBUNGS-SCREEN OVERLAY (DEINE NEUEN FOTOS) */
-#exercise-overlay {
-display: none;
-position: fixed;
-top: 0; left: 0; width: 100%; height: 100%;
-background: white;
-z-index: 1000;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-animation: fadeIn 0.3s;
-}
-
-.ex-container {
-width: 340px;
-height: 400px;
-background: white;
-border-radius: 40px;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-position: relative;
-}
-
-.ex-title { color: #2e6fa5; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-.ex-counter { color: #d49a2d; font-size: 80px; margin: 20px 0; }
-.ex-subtitle { color: #555; font-size: 18px; margin-top: 10px; }
-/* FEEDBACK SCREEN */
-#feedback-area { display: none; text-align: center; margin-top: 30px; }
-.feedback-btns { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
-.f-btn { width: 140px; padding: 15px; border-radius: 15px; border: none; cursor: pointer; font-size: 24px; }
-.f-good { background-color: #38b473; color: white; }
-.f-bad { background-color: #ca4438; color: white; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; font-size: 12px; color: #555; border-top: 1px solid #eee; padding-top: 15px; width: 100%; }
-.status-normal { color: #28a745; font-weight: bold; }
+body{font-family:-apple-system;text-align:center;background:#fdfcfb;}
+.card{background:white;padding:20px;border-radius:20px;max-width:420px;margin:auto;}
+button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-weight:bold;}
+.hidden{display:none;}
+.timer{font-size:50px;}
+.warn{color:#c0392b;font-weight:bold;}
+.good{color:#27ae60;font-weight:bold;}
 </style>
 </head>
+
 <body>
 
-<div class="app-card">
-<div class="header">
-<h1>👁️ Strategie 5.1.8</h1>
-<div class="sub-title">DEEP FOCUS WORK</div>
+<div id="menu" class="card">
+<h2>👁️ 5.6</h2>
+
+<div id="live"></div>
+
+<button onclick="startManual()">Jetzt starten</button>
+<button onclick="showStats()">📊 Analyse</button>
 </div>
 
-<button class="btn btn-morgen" onclick="startMorgen()">🟡 Morgen-Routine</button>
-<div class="caption">Wärme & Ölfluss</div>
+<div id="run" class="card hidden">
+<h3 id="title"></h3>
+<div id="timer" class="timer"></div>
+<p id="desc"></p>
 
-<button class="btn btn-training" onclick="runSimple('Training', 'Training startet. Nah Fern Wechsel.')">🚀 Training starten</button>
-<div class="caption">Dynamischer Fokus & Mobilisation</div>
+<button onclick="abort()">Abbrechen</button>
 
-<div class="row">
-<div style="width: 50%;">
-<button class="btn-half btn-reset" onclick="runReset()">🌿 Reset</button>
-<div class="caption" style="margin-top: 5px;">Weicher Fokus</div>
-</div>
-<div style="width: 50%;">
-<button class="btn-half btn-notfall" onclick="runSimple('Notfall', 'Soforthilfe aktiviert. Blick in die Ferne.')">⚠️ Notfall</button>
-<div class="caption" style="margin-top: 5px;">Sofort-Hilfe</div>
-</div>
-</div>
-
-<div class="footer">
-<div>📊 Analyse</div>
-<div>Stress: <span class="status-normal">Normal</span></div>
-<div style="cursor:pointer" onclick="localStorage.clear(); location.reload();">Reset</div>
+<div id="fb" class="hidden">
+<button onclick="finish('good')">👍</button>
+<button onclick="finish('neutral')">😐</button>
+<button onclick="finish('bad')">⚠️</button>
 </div>
 </div>
 
-<div id="exercise-overlay">
-<div class="ex-container" id="ex-main">
-<div class="ex-title" id="ex-title">Wärme</div>
-<div class="ex-counter" id="ex-counter">60</div>
-<div class="ex-subtitle" id="ex-subtitle">Vorbereitung</div>
-<div id="feedback-area">
-<p style="color: #888; font-size: 14px;">Wie fühlen sich die Augen jetzt an?</p>
-<div class="feedback-btns">
-<button class="f-btn f-good" onclick="endExercise()">👍</button>
-<button class="f-btn f-bad" onclick="endExercise(true)">⚠️</button>
-</div>
-</div>
-</div>
-</div>
+<div id="stats" class="card hidden"></div>
 
 <script>
-const synth = window.speechSynthesis;
-let timerInterval;
 
-function speak(text) {
-synth.cancel();
-const utterance = new SpeechSynthesisUtterance(text);
-utterance.lang = 'de-DE';
-synth.speak(utterance);
+let interval;
+let stats = JSON.parse(localStorage.getItem('exStatsV4')||"{}");
+let lastAction = parseInt(localStorage.getItem('lastAction')||Date.now());
+let fatigue = 0;
+let currentExercise=""
+
+function save(){
+localStorage.setItem('exStatsV4',JSON.stringify(stats));
+localStorage.setItem('lastAction',Date.now());
 }
 
-// MORGENROUTINE: Kombiniert Optik & korrekte Logik
-function startMorgen() {
-const overlay = document.getElementById('exercise-overlay');
-overlay.style.display = 'flex';
-document.getElementById('feedback-area').style.display = 'none';
-document.getElementById('ex-counter').style.display = 'block';
+function score(ex){
+if(!stats[ex]) return 0;
 
-// Phase 1: Wärme (60s)
-updateScreen("Wärme", 60, "Hände reiben & auflegen");
-speak("Morgen-Routine. Lass die Augen noch zu. Reibe deine Hände fest warm und lege sie auf deine Augen.");
+let s=stats[ex];
+let total=0;
 
-runCountdown(60, () => {
-// Phase 2: Massage (15s)
-updateScreen("Massage", 15, "Sanft zur Mitte ausstreichen");
-speak("Wärme beendet. Jetzt Massage. Streiche deine Lider sanft von oben und unten zur Mitte aus.");
-runCountdown(15, () => {
-// Phase 3: Check & Reinigung
-showFeedback();
-});
-});
+for(let k in s){
+total += (s[k].good||0) - (s[k].bad||0);
 }
 
-function runCountdown(seconds, callback) {
-let timeLeft = seconds;
-const display = document.getElementById('ex-counter');
-display.innerText = timeLeft;
-clearInterval(timerInterval);
-timerInterval = setInterval(() => {
-timeLeft--;
-display.innerText = timeLeft;
-if (timeLeft <= 0) {
-clearInterval(timerInterval);
-callback();
-}
-}, 1000);
+return total;
 }
 
-function updateScreen(title, time, sub) {
-document.getElementById('ex-title').innerText = title;
-document.getElementById('ex-counter').innerText = time;
-document.getElementById('ex-subtitle').innerText = sub;
-}
+function recommend(){
 
-function showFeedback() {
-document.getElementById('ex-title').innerText = "Massage"
-document.getElementById('ex-counter').innerText = "✓"
-document.getElementById('ex-subtitle').innerText = "Ölfluss"
-document.getElementById('feedback-area').style.display = 'block';
-speak("Übung im Bett beendet. Wie fühlen sich deine Augen an?");
-}
+let time = (Date.now()-lastAction)/60000;
 
-function endExercise(wasBad = false) {
-document.getElementById('exercise-overlay').style.display = 'none';
-if (wasBad) {
-speak("Alles klar. Achte besonders auf die Reinigung am Waschbecken.");
+fatigue = Math.min(10, time / 5); // steigt alle 5 min
+
+let list=["Palmieren","Blinzeln","Wärme","NahFern"];
+
+list.sort((a,b)=>score(b)-score(a));
+
+let best = list[0];
+
+let action = ""
+
+if(fatigue < 2){
+action = "Alles stabil"
+} else if(fatigue < 5){
+action = "Kurzpause: Blinzeln 20s"
+best="Blinzeln"
+} else if(fatigue < 8){
+action = "Reset: Palmieren 60s"
+best="Palmieren"
 } else {
-speak("Sehr gut. Jetzt aufstehen und Lider am Waschbecken reinigen.");
-}
-saveEntry("☀️ Morgenroutine beendet");
-}
-
-// EINFACHE AKTIONEN FÜR TRAINING & NOTFALL
-function runSimple(action, voice) {
-speak(voice);
-saveEntry(action);
+action = "Starke Belastung → Pause + Wärme"
+best="Wärme"
 }
 
-function runReset() {
-synth.cancel();
-clearInterval(timerInterval);
-document.getElementById('exercise-overlay').style.display = 'none';
-speak("Reset. Weicher Fokus. Entspanne die Augen.");
-saveEntry("🌿 Reset");
+document.getElementById("live").innerHTML =
+"<div class='good'>"+action+"</div>"
+
+currentExercise = best;
 }
 
-function saveEntry(action) {
-const history = JSON.parse(localStorage.getItem('eye_log_518')) || [];
-history.unshift({ t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), a: action });
-localStorage.setItem('eye_log_518', JSON.stringify(history.slice(0, 10)));
+setInterval(recommend,3000);
+
+function startManual(){
+start(currentExercise || "Palmieren");
 }
+
+function start(ex){
+
+document.getElementById('menu').classList.add('hidden');
+document.getElementById('run').classList.remove('hidden');
+document.getElementById('fb').classList.add('hidden');
+
+let step;
+
+if(ex==="Palmieren") step={t:"Palmieren",s:60,d:"Augen abdunkeln"};
+if(ex==="Blinzeln") step={t:"Blinzeln",s:20,d:"Locker blinzeln"};
+if(ex==="Wärme") step={t:"Wärme",s:60,d:"Warme Kompresse"};
+if(ex==="NahFern") step={t:"Nah-Fern",s:30,d:"Nähe/Ferne wechseln"};
+
+currentExercise = ex;
+
+runStep(step);
+}
+
+function runStep(s){
+
+document.getElementById('title').innerText=s.t;
+document.getElementById('desc').innerText=s.d;
+document.getElementById('timer').innerText=s.s;
+
+let sec=s.s;
+
+interval=setInterval(()=>{
+sec--;
+document.getElementById('timer').innerText=sec;
+
+if(sec<=0){
+clearInterval(interval);
+document.getElementById('timer').innerText="✓"
+document.getElementById('fb').classList.remove('hidden');
+}
+},1000);
+}
+
+function abort(){
+clearInterval(interval);
+document.getElementById('run').classList.add('hidden');
+document.getElementById('menu').classList.remove('hidden');
+}
+
+function finish(fb){
+
+if(!stats[currentExercise]) stats[currentExercise]={neutral:{good:0,neutral:0,bad:0}};
+stats[currentExercise].neutral[fb]++;
+
+save();
+
+document.getElementById('run').classList.add('hidden');
+document.getElementById('menu').classList.remove('hidden');
+}
+
+function showStats(){
+
+document.getElementById('menu').classList.add('hidden');
+let box=document.getElementById('stats');
+box.classList.remove('hidden');
+
+let html="<h3>Analyse</h3>"
+
+for(let ex in stats){
+let s=stats[ex].neutral;
+let total=s.good+s.bad+s.neutral;
+let rate=Math.round((s.good/total)*100);
+html+=ex+": "+rate+"% ("+total+")<br>"
+}
+
+html+="<br><button onclick='back()'>Zurück</button>"
+
+box.innerHTML=html;
+}
+
+function back(){
+document.getElementById('stats').classList.add('hidden');
+document.getElementById('menu').classList.remove('hidden');
+}
+
 </script>
 
 </body>
