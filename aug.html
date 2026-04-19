@@ -3,49 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6.5</title>
+<title>MeineAugen 5.6.6</title>
 
 <style>
-:root { --s:#2980b9; --a:#e67e22; --d:#c0392b; }
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
-button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:bold; }
-.btn { background:var(--s); color:white; }
+button { padding:14px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:600; }
+.primary { background:#2980b9; color:white; }
 .hidden{display:none;}
-#live{margin:10px 0;font-weight:bold;}
-.timer{font-size:48px;color:var(--a);}
+#live { font-weight:bold; margin:10px 0; }
+.timer { font-size:44px; color:#e67e22; margin:10px 0; }
 </style>
 </head>
 
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ 5.6.5</h2>
 
-<div id="live">Bereit</div>
+<h2>👁️ 5.6.6</h2>
 
-<button class="btn" onclick="start('morgen')">☀️ Morgenroutine</button>
-<button class="btn" onclick="runRecommendation()">Empfehlung ausführen</button>
-<button onclick="showStats()">📊 Analyse</button>
+<div id="live">Was trifft gerade zu?</div>
+
+<h4>Kontext</h4>
+<button onclick="setContext('screen')" class="primary">📱 Bildschirm</button>
+<button onclick="setContext('stress')" class="primary">⚠️ Stress / Fokus</button>
+<button onclick="setContext('nature')" class="primary">🌿 Natur / Ruhe</button>
+
+<h4>Augenzustand</h4>
+<button onclick="setState('normal')" class="primary">🙂 Normal</button>
+<button onclick="setState('dry')" class="primary">😵 Trocken / müde</button>
+<button onclick="setState('sticky')" class="primary">🟡 Verklebt / schwer öffnen</button>
+<button onclick="setState('overload')" class="primary">🔴 Überreizt</button>
+
 </div>
 
 <div id="run" class="card hidden">
+
 <h3 id="title"></h3>
-<div id="timer" class="timer"></div>
+<div class="timer" id="timer"></div>
 <p id="desc"></p>
 
+<button onclick="finish()">✔️ Fertig</button>
 <button onclick="abort()">Abbrechen</button>
 
-<div id="fb" class="hidden">
-<button onclick="finish('good')">👍</button>
-<button onclick="finish('neutral')">😐</button>
-<button onclick="finish('bad')">⚠️</button>
 </div>
-</div>
-
-<div id="stats" class="card hidden"></div>
 
 <script>
+
+// ================= STATE =================
+let context = "screen"
+let state = "normal"
+let interval;
 
 // ================= SPEECH =================
 let synth = window.speechSynthesis;
@@ -58,253 +66,153 @@ u.lang="de-DE"
 synth.speak(u);
 }
 
-// ================= STATE =================
-let stats = JSON.parse(localStorage.getItem('stats565')||"{}");
-let currentExercise=""
-
-// ================= DAY RESET =================
-let today = new Date().toDateString();
-let lastDay = localStorage.getItem("day");
-
-if(today !== lastDay){
-localStorage.setItem("day", today);
-localStorage.removeItem("morningDone");
+// ================= INPUT =================
+function setContext(c){
+context=c;
+recommend();
 }
 
-// ================= SCORE =================
-function score(ex){
-if(!stats[ex]) return 0;
-let s=stats[ex];
-return (s.good||0) - (s.bad||0);
+function setState(s){
+state=s;
+recommend();
 }
 
-// ================= STATE DETECTION =================
-function getState(){
+// ================= DECISION ENGINE =================
+function decide(){
 
-let bad = 0;
-let good = 0;
+// 🔴 AKUT-ZUSTAND HAT PRIORITÄT
+if(state === "sticky") return "sticky"
+if(state === "overload") return "palmieren"
+if(state === "dry") return "blinzeln_fern"
 
-for(let ex in stats){
-good += stats[ex].good||0;
-bad += stats[ex].bad||0;
+// 🌞 KONTEXTBASIS
+if(context === "screen") return "blinzeln_fern"
+if(context === "stress") return "palmieren"
+if(context === "nature") return "fernblick"
+
+return "blinzeln"
 }
 
-if(bad > good + 2) return "overload"
-if(bad > good) return "dry"
-if(good > bad + 2) return "stable"
-
-return "normal"
-}
-
-// ================= RECOMMENDATION =================
+// ================= RECOMMEND =================
 function recommend(){
 
-if(!localStorage.getItem("morningDone")){
-currentExercise = "morgen"
-setLive("➡️ Morgenroutine fehlt");
-return;
-}
-
-let state = getState();
-
-let plan = {
-overload: "Palmieren",
-dry: "Blinzeln+Fernblick",
-normal: "Blinzeln",
-stable: "Fernblick"
-};
-
-currentExercise = plan[state];
+let ex = decide();
 
 let map = {
-"Palmieren":"Empfehlung: Palmieren (Ruhe)",
-"Blinzeln+Fernblick":"Empfehlung: Blinzeln + Fernblick",
-"Blinzeln":"Empfehlung: Blinzeln",
-"Fernblick":"Empfehlung: In die Ferne schauen"
+sticky: "Empfehlung: Verklebt → Reset",
+palmieren: "Empfehlung: Palmieren",
+blinzeln_fern: "Empfehlung: Blinzeln + Fernblick",
+fernblick: "Empfehlung: Fernblick",
+blinzeln: "Empfehlung: Blinzeln"
 };
 
-setLive(map[currentExercise]);
-}
+document.getElementById("live").innerText = map[ex];
 
-function setLive(t){
-document.getElementById("live").innerText=t;
-speak(t);
-}
-
-recommend();
-
-// ================= ACTION =================
-function runRecommendation(){
-if(!currentExercise) start("Blinzeln");
-else start(currentExercise);
+currentExercise = ex;
 }
 
 // ================= START =================
-function start(type){
+let currentExercise=""
 
-document.getElementById('menu').classList.add('hidden');
-document.getElementById('run').classList.remove('hidden');
-document.getElementById('fb').classList.add('hidden');
+function start(){
 
-let steps=[];
+document.getElementById("menu").classList.add("hidden");
+document.getElementById("run").classList.remove("hidden");
 
-if(type==="morgen"){
+let steps = build(currentExercise);
 
-localStorage.setItem("morningDone","true");
-
-steps=[
-{
-t:"Augen schließen",
-s:40,
-d:"Augen vollständig schließen. Kein Licht zulassen."
-},
-{
-t:"Blinzeln",
-s:20,
-d:"Locker blinzeln. Keine Spannung."
-},
-{
-t:"Wärme",
-s:60,
-d:"Warme Kompresse auf geschlossene Augen legen."
-},
-{
-t:"Massage",
-s:30,
-d:"Lidränder sanft ausstreichen."
-}
-];
-
-speak("Morgenroutine starten");
-}
-
-if(type==="Palmieren"){
-steps=[{
-t:"Palmieren",
-s:60,
-d:"Augen schließen. Hände warmreiben. Handflächen locker auf Augen legen. Kein Druck. Komplett abdunkeln. Ruhig atmen."
-}];
-
-speak("Augen schließen. Hände warmreiben. Locker auflegen.");
-}
-
-if(type==="Blinzeln"){
-steps=[{
-t:"Blinzeln",
-s:20,
-d:"Locker blinzeln ohne Druck."
-}];
-
-speak("Locker blinzeln.");
-}
-
-if(type==="Blinzeln+Fernblick"){
-steps=[
-{
-t:"Blinzeln",
-s:15,
-d:"Locker blinzeln."
-},
-{
-t:"Fernblick",
-s:40,
-d:"In die Ferne schauen. Augen entspannen."
-}
-];
-
-speak("Blinzeln und dann in die Ferne schauen.");
-}
-
-if(type==="Fernblick"){
-steps=[{
-t:"Fernblick",
-s:40,
-d:"Ruhig in die Ferne schauen. Augen entspannen."
-}];
-
-speak("In die Ferne schauen.");
-}
-
-currentExercise=type;
 run(steps,0);
 }
 
-// ================= RUN =================
-let interval;
+// ================= BUILD EXERCISES =================
+function build(type){
 
+if(type==="sticky"){
+speak("Augen nicht reiben. Erst beruhigen.");
+
+return [
+{t:"Augen schließen", s:30, d:"Augen geschlossen halten. Kein Reiben."},
+{t:"Wärme", s:60, d:"Handflächen warmreiben und auflegen."},
+{t:"Lösen", s:20, d:"2–3x langsam blinzeln."},
+{t:"Fernblick", s:40, d:"In die Ferne schauen."}
+];
+}
+
+if(type==="palmieren"){
+speak("Augen schließen. Hände warmreiben.");
+
+return [{
+t:"Palmieren",
+s:60,
+d:"Augen schließen. Hände warmreiben. Locker auflegen. Kein Druck."
+}];
+}
+
+if(type==="blinzeln_fern"){
+speak("Blinzeln und Fernblick.");
+
+return [
+{t:"Blinzeln", s:15, d:"Locker blinzeln."},
+{t:"Fernblick", s:40, d:"In die Ferne schauen."}
+];
+}
+
+if(type==="fernblick"){
+speak("In die Ferne schauen.");
+
+return [{
+t:"Fernblick",
+s:40,
+d:"Augen entspannen und in die Ferne schauen."
+}];
+}
+
+return [{
+t:"Blinzeln",
+s:20,
+d:"Locker blinzeln."
+}];
+}
+
+// ================= RUN =================
 function run(steps,i){
 
 if(i>=steps.length){
-document.getElementById('timer').innerText="✓"
-document.getElementById('fb').classList.remove('hidden');
+document.getElementById("timer").innerText="✓"
 speak("Fertig");
 return;
 }
 
 let s=steps[i];
 
-document.getElementById('title').innerText=s.t;
-document.getElementById('desc').innerText=s.d;
-document.getElementById('timer').innerText=s.s;
+document.getElementById("title").innerText=s.t;
+document.getElementById("desc").innerText=s.d;
+document.getElementById("timer").innerText=s.s;
 
 let sec=s.s;
 
 interval=setInterval(()=>{
+
 sec--;
-document.getElementById('timer').innerText=sec;
+document.getElementById("timer").innerText=sec;
 
 if(sec<=0){
 clearInterval(interval);
 run(steps,i+1);
 }
+
 },1000);
 }
 
 // ================= CONTROL =================
+function finish(){
+abort();
+}
+
 function abort(){
 clearInterval(interval);
-document.getElementById('run').classList.add('hidden');
-document.getElementById('menu').classList.remove('hidden');
-}
-
-// ================= FEEDBACK =================
-function finish(fb){
-
-if(!stats[currentExercise]) stats[currentExercise]={good:0,neutral:0,bad:0};
-stats[currentExercise][fb]++;
-
-localStorage.setItem('stats565',JSON.stringify(stats));
-
-document.getElementById('run').classList.add('hidden');
-document.getElementById('menu').classList.remove('hidden');
-
-recommend();
-}
-
-// ================= STATS =================
-function showStats(){
-
-document.getElementById('menu').classList.add('hidden');
-let box=document.getElementById('stats');
-box.classList.remove('hidden');
-
-let html="<h3>Analyse</h3>"
-
-for(let ex in stats){
-let s=stats[ex];
-let total=s.good+s.bad+s.neutral;
-let rate=Math.round((s.good/total)*100);
-html+=ex+": "+rate+"% ("+total+")<br>"
-}
-
-html+="<br><button onclick='back()'>Zurück</button>"
-
-box.innerHTML=html;
-}
-
-function back(){
-document.getElementById('stats').classList.add('hidden');
-document.getElementById('menu').classList.remove('hidden');
+document.getElementById("run").classList.add("hidden");
+document.getElementById("menu").classList.remove("hidden");
 }
 
 </script>
