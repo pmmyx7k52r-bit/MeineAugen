@@ -3,11 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6.8</title>
+<title>MeineAugen 5.7</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
-.card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
+
+.card {
+background:white;
+padding:20px;
+border-radius:25px;
+max-width:420px;
+margin:auto;
+}
 
 button {
 padding:14px;
@@ -19,20 +26,21 @@ font-weight:600;
 font-size:15px;
 background:#2980b9;
 color:white;
-opacity:0.6;
+opacity:0.7;
 }
 
-button.active {
-opacity:1;
-outline:3px solid #2ecc71;
-}
+button.active { opacity:1; outline:3px solid #2ecc71; }
 
 .start { background:#27ae60; opacity:1; }
 
+.night { background:#2c3e50; }
+
 .hidden { display:none; }
 
-#live { font-weight:bold; margin:10px 0; }
-.timer { font-size:44px; color:#e67e22; margin:10px 0; }
+#title { font-size:20px; margin:10px 0; }
+#desc { font-size:14px; color:#444; }
+#timer { font-size:42px; color:#e67e22; margin:10px 0; }
+#phase { font-size:12px; color:#888; margin-bottom:10px; }
 
 .small { font-size:12px; color:#666; }
 </style>
@@ -42,9 +50,13 @@ outline:3px solid #2ecc71;
 
 <div id="menu" class="card">
 
-<h2>👁️ 5.6.8</h2>
+<h2>👁️ MeineAugen 5.7</h2>
 
-<div id="live">Kontext + Zustand wählen</div>
+<div id="phase">Phase: ...</div>
+
+<div id="live">System bereit</div>
+
+<hr>
 
 <h4>Kontext</h4>
 <button id="c_screen" onclick="setContext('screen')">📱 Bildschirm</button>
@@ -57,7 +69,9 @@ outline:3px solid #2ecc71;
 <button id="s_sticky" onclick="setState('sticky')">🟡 Verklebt</button>
 <button id="s_over" onclick="setState('overload')">🔴 Überreizt</button>
 
-<button class="start" onclick="startPlan()">▶ Start</button>
+<button class="start" onclick="startFlow()">▶ Start</button>
+
+<button class="night" onclick="goodNight()">🌙 Gute Nacht</button>
 
 <div class="small" id="preview"></div>
 
@@ -65,13 +79,12 @@ outline:3px solid #2ecc71;
 
 <div id="run" class="card hidden">
 
-<h3 id="title"></h3>
-<div class="timer" id="timer"></div>
-<p id="desc"></p>
+<div id="title"></div>
+<div id="timer"></div>
+<div id="desc"></div>
 
 <button onclick="finish(true)">👍 Gut</button>
 <button onclick="finish(false)">⚠️ Schlecht</button>
-
 <button onclick="abort()">Abbrechen</button>
 
 </div>
@@ -79,80 +92,88 @@ outline:3px solid #2ecc71;
 <script>
 
 // ================= STATE =================
+let phase = localStorage.getItem("phase") || "morning"
+
 let context = "screen"
 let state = "normal"
 
-let stats = JSON.parse(localStorage.getItem("eyeStats568")||"{}");
+let stats = JSON.parse(localStorage.getItem("eyeStats57") || "{}");
+
 let interval;
 
-// ================= UI LOCK =================
-function updateUI(){
+// ================= INIT =================
+updatePhaseUI();
 
+// ================= PHASE CONTROL =================
+function updatePhaseUI(){
+document.getElementById("phase").innerText =
+"Phase: " + phase.toUpperCase();
+}
+
+// ================= INPUT =================
+function setContext(c){
+context = c;
+updateUI();
+updatePreview();
+}
+
+function setState(s){
+state = s;
+updateUI();
+updatePreview();
+}
+
+// ================= UI =================
+function updateUI(){
 document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
 
 document.getElementById("c_"+context)?.classList.add("active");
 document.getElementById("s_"+state)?.classList.add("active");
 }
 
-// ================= INPUT =================
-function setContext(c){
-context=c;
-updateUI();
-updatePreview();
-}
-
-function setState(s){
-state=s;
-updateUI();
-updatePreview();
-}
-
-// ================= LEARNING =================
-function weight(ex){
-
-if(!stats[ex]) return 0;
-
-let s = stats[ex];
-
-return (s.good||0) - (s.bad||0);
+// ================= MORNING =================
+function morningRoutine(){
+return [
+{t:"Augen schließen", s:30, d:"Entspannen, nicht drücken."},
+{t:"Blinzeln", s:20, d:"Locker und bewusst blinzeln."},
+{t:"Fernblick", s:60, d:"In die Ferne schauen, nichts fixieren."},
+{t:"Palmieren", s:60, d:"Hände warm auf Augen legen."}
+];
 }
 
 // ================= DECISION =================
 function buildPlan(){
 
-if(state==="sticky") return ["sticky"];
-if(state==="overload") return ["palmieren"];
+if(state === "sticky") return ["sticky"];
+if(state === "overload") return ["palmieren"];
 
-let options = [];
+if(state === "dry") return ["blinzeln_fern"];
 
-if(context==="screen") options.push("blinzeln_fern");
-if(context==="stress") options.push("palmieren");
-if(context==="nature") options.push("fernblick");
+if(context === "screen") return ["blinzeln_fern"];
+if(context === "stress") return ["palmieren"];
+if(context === "nature") return ["fernblick"];
 
-if(state==="dry") options.unshift("blinzeln_fern");
-
-// Learning bias
-options.sort((a,b)=>weight(b)-weight(a));
-
-return [options[0] || "blinzeln"];
+return ["blinzeln"];
 }
 
-// ================= PREVIEW =================
-function updatePreview(){
-let p = buildPlan();
-document.getElementById("preview").innerText =
-"→ Vorschlag: " + p.join(" + ");
-}
+// ================= FLOW =================
+function startFlow(){
 
-// ================= START =================
-function startPlan(){
-
-let plan = buildPlan();
 let steps = [];
 
+if(phase === "morning"){
+steps = morningRoutine();
+phase = "day"
+localStorage.setItem("phase", phase);
+}
+else{
+let plan = buildPlan();
 for(let p of plan){
 steps = steps.concat(build(p));
 }
+}
+
+updatePhaseUI();
 
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
@@ -166,9 +187,9 @@ function build(type){
 if(type==="sticky"){
 return [
 {t:"Augen schließen",s:30,d:"Kein Reiben."},
-{t:"Wärme",s:60,d:"Handflächen auflegen."},
+{t:"Wärme",s:60,d:"Hände auflegen."},
 {t:"Lösen",s:20,d:"Langsam blinzeln."},
-{t:"Fernblick",s:40,d:"In die Ferne schauen."}
+{t:"Fernblick",s:40,d:"Nicht fixieren."}
 ];
 }
 
@@ -176,14 +197,14 @@ if(type==="palmieren"){
 return [{
 t:"Palmieren",
 s:60,
-d:"Augen schließen. Hände warm. Kein Druck."
+d:"Augen schließen, Hände warm, kein Druck."
 }];
 }
 
 if(type==="blinzeln_fern"){
 return [
 {t:"Blinzeln",s:15,d:"Locker blinzeln."},
-{t:"Fernblick",s:40,d:"Fokus lösen."}
+{t:"Fernblick",s:40,d:"Blick weich halten, nicht fixieren."}
 ];
 }
 
@@ -191,7 +212,7 @@ if(type==="fernblick"){
 return [{
 t:"Fernblick",
 s:40,
-d:"Entspannt in die Ferne schauen."
+d:"In die Ferne schauen ohne Fokus."
 }];
 }
 
@@ -230,16 +251,23 @@ run(steps,i+1);
 // ================= FEEDBACK =================
 function finish(ok){
 
-let ex = buildPlan()[0];
+let key = buildPlan()[0];
 
-if(!stats[ex]) stats[ex]={good:0,bad:0};
+if(!stats[key]) stats[key]={good:0,bad:0};
 
-if(ok) stats[ex].good++;
-else stats[ex].bad++;
+ok ? stats[key].good++ : stats[key].bad++;
 
-localStorage.setItem("eyeStats568",JSON.stringify(stats));
+localStorage.setItem("eyeStats57",JSON.stringify(stats));
 
 abort();
+}
+
+// ================= NIGHT =================
+function goodNight(){
+phase = "morning"
+localStorage.setItem("phase", phase);
+updatePhaseUI();
+alert("Gute Nacht. Morgen startet wieder die Morgenroutine.");
 }
 
 // ================= CONTROL =================
@@ -249,7 +277,12 @@ document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
 
-// init
+function updatePreview(){
+let p = buildPlan();
+document.getElementById("preview").innerText =
+"Vorschlag: " + p.join(" + ");
+}
+
 updateUI();
 updatePreview();
 
