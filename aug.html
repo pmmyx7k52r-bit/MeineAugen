@@ -3,16 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6.6</title>
+<title>MeineAugen 5.6.8</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
-button { padding:14px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:600; }
-.primary { background:#2980b9; color:white; }
-.hidden{display:none;}
+
+button {
+padding:14px;
+margin:6px;
+width:100%;
+border:none;
+border-radius:15px;
+font-weight:600;
+font-size:15px;
+background:#2980b9;
+color:white;
+opacity:0.6;
+}
+
+button.active {
+opacity:1;
+outline:3px solid #2ecc71;
+}
+
+.start { background:#27ae60; opacity:1; }
+
+.hidden { display:none; }
+
 #live { font-weight:bold; margin:10px 0; }
 .timer { font-size:44px; color:#e67e22; margin:10px 0; }
+
+.small { font-size:12px; color:#666; }
 </style>
 </head>
 
@@ -20,20 +42,24 @@ button { padding:14px; margin:6px; width:100%; border:none; border-radius:15px; 
 
 <div id="menu" class="card">
 
-<h2>👁️ 5.6.6</h2>
+<h2>👁️ 5.6.8</h2>
 
-<div id="live">Was trifft gerade zu?</div>
+<div id="live">Kontext + Zustand wählen</div>
 
 <h4>Kontext</h4>
-<button onclick="setContext('screen')" class="primary">📱 Bildschirm</button>
-<button onclick="setContext('stress')" class="primary">⚠️ Stress / Fokus</button>
-<button onclick="setContext('nature')" class="primary">🌿 Natur / Ruhe</button>
+<button id="c_screen" onclick="setContext('screen')">📱 Bildschirm</button>
+<button id="c_stress" onclick="setContext('stress')">⚠️ Stress</button>
+<button id="c_nature" onclick="setContext('nature')">🌿 Natur</button>
 
-<h4>Augenzustand</h4>
-<button onclick="setState('normal')" class="primary">🙂 Normal</button>
-<button onclick="setState('dry')" class="primary">😵 Trocken / müde</button>
-<button onclick="setState('sticky')" class="primary">🟡 Verklebt / schwer öffnen</button>
-<button onclick="setState('overload')" class="primary">🔴 Überreizt</button>
+<h4>Zustand</h4>
+<button id="s_normal" onclick="setState('normal')">🙂 Normal</button>
+<button id="s_dry" onclick="setState('dry')">😵 Trocken</button>
+<button id="s_sticky" onclick="setState('sticky')">🟡 Verklebt</button>
+<button id="s_over" onclick="setState('overload')">🔴 Überreizt</button>
+
+<button class="start" onclick="startPlan()">▶ Start</button>
+
+<div class="small" id="preview"></div>
 
 </div>
 
@@ -43,7 +69,9 @@ button { padding:14px; margin:6px; width:100%; border:none; border-radius:15px; 
 <div class="timer" id="timer"></div>
 <p id="desc"></p>
 
-<button onclick="finish()">✔️ Fertig</button>
+<button onclick="finish(true)">👍 Gut</button>
+<button onclick="finish(false)">⚠️ Schlecht</button>
+
 <button onclick="abort()">Abbrechen</button>
 
 </div>
@@ -53,125 +81,121 @@ button { padding:14px; margin:6px; width:100%; border:none; border-radius:15px; 
 // ================= STATE =================
 let context = "screen"
 let state = "normal"
+
+let stats = JSON.parse(localStorage.getItem("eyeStats568")||"{}");
 let interval;
 
-// ================= SPEECH =================
-let synth = window.speechSynthesis;
+// ================= UI LOCK =================
+function updateUI(){
 
-function speak(t){
-if(!synth) return;
-synth.cancel();
-let u=new SpeechSynthesisUtterance(t);
-u.lang="de-DE"
-synth.speak(u);
+document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+
+document.getElementById("c_"+context)?.classList.add("active");
+document.getElementById("s_"+state)?.classList.add("active");
 }
 
 // ================= INPUT =================
 function setContext(c){
 context=c;
-recommend();
+updateUI();
+updatePreview();
 }
 
 function setState(s){
 state=s;
-recommend();
+updateUI();
+updatePreview();
 }
 
-// ================= DECISION ENGINE =================
-function decide(){
+// ================= LEARNING =================
+function weight(ex){
 
-// 🔴 AKUT-ZUSTAND HAT PRIORITÄT
-if(state === "sticky") return "sticky"
-if(state === "overload") return "palmieren"
-if(state === "dry") return "blinzeln_fern"
+if(!stats[ex]) return 0;
 
-// 🌞 KONTEXTBASIS
-if(context === "screen") return "blinzeln_fern"
-if(context === "stress") return "palmieren"
-if(context === "nature") return "fernblick"
+let s = stats[ex];
 
-return "blinzeln"
+return (s.good||0) - (s.bad||0);
 }
 
-// ================= RECOMMEND =================
-function recommend(){
+// ================= DECISION =================
+function buildPlan(){
 
-let ex = decide();
+if(state==="sticky") return ["sticky"];
+if(state==="overload") return ["palmieren"];
 
-let map = {
-sticky: "Empfehlung: Verklebt → Reset",
-palmieren: "Empfehlung: Palmieren",
-blinzeln_fern: "Empfehlung: Blinzeln + Fernblick",
-fernblick: "Empfehlung: Fernblick",
-blinzeln: "Empfehlung: Blinzeln"
-};
+let options = [];
 
-document.getElementById("live").innerText = map[ex];
+if(context==="screen") options.push("blinzeln_fern");
+if(context==="stress") options.push("palmieren");
+if(context==="nature") options.push("fernblick");
 
-currentExercise = ex;
+if(state==="dry") options.unshift("blinzeln_fern");
+
+// Learning bias
+options.sort((a,b)=>weight(b)-weight(a));
+
+return [options[0] || "blinzeln"];
+}
+
+// ================= PREVIEW =================
+function updatePreview(){
+let p = buildPlan();
+document.getElementById("preview").innerText =
+"→ Vorschlag: " + p.join(" + ");
 }
 
 // ================= START =================
-let currentExercise=""
+function startPlan(){
 
-function start(){
+let plan = buildPlan();
+let steps = [];
+
+for(let p of plan){
+steps = steps.concat(build(p));
+}
 
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 
-let steps = build(currentExercise);
-
 run(steps,0);
 }
 
-// ================= BUILD EXERCISES =================
+// ================= BUILD =================
 function build(type){
 
 if(type==="sticky"){
-speak("Augen nicht reiben. Erst beruhigen.");
-
 return [
-{t:"Augen schließen", s:30, d:"Augen geschlossen halten. Kein Reiben."},
-{t:"Wärme", s:60, d:"Handflächen warmreiben und auflegen."},
-{t:"Lösen", s:20, d:"2–3x langsam blinzeln."},
-{t:"Fernblick", s:40, d:"In die Ferne schauen."}
+{t:"Augen schließen",s:30,d:"Kein Reiben."},
+{t:"Wärme",s:60,d:"Handflächen auflegen."},
+{t:"Lösen",s:20,d:"Langsam blinzeln."},
+{t:"Fernblick",s:40,d:"In die Ferne schauen."}
 ];
 }
 
 if(type==="palmieren"){
-speak("Augen schließen. Hände warmreiben.");
-
 return [{
 t:"Palmieren",
 s:60,
-d:"Augen schließen. Hände warmreiben. Locker auflegen. Kein Druck."
+d:"Augen schließen. Hände warm. Kein Druck."
 }];
 }
 
 if(type==="blinzeln_fern"){
-speak("Blinzeln und Fernblick.");
-
 return [
-{t:"Blinzeln", s:15, d:"Locker blinzeln."},
-{t:"Fernblick", s:40, d:"In die Ferne schauen."}
+{t:"Blinzeln",s:15,d:"Locker blinzeln."},
+{t:"Fernblick",s:40,d:"Fokus lösen."}
 ];
 }
 
 if(type==="fernblick"){
-speak("In die Ferne schauen.");
-
 return [{
 t:"Fernblick",
 s:40,
-d:"Augen entspannen und in die Ferne schauen."
+d:"Entspannt in die Ferne schauen."
 }];
 }
 
-return [{
-t:"Blinzeln",
-s:20,
-d:"Locker blinzeln."
-}];
+return [{t:"Blinzeln",s:20,d:"Locker blinzeln."}];
 }
 
 // ================= RUN =================
@@ -179,7 +203,6 @@ function run(steps,i){
 
 if(i>=steps.length){
 document.getElementById("timer").innerText="✓"
-speak("Fertig");
 return;
 }
 
@@ -204,16 +227,31 @@ run(steps,i+1);
 },1000);
 }
 
-// ================= CONTROL =================
-function finish(){
+// ================= FEEDBACK =================
+function finish(ok){
+
+let ex = buildPlan()[0];
+
+if(!stats[ex]) stats[ex]={good:0,bad:0};
+
+if(ok) stats[ex].good++;
+else stats[ex].bad++;
+
+localStorage.setItem("eyeStats568",JSON.stringify(stats));
+
 abort();
 }
 
+// ================= CONTROL =================
 function abort(){
 clearInterval(interval);
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
+
+// init
+updateUI();
+updatePreview();
 
 </script>
 
