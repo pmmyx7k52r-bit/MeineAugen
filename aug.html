@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6.1</title>
+<title>MeineAugen 5.6.3</title>
 
 <style>
-:root { --p:#2c3e50; --s:#2980b9; --a:#e67e22; --d:#c0392b; }
+:root { --s:#2980b9; --a:#e67e22; --d:#c0392b; }
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
 button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:bold; }
-.btn-main{background:var(--s);color:white;}
-.btn-warn{background:var(--d);color:white;}
+.btn { background:var(--s); color:white; }
 .hidden{display:none;}
 .timer{font-size:48px;color:var(--a);}
 #live{margin:10px 0;font-weight:bold;}
@@ -21,12 +20,12 @@ button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; 
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ 5.6.1</h2>
+<h2>👁️ 5.6.3</h2>
 
-<div id="live">Lade...</div>
+<div id="live">Bereit</div>
 
-<button class="btn-main" onclick="start('morgen')">☀️ Morgenroutine</button>
-<button class="btn-main" onclick="startAuto()">Empfehlung ausführen</button>
+<button class="btn" onclick="start('morgen')">☀️ Morgenroutine</button>
+<button class="btn" onclick="startAuto()">Empfehlung ausführen</button>
 <button onclick="showStats()">📊 Analyse</button>
 </div>
 
@@ -48,9 +47,7 @@ button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; 
 
 <script>
 
-// =====================
 // SPEECH
-// =====================
 let synth = window.speechSynthesis;
 function speak(t){
 if(!synth) return;
@@ -60,17 +57,12 @@ u.lang="de-DE"
 synth.speak(u);
 }
 
-// =====================
 // STATE
-// =====================
-let stats = JSON.parse(localStorage.getItem('stats56')||"{}");
-let lastAction = parseInt(localStorage.getItem('lastAction')||Date.now());
+let stats = JSON.parse(localStorage.getItem('stats563')||"{}");
 let currentExercise=""
 let interval;
 
-// =====================
 // DAY RESET
-// =====================
 let today = new Date().toDateString();
 let lastDay = localStorage.getItem("day");
 
@@ -79,73 +71,59 @@ localStorage.setItem("day", today);
 localStorage.removeItem("morningDone");
 }
 
-// =====================
 // SCORE
-// =====================
 function score(ex){
 if(!stats[ex]) return 0;
 let s=stats[ex];
 return (s.good||0) - (s.bad||0);
 }
 
-// =====================
-// RECOMMENDATION
-// =====================
-let lastSpoken=""
-
+// EMPFEHLUNG (kein Timer mehr!)
 function recommend(){
 
 let morningDone = localStorage.getItem("morningDone");
 
 if(!morningDone){
-document.getElementById("live").innerText = "➡️ Erst Morgenroutine"
+setLive("➡️ Erst Morgenroutine");
+currentExercise = "morgen"
 return;
 }
 
-let minutes = (Date.now()-lastAction)/60000;
+let list = ["Palmieren","Blinzeln","Wärme"];
 
-let action, ex;
+list.sort((a,b)=>score(b)-score(a));
 
-if(minutes < 10){
-action = "Alles stabil"
-ex = null;
-}
-else if(minutes < 20){
-action = "Kurzpause: Blinzeln 20 Sekunden"
-ex = "Blinzeln"
-}
-else if(minutes < 40){
-action = "Reset: Palmieren 60 Sekunden"
-ex = "Palmieren"
-}
-else{
-action = "Starke Belastung: Wärme anwenden"
-ex = "Wärme"
+let best = list[0];
+
+let textMap = {
+"Palmieren": "Empfehlung: Palmieren (60s)",
+"Blinzeln": "Empfehlung: Blinzeln (20s)",
+"Wärme": "Empfehlung: Wärme anwenden"
+};
+
+setLive(textMap[best]);
+
+currentExercise = best;
 }
 
-document.getElementById("live").innerText = action;
-
-if(action !== lastSpoken){
-speak(action);
-lastSpoken = action;
+function setLive(t){
+document.getElementById("live").innerText = t;
+speak(t);
 }
 
-currentExercise = ex;
-}
+// beim Laden einmal Empfehlung
+recommend();
 
-setInterval(recommend,3000);
-
-// =====================
 // START AUTO
-// =====================
 function startAuto(){
-if(!currentExercise) return;
+if(!currentExercise){
+start("Blinzeln");
+return;
+}
 start(currentExercise);
 }
 
-// =====================
 // START
-// =====================
 function start(type){
 
 document.getElementById('menu').classList.add('hidden');
@@ -154,7 +132,6 @@ document.getElementById('fb').classList.add('hidden');
 
 let steps=[];
 
-// MORGEN = FIX, KEIN SYSTEM
 if(type==="morgen"){
 localStorage.setItem("morningDone","true");
 
@@ -168,7 +145,6 @@ steps = [
 speak("Morgenroutine starten");
 }
 
-// AUTO ÜBUNGEN
 if(type==="Palmieren"){
 steps=[{t:"Palmieren",s:60,d:"Augen abdunkeln"}];
 speak("Palmieren starten");
@@ -189,9 +165,7 @@ currentExercise = type;
 run(steps,0);
 }
 
-// =====================
 // RUN
-// =====================
 function run(steps,i){
 
 if(i>=steps.length){
@@ -220,33 +194,28 @@ run(steps,i+1);
 },1000);
 }
 
-// =====================
 // ABORT
-// =====================
 function abort(){
 clearInterval(interval);
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
 }
 
-// =====================
 // FEEDBACK
-// =====================
 function finish(fb){
 
 if(!stats[currentExercise]) stats[currentExercise]={good:0,neutral:0,bad:0};
 stats[currentExercise][fb]++;
 
-localStorage.setItem('stats56',JSON.stringify(stats));
-localStorage.setItem('lastAction',Date.now());
+localStorage.setItem('stats563',JSON.stringify(stats));
 
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
+
+recommend();
 }
 
-// =====================
 // STATS
-// =====================
 function showStats(){
 
 document.getElementById('menu').classList.add('hidden');
