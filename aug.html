@@ -3,38 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.5</title>
+<title>MeineAugen 5.6.1</title>
 
 <style>
-body{font-family:-apple-system;text-align:center;background:#fdfcfb;}
-.card{background:white;padding:20px;border-radius:20px;max-width:420px;margin:auto;}
-button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-weight:bold;}
+:root { --p:#2c3e50; --s:#2980b9; --a:#e67e22; --d:#c0392b; }
+body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
+.card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
+button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:bold; }
+.btn-main{background:var(--s);color:white;}
+.btn-warn{background:var(--d);color:white;}
 .hidden{display:none;}
-.timer{font-size:50px;}
-.fb{width:30%;}
-.warn{color:#c0392b;font-weight:bold;}
-.good{color:#27ae60;font-weight:bold;}
+.timer{font-size:48px;color:var(--a);}
+#live{margin:10px 0;font-weight:bold;}
 </style>
 </head>
 
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ 5.5</h2>
+<h2>👁️ 5.6.1</h2>
 
-<div id="stateBox">
-<p><b>Zustand:</b></p>
-<label><input type="checkbox" value="trocken"> Trocken</label><br>
-<label><input type="checkbox" value="druck"> Druck</label><br>
-<label><input type="checkbox" value="muede"> Müde</label><br>
-<label><input type="checkbox" value="fokus"> Fokus schlecht</label>
-</div>
+<div id="live">Lade...</div>
 
-<div id="recommendation"></div>
-
-<button onclick="start('morgen')">☀️ Morgen</button>
-<button onclick="start('train')">🚀 Training</button>
-<button onclick="start('reset')">🌿 Reset</button>
+<button class="btn-main" onclick="start('morgen')">☀️ Morgenroutine</button>
+<button class="btn-main" onclick="startAuto()">Empfehlung ausführen</button>
 <button onclick="showStats()">📊 Analyse</button>
 </div>
 
@@ -46,9 +38,9 @@ button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-we
 <button onclick="abort()">Abbrechen</button>
 
 <div id="fb" class="hidden">
-<button class="fb" onclick="finish('good')">👍</button>
-<button class="fb" onclick="finish('neutral')">😐</button>
-<button class="fb" onclick="finish('bad')">⚠️</button>
+<button onclick="finish('good')">👍</button>
+<button onclick="finish('neutral')">😐</button>
+<button onclick="finish('bad')">⚠️</button>
 </div>
 </div>
 
@@ -56,137 +48,161 @@ button{padding:15px;margin:5px;width:100%;border:none;border-radius:15px;font-we
 
 <script>
 
-let interval;
-let steps=[];
+// =====================
+// SPEECH
+// =====================
+let synth = window.speechSynthesis;
+function speak(t){
+if(!synth) return;
+synth.cancel();
+let u=new SpeechSynthesisUtterance(t);
+u.lang="de-DE"
+synth.speak(u);
+}
+
+// =====================
+// STATE
+// =====================
+let stats = JSON.parse(localStorage.getItem('stats56')||"{}");
+let lastAction = parseInt(localStorage.getItem('lastAction')||Date.now());
 let currentExercise=""
-let currentState=[];
+let interval;
 
-let stats = JSON.parse(localStorage.getItem('exStatsV3')||"{}");
+// =====================
+// DAY RESET
+// =====================
+let today = new Date().toDateString();
+let lastDay = localStorage.getItem("day");
 
-function save(){localStorage.setItem('exStatsV3',JSON.stringify(stats));}
-
-function getState(){
-let arr=[];
-document.querySelectorAll('#stateBox input').forEach(cb=>{
-if(cb.checked) arr.push(cb.value);
-});
-return arr.length?arr:["neutral"];
+if(today !== lastDay){
+localStorage.setItem("day", today);
+localStorage.removeItem("morningDone");
 }
 
-function getScore(ex,state){
-if(!stats[ex]||!stats[ex][state]) return 0;
-let s=stats[ex][state];
-return (s.good||0)-(s.bad||0);
+// =====================
+// SCORE
+// =====================
+function score(ex){
+if(!stats[ex]) return 0;
+let s=stats[ex];
+return (s.good||0) - (s.bad||0);
 }
 
-function evaluate(){
+// =====================
+// RECOMMENDATION
+// =====================
+let lastSpoken=""
 
-let state = getState();
-let list=["Kreise","Acht","NahFern","Palmieren"];
+function recommend(){
 
-let best={ex:null,score:-999};
-let warnings=[];
+let morningDone = localStorage.getItem("morningDone");
 
-list.forEach(ex=>{
-let score=0;
-
-state.forEach(s=>{
-score+=getScore(ex,s);
-});
-
-if(score>best.score) best={ex,score};
-
-if(score<-2) warnings.push(ex);
-});
-
-let html=""
-
-if(best.ex){
-html += "<div class='good'>Empfehlung: "+best.ex+"</div>"
+if(!morningDone){
+document.getElementById("live").innerText = "➡️ Erst Morgenroutine"
+return;
 }
 
-if(warnings.length){
-html += "<div class='warn'>Vermeiden: "+warnings.join(", ")+"</div>"
+let minutes = (Date.now()-lastAction)/60000;
+
+let action, ex;
+
+if(minutes < 10){
+action = "Alles stabil"
+ex = null;
+}
+else if(minutes < 20){
+action = "Kurzpause: Blinzeln 20 Sekunden"
+ex = "Blinzeln"
+}
+else if(minutes < 40){
+action = "Reset: Palmieren 60 Sekunden"
+ex = "Palmieren"
+}
+else{
+action = "Starke Belastung: Wärme anwenden"
+ex = "Wärme"
 }
 
-document.getElementById('recommendation').innerHTML = html;
+document.getElementById("live").innerText = action;
+
+if(action !== lastSpoken){
+speak(action);
+lastSpoken = action;
 }
 
-setInterval(evaluate,2000);
-
-function updateStat(ex,stateArr,fb){
-if(!stats[ex]) stats[ex]={};
-
-stateArr.forEach(s=>{
-if(!stats[ex][s]) stats[ex][s]={good:0,neutral:0,bad:0};
-stats[ex][s][fb]++;
-});
-
-save();
+currentExercise = ex;
 }
 
-function pickExercise(){
+setInterval(recommend,3000);
 
-let list=["Kreise","Acht","NahFern","Palmieren"];
-
-list.sort((a,b)=>{
-let scoreA=0, scoreB=0;
-
-currentState.forEach(s=>{
-scoreA+=getScore(a,s);
-scoreB+=getScore(b,s);
-});
-
-return scoreB-scoreA;
-});
-
-return list[0];
+// =====================
+// START AUTO
+// =====================
+function startAuto(){
+if(!currentExercise) return;
+start(currentExercise);
 }
 
+// =====================
+// START
+// =====================
 function start(type){
-
-currentState = getState();
 
 document.getElementById('menu').classList.add('hidden');
 document.getElementById('run').classList.remove('hidden');
 document.getElementById('fb').classList.add('hidden');
 
-let ex = pickExercise();
+let steps=[];
 
-let focus;
+// MORGEN = FIX, KEIN SYSTEM
+if(type==="morgen"){
+localStorage.setItem("morningDone","true");
 
-if(ex==="Kreise") focus={t:"Kreise",s:30,d:"Langsame Augenkreise",sw:true};
-if(ex==="Acht") focus={t:"Acht",s:30,d:"Acht verfolgen",sw:true};
-if(ex==="NahFern") focus={t:"Nah-Fern",s:30,d:"Nähe/Ferne wechseln"};
-if(ex==="Palmieren") focus={t:"Palmieren",s:60,d:"Augen abdunkeln"};
-
-currentExercise = focus.t;
-
-const train=[
-{t:"Blinzeln",s:15,d:"Locker blinzeln"},
-focus
-];
-
-const morgen=[
-{t:"Augen zu",s:40,d:"Augen geschlossen lassen"},
+steps = [
+{t:"Augen geschlossen",s:40,d:"Augen geschlossen lassen"},
 {t:"Blinzeln",s:20,d:"Sanft blinzeln"},
 {t:"Wärme",s:60,d:"Warme Kompresse"},
-{t:"Massage",s:30,d:"Lidränder massieren"}
+{t:"Massage",s:30,d:"Lidränder sanft ausstreichen"}
 ];
 
-steps = type==="morgen"?morgen:type==="reset"?[{t:"Ferne",s:20,d:"In die Ferne"}]:train;
-
-run(0);
+speak("Morgenroutine starten");
 }
 
-function run(i){
+// AUTO ÜBUNGEN
+if(type==="Palmieren"){
+steps=[{t:"Palmieren",s:60,d:"Augen abdunkeln"}];
+speak("Palmieren starten");
+}
+
+if(type==="Blinzeln"){
+steps=[{t:"Blinzeln",s:20,d:"Locker blinzeln"}];
+speak("Blinzeln starten");
+}
+
+if(type==="Wärme"){
+steps=[{t:"Wärme",s:60,d:"Warme Kompresse"}];
+speak("Wärme anwenden");
+}
+
+currentExercise = type;
+
+run(steps,0);
+}
+
+// =====================
+// RUN
+// =====================
+function run(steps,i){
+
 if(i>=steps.length){
 document.getElementById('timer').innerText="✓"
 document.getElementById('fb').classList.remove('hidden');
+speak("Fertig");
 return;
 }
 
 let s=steps[i];
+
 document.getElementById('title').innerText=s.t;
 document.getElementById('desc').innerText=s.d;
 document.getElementById('timer').innerText=s.s;
@@ -197,28 +213,40 @@ interval=setInterval(()=>{
 sec--;
 document.getElementById('timer').innerText=sec;
 
-if(s.sw && sec===15) alert("Richtung wechseln");
-
 if(sec<=0){
 clearInterval(interval);
-run(i+1);
+run(steps,i+1);
 }
 },1000);
 }
 
+// =====================
+// ABORT
+// =====================
 function abort(){
 clearInterval(interval);
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
 }
 
+// =====================
+// FEEDBACK
+// =====================
 function finish(fb){
-updateStat(currentExercise,currentState,fb);
+
+if(!stats[currentExercise]) stats[currentExercise]={good:0,neutral:0,bad:0};
+stats[currentExercise][fb]++;
+
+localStorage.setItem('stats56',JSON.stringify(stats));
+localStorage.setItem('lastAction',Date.now());
 
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
 }
 
+// =====================
+// STATS
+// =====================
 function showStats(){
 
 document.getElementById('menu').classList.add('hidden');
@@ -228,21 +256,13 @@ box.classList.remove('hidden');
 let html="<h3>Analyse</h3>"
 
 for(let ex in stats){
-html+="<b>"+ex+"</b><br>"
-
-for(let st in stats[ex]){
-let s=stats[ex][st];
+let s=stats[ex];
 let total=s.good+s.bad+s.neutral;
-if(total===0) continue;
-
 let rate=Math.round((s.good/total)*100);
-html+=st+": "+rate+"% ("+total+")<br>"
+html+=ex+": "+rate+"% ("+total+")<br>"
 }
 
-html+="<br>"
-}
-
-html+="<button onclick='back()'>Zurück</button>"
+html+="<br><button onclick='back()'>Zurück</button>"
 
 box.innerHTML=html;
 }
