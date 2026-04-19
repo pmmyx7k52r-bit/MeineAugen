@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.6.4</title>
+<title>MeineAugen 5.6.5</title>
 
 <style>
 :root { --s:#2980b9; --a:#e67e22; --d:#c0392b; }
@@ -12,20 +12,20 @@ body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding
 button { padding:15px; margin:6px; width:100%; border:none; border-radius:15px; font-weight:bold; }
 .btn { background:var(--s); color:white; }
 .hidden{display:none;}
-.timer{font-size:48px;color:var(--a);}
 #live{margin:10px 0;font-weight:bold;}
+.timer{font-size:48px;color:var(--a);}
 </style>
 </head>
 
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ 5.6.4</h2>
+<h2>👁️ 5.6.5</h2>
 
 <div id="live">Bereit</div>
 
 <button class="btn" onclick="start('morgen')">☀️ Morgenroutine</button>
-<button class="btn" onclick="startAuto()">Empfehlung ausführen</button>
+<button class="btn" onclick="runRecommendation()">Empfehlung ausführen</button>
 <button onclick="showStats()">📊 Analyse</button>
 </div>
 
@@ -59,7 +59,7 @@ synth.speak(u);
 }
 
 // ================= STATE =================
-let stats = JSON.parse(localStorage.getItem('stats564')||"{}");
+let stats = JSON.parse(localStorage.getItem('stats565')||"{}");
 let currentExercise=""
 
 // ================= DAY RESET =================
@@ -78,29 +78,52 @@ let s=stats[ex];
 return (s.good||0) - (s.bad||0);
 }
 
-// ================= RECOMMEND =================
+// ================= STATE DETECTION =================
+function getState(){
+
+let bad = 0;
+let good = 0;
+
+for(let ex in stats){
+good += stats[ex].good||0;
+bad += stats[ex].bad||0;
+}
+
+if(bad > good + 2) return "overload"
+if(bad > good) return "dry"
+if(good > bad + 2) return "stable"
+
+return "normal"
+}
+
+// ================= RECOMMENDATION =================
 function recommend(){
 
 if(!localStorage.getItem("morningDone")){
-setLive("➡️ Erst Morgenroutine");
-currentExercise="morgen"
+currentExercise = "morgen"
+setLive("➡️ Morgenroutine fehlt");
 return;
 }
 
-let list=["Palmieren","Blinzeln","Wärme"];
+let state = getState();
 
-list.sort((a,b)=>score(b)-score(a));
-
-let best=list[0];
-
-let map={
-"Palmieren":"Empfehlung: Palmieren (Entlastung)",
-"Blinzeln":"Empfehlung: Blinzeln (20 Sekunden)",
-"Wärme":"Empfehlung: Wärme anwenden (60 Sekunden)"
+let plan = {
+overload: "Palmieren",
+dry: "Blinzeln+Fernblick",
+normal: "Blinzeln",
+stable: "Fernblick"
 };
 
-setLive(map[best]);
-currentExercise=best;
+currentExercise = plan[state];
+
+let map = {
+"Palmieren":"Empfehlung: Palmieren (Ruhe)",
+"Blinzeln+Fernblick":"Empfehlung: Blinzeln + Fernblick",
+"Blinzeln":"Empfehlung: Blinzeln",
+"Fernblick":"Empfehlung: In die Ferne schauen"
+};
+
+setLive(map[currentExercise]);
 }
 
 function setLive(t){
@@ -109,6 +132,12 @@ speak(t);
 }
 
 recommend();
+
+// ================= ACTION =================
+function runRecommendation(){
+if(!currentExercise) start("Blinzeln");
+else start(currentExercise);
+}
 
 // ================= START =================
 function start(type){
@@ -120,6 +149,7 @@ document.getElementById('fb').classList.add('hidden');
 let steps=[];
 
 if(type==="morgen"){
+
 localStorage.setItem("morningDone","true");
 
 steps=[
@@ -131,7 +161,7 @@ d:"Augen vollständig schließen. Kein Licht zulassen."
 {
 t:"Blinzeln",
 s:20,
-d:"Locker und regelmäßig blinzeln. Nicht pressen."
+d:"Locker blinzeln. Keine Spannung."
 },
 {
 t:"Wärme",
@@ -141,7 +171,7 @@ d:"Warme Kompresse auf geschlossene Augen legen."
 {
 t:"Massage",
 s:30,
-d:"Lidränder sanft mit den Fingerspitzen streichen."
+d:"Lidränder sanft ausstreichen."
 }
 ];
 
@@ -152,30 +182,47 @@ if(type==="Palmieren"){
 steps=[{
 t:"Palmieren",
 s:60,
-d:"1. Augen schließen. 2. Hände kräftig warmreiben. 3. Handflächen locker auf Augen legen. 4. Kein Druck. 5. Komplett abdunkeln. 6. Ruhig atmen."
+d:"Augen schließen. Hände warmreiben. Handflächen locker auf Augen legen. Kein Druck. Komplett abdunkeln. Ruhig atmen."
 }];
 
-speak("Augen schließen. Hände warmreiben. Locker auflegen. Kein Druck.");
+speak("Augen schließen. Hände warmreiben. Locker auflegen.");
 }
 
 if(type==="Blinzeln"){
 steps=[{
 t:"Blinzeln",
 s:20,
-d:"Augen normal öffnen und locker blinzeln. Kein bewusstes Pressen."
+d:"Locker blinzeln ohne Druck."
 }];
 
-speak("Locker blinzeln für zwanzig Sekunden.");
+speak("Locker blinzeln.");
 }
 
-if(type==="Wärme"){
+if(type==="Blinzeln+Fernblick"){
+steps=[
+{
+t:"Blinzeln",
+s:15,
+d:"Locker blinzeln."
+},
+{
+t:"Fernblick",
+s:40,
+d:"In die Ferne schauen. Augen entspannen."
+}
+];
+
+speak("Blinzeln und dann in die Ferne schauen.");
+}
+
+if(type==="Fernblick"){
 steps=[{
-t:"Wärme",
-s:60,
-d:"Warme Kompresse gleichmäßig auf geschlossene Augen legen."
+t:"Fernblick",
+s:40,
+d:"Ruhig in die Ferne schauen. Augen entspannen."
 }];
 
-speak("Wärme auf die Augen legen.");
+speak("In die Ferne schauen.");
 }
 
 currentExercise=type;
@@ -214,11 +261,6 @@ run(steps,i+1);
 }
 
 // ================= CONTROL =================
-function startAuto(){
-if(!currentExercise) start("Blinzeln");
-else start(currentExercise);
-}
-
 function abort(){
 clearInterval(interval);
 document.getElementById('run').classList.add('hidden');
@@ -231,7 +273,7 @@ function finish(fb){
 if(!stats[currentExercise]) stats[currentExercise]={good:0,neutral:0,bad:0};
 stats[currentExercise][fb]++;
 
-localStorage.setItem('stats564',JSON.stringify(stats));
+localStorage.setItem('stats565',JSON.stringify(stats));
 
 document.getElementById('run').classList.add('hidden');
 document.getElementById('menu').classList.remove('hidden');
