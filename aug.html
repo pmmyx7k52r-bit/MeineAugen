@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.0.2</title>
+<title>MeineAugen 6.0.4</title>
 <style>
 body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:15px; color: #2c3e50; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -24,7 +24,6 @@ cursor: pointer; color: white;
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; }
 .night { background: #2c3e50; }
-.reset { background: #e74c3c; width: 50%; font-size: 11px; padding: 8px; margin-top: 20px; }
 .hidden { display: none; }
 #mode-info { font-size: 12px; color: #7f8c8d; margin-bottom: 15px; background: #f0f0f0; padding: 8px; border-radius: 12px; }
 #title { font-size: 28px; font-weight: bold; margin-top: 10px; }
@@ -35,7 +34,7 @@ cursor: pointer; color: white;
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.0.2</h2>
+<h2>👁️ MeineAugen 6.0.4</h2>
 <div id="mode-info">Lädt...</div>
 
 <h4 style="margin:10px 0">Kontext</h4>
@@ -57,7 +56,7 @@ cursor: pointer; color: white;
 <button class="action-btn start-morning" onclick="startSession('wake')">☀️ Morgen-Pflege</button>
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
-<button class="action-btn reset" onclick="STATE.reset()">Reset</button>
+<button class="action-btn reset" onclick="STATE.reset()" style="background:#e74c3c; width:50%; font-size:11px;">Reset</button>
 </div>
 
 <div id="run" class="card hidden">
@@ -69,12 +68,7 @@ cursor: pointer; color: white;
 
 <script>
 const STATE = {
-get() {
-return {
-state: localStorage.getItem("ma_state") || "normal",
-context: localStorage.getItem("ma_context") || "screen"
-};
-},
+get() { return { state: localStorage.getItem("ma_state") || "normal", context: localStorage.getItem("ma_context") || "screen" }; },
 setState(s) { localStorage.setItem("ma_state", s); this.updateUI(); },
 setContext(c) { localStorage.setItem("ma_context", c); this.updateUI(); },
 reset() { localStorage.clear(); location.reload(); },
@@ -89,55 +83,49 @@ document.getElementById("mode-info").innerText = `KONTEXT: ${data.context.toUppe
 
 STATE.updateUI();
 
-function step(t, s, v) { return {t, s, v}; }
+// Hilfsfunktion für Übungsschritte
+// t: Titel, s: Sekunden, v: Beschreibungstext, split: Ob Richtungswechsel nötig
+function step(t, s, v, split = false) { return {t, s, v, split}; }
 
 function buildPlan(type) {
 const {state, context} = STATE.get();
 
 if(type === 'wake') {
 return [
-step("Sunning", 25, "Schließe die Augen. Drehe dein Gesicht sanft zum Fenster und bewege den Kopf langsam von links nach rechts."),
-step("Palmieren", 20, "Decke deine Augen mit den warmen Handflächen ab. Genieße die Dunkelheit."),
-step("Frische-Kick", 15, "Wasche deine geschlossenen Augen jetzt im Bad mit kühlem Wasser."),
-step("Blinzeln", 15, "Blinzle nun ganz locker und schnell, um die Augen zu befeuchten.")
+step("Sunning", 30, "Schließe die Augen. Drehe dein Gesicht sanft zum Licht und bewege den Kopf langsam von links nach rechts.", true),
+step("Palmieren", 20, "Decke deine Augen mit den warmen Handflächen ab."),
+step("Frische-Kick", 15, "Wasche deine geschlossenen Augen nun im Bad mit kühlem Wasser."),
+step("Augen-Acht", 24, "Beschreibe mit den Augen eine liegende Acht.", true)
 ];
 }
 if(type === 'night') {
 return [
-step("Palmieren", 45, "Lege die Handflächen auf. Lass alle Bilder des Tages in der Dunkelheit verblassen."),
-step("Gähnen", 20, "Gähne jetzt tief und herzhaft, um deinen Kiefer und die Augen zu entspannen."),
-step("Ruhe", 10, "Lass die Augen nun geschlossen. Gute Nacht.")
+step("Palmieren", 45, "Lege die Handflächen auf. Lass alle Bilder des Tages verblassen."),
+step("Gähnen", 20, "Gähne tief und herzhaft, um Kiefer und Augen zu lockern."),
+step("Ruhe", 10, "Gute Nacht.")
 ];
 }
 
 if(state === "overload" || context === "stress") {
 return [
-step("Großes Schwingen", 35, "Stehe locker. Drehe deinen Oberkörper von links nach rechts. Dein Blick gleitet entspannt mit."),
-step("Palmieren", 30, "Hände auflegen. Atme tief in den Bauch und schirme alle Reize ab."),
-step("Weicher Blick", 20, "Öffne die Augen. Schau ganz entspannt in die Ferne, ohne etwas Bestimmtes zu fixieren.")
-];
-}
-
-if(context === "screen") {
-return [
-step("Zentralisation", 20, "Suche dir einen winzigen Punkt am Bildschirm. Sieh nur diesen scharf, alles andere wird weich."),
-step("Nah-Fern", 30, "Schau auf deinen Daumen, dann in die Ferne. Wiederhole das im Wechsel."),
-step("Großes Blinzeln", 15, "Kneife die Augen fest zu und öffne sie dann ganz weit.")
+step("Großes Schwingen", 40, "Drehe den Oberkörper locker von links nach rechts. Der Blick gleitet mit.", true),
+step("Palmieren", 30, "Hände auflegen und tief durchatmen."),
+step("Weicher Blick", 20, "Schau ganz entspannt ohne Fokus in die Ferne.")
 ];
 }
 
 if(state === "dry") {
 return [
-step("Blinzel-Flash", 20, "Blinzle so schnell und locker wie möglich, wie ein Schmetterling mit den Flügeln schlägt."),
-step("Gähnen", 15, "Gähne tief, um den natürlichen Tränenfluss deiner Augen anzuregen."),
-step("Augenrollen", 20, "Halte die Augen geschlossen und rolle sie langsam in einem großen Kreis.")
+step("Blinzel-Flash", 20, "Blinzle ganz schnell und locker."),
+step("Gähnen", 15, "Tief gähnen für die Tränendrüsen."),
+step("Augenrollen", 24, "Rolle die Augen langsam in einem großen Kreis.", true)
 ];
 }
 
 return [
-step("Blinzeln", 15, "Blinzle regelmäßig, um den Tränenfilm zu erneuern."),
-step("Fernblick", 30, "Suche dir einen Punkt ganz weit draußen und lass deinen Blick dort ruhen."),
-step("Acht malen", 20, "Stelle dir eine liegende Acht vor und fahre sie mit den Augen langsam nach.")
+step("Blinzeln", 15, "Locker blinzeln."),
+step("Fernblick", 30, "In die weite Ferne schauen."),
+step("Acht malen", 24, "Fahre eine liegende Acht mit den Augen nach.", true)
 ];
 }
 
@@ -147,7 +135,7 @@ if(!window.speechSynthesis) { cb?.(); return; }
 speechSynthesis.cancel();
 const u = new SpeechSynthesisUtterance(text);
 u.lang = "de-DE"
-u.rate = 0.95; // Etwas langsamer für bessere Verständlichkeit
+u.rate = 0.95;
 u.onend = () => cb?.();
 speechSynthesis.speak(u);
 }
@@ -162,20 +150,25 @@ run(steps, 0);
 function run(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Das Training ist beendet. Deine Augen sind nun entspannt.");
-setTimeout(abort, 4000);
+speak("Fertig.");
+setTimeout(abort, 3000);
 return;
 }
 const s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-// Zuerst die Anweisung sprechen, dann Timer starten
 speak(s.v, () => {
 let sec = s.s;
+let half = Math.floor(s.s / 2);
 document.getElementById("timer").innerText = sec;
 interval = setInterval(() => {
 sec--;
 document.getElementById("timer").innerText = sec;
+// NEU: Richtungswechsel-Ansage
+if(s.split && sec === half) {
+speak("Jetzt Richtungswechsel.");
+}
+
 if(sec <= 0) {
 clearInterval(interval);
 run(steps, i + 1);
