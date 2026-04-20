@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.9.1</title>
+<title>MeineAugen 5.9.2</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
@@ -32,7 +32,7 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.9.1</h2>
+<h2>👁️ MeineAugen 5.9.2</h2>
 <div id="phase"></div>
 
 <div id="morning-check">
@@ -147,22 +147,20 @@ let steps;
 
 if(mode==="bed") steps = [
 step("Augen zu",15,"Augen geschlossen lassen"),
-step("Öffnen",20,"Langsam öffnen, nicht fixieren"),
-step("Blinzeln",15,"Ruhig blinzeln"),
-step("Orientieren",30,"Blick weich im Raum bewegen")
+step("Öffnen",20,"Langsam öffnen"),
+step("Blinzeln",15,"Ruhig blinzeln")
 ];
 
 if(mode==="normal") steps = [
 step("Blinzeln",20,"Ruhig blinzeln"),
-step("Palmieren",40,"Hände auf die Augen legen"),
-step("Fernblick",50,"In die Ferne schauen")
+step("Palmieren",30,"Hände auflegen"),
+step("Fernblick",40,"In die Ferne schauen")
 ];
 
 if(mode==="sticky") steps = [
-step("Wärme",60,"Warme Hände auflegen"),
-step("Reinigung",30,"Augenlider reinigen"),
-step("Blinzeln",20,"Langsam blinzeln"),
-step("Fernblick",40,"In die Ferne schauen")
+step("Wärme",40,"Warme Hände auflegen"),
+step("Reinigung",20,"Augenlider reinigen"),
+step("Blinzeln",15,"Langsam blinzeln")
 ];
 
 phase="day"
@@ -173,41 +171,53 @@ runSteps(steps);
 }
 
 /* =========================
-AUTO ENGINE
+PLAN LOGIK
 ========================= */
 
 function buildPlan(){
 
-let steps = [];
-
-steps.push(step("Blinzeln",15,"Ruhig blinzeln"));
-
-if(state!=="normal"){
-steps.push(...buildMovement());
-}
-
-if(context==="screen"){
-steps.push(step("Nah-Fern",60,"Zwischen nah und fern wechseln"));
-}
-
-steps.push(step("Freier Blick",40,"Blick wandern lassen"));
-
-return steps;
-}
-
-/* =========================
-EXERCISES MIT RICHTUNG
-========================= */
-
-function buildMovement(){
-
+// 🔴 OVERLOAD
+if(state==="overload"){
 return [
-step("Uhr oben",5,"Blick nach oben"),
-step("Uhr rechts",5,"Blick nach rechts"),
-step("Uhr unten",5,"Blick nach unten"),
-step("Uhr links",5,"Blick nach links"),
-step("Acht rechts",25,"Acht im Uhrzeigersinn"),
-step("Acht links",25,"Acht gegen Uhrzeigersinn")
+step("Blinzeln",10,"Ruhig blinzeln"),
+step("Palmieren",25,"Hände auf die Augen legen"),
+step("Freier Blick",20,"Blick weich lassen")
+];
+}
+
+// 🟡 STICKY
+if(state==="sticky"){
+return [
+step("Wärme",40,"Warme Hände"),
+step("Reinigung",20,"Reinigen"),
+step("Blinzeln",15,"Blinzeln"),
+step("Fernblick",30,"Fernblick")
+];
+}
+
+// 🟡 DRY
+if(state==="dry"){
+return [
+step("Blinzeln",15,"Ruhig blinzeln"),
+step("Uhr",20,"Oben rechts unten links"),
+step("Fernblick",30,"In die Ferne schauen")
+];
+}
+
+// 🟢 SCREEN
+if(context==="screen"){
+return [
+step("Blinzeln",15,"Ruhig blinzeln"),
+step("Uhr",20,"Oben rechts unten links"),
+step("Nah-Fern",40,"Nah und fern wechseln"),
+step("Freier Blick",30,"Blick wandern lassen")
+];
+}
+
+// 🟢 DEFAULT
+return [
+step("Blinzeln",15,"Ruhig blinzeln"),
+step("Freier Blick",30,"Blick wandern lassen")
 ];
 }
 
