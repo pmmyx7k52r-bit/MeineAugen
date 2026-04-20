@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.9.3</title>
+<title>MeineAugen 5.9.4</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
@@ -21,11 +21,10 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 .night { background:#2c3e50; }
 .hidden { display:none; }
 
+#mode { font-size:13px; color:#555; margin-bottom:10px; }
 #title { font-size:20px; }
 #timer { font-size:42px; color:#e67e22; }
 #desc { font-size:14px; color:#444; }
-#phase { font-size:12px; color:#888; margin-bottom:10px; }
-#mode { font-size:13px; color:#555; margin-bottom:10px; }
 </style>
 </head>
 
@@ -33,35 +32,23 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.9.3</h2>
-<div id="phase"></div>
+<h2>👁️ MeineAugen 5.9.4</h2>
 <div id="mode"></div>
 
-<div id="morning-check">
-<h4>Morgen</h4>
-<button onclick="startMorning('sticky')">🟡 Verklebte Augen</button>
-<button onclick="startMorning('normal')">🙂 Normal</button>
-<button onclick="startMorning('bed')">🛏️ Im Bett starten</button>
-</div>
-
-<div id="day-ui" class="hidden">
+<div id="day-ui">
 
 <h4>Kontext</h4>
 <button id="c_screen" onclick="setContext('screen')">📱 Bildschirm</button>
 <button id="c_stress" onclick="setContext('stress')">⚠️ Stress</button>
-<button id="c_nature" onclick="setContext('nature')">🌿 Natur</button>
 
 <h4>Zustand</h4>
 <button id="s_normal" onclick="setState('normal')">🙂 Normal</button>
 <button id="s_dry" onclick="setState('dry')">😵 Trocken</button>
-<button id="s_sticky" onclick="setState('sticky')">🟡 Verklebt</button>
 <button id="s_over" onclick="setState('overload')">🔴 Überreizt</button>
 
 <button class="start" onclick="startDay()">▶ Start</button>
 
 </div>
-
-<button class="night" onclick="goodNight()">🌙 Gute Nacht</button>
 
 </div>
 
@@ -75,13 +62,50 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <script>
 
-let phase = localStorage.getItem("phase") || "morning"
-let context = localStorage.getItem("context") || "screen"
-let state = localStorage.getItem("state") || "normal"
-
 let interval;
 
-updatePhase();
+/* =========================
+STATE HELPERS
+========================= */
+
+function getState(){
+return localStorage.getItem("state") || "normal"
+}
+
+function getContext(){
+return localStorage.getItem("context") || "screen"
+}
+
+function setState(s){
+localStorage.setItem("state", s);
+updateUI();
+}
+
+function setContext(c){
+localStorage.setItem("context", c);
+updateUI();
+}
+
+/* =========================
+UI
+========================= */
+
+function updateUI(){
+
+let state = getState();
+let context = getContext();
+
+document.querySelectorAll("button").forEach(b=>{
+b.classList.remove("active");
+});
+
+document.getElementById("s_"+state)?.classList.add("active");
+document.getElementById("c_"+context)?.classList.add("active");
+
+document.getElementById("mode").innerText =
+"Aktiv: " + state + " | " + context;
+}
+
 updateUI();
 
 /* =========================
@@ -95,7 +119,6 @@ speechSynthesis.cancel();
 
 let u = new SpeechSynthesisUtterance(text);
 u.lang = "de-DE"
-u.rate = 0.95;
 
 u.onend = ()=>cb?.();
 
@@ -103,119 +126,33 @@ speechSynthesis.speak(u);
 }
 
 /* =========================
-UI
-========================= */
-
-function updatePhase(){
-document.getElementById("phase").innerText = "Phase: " + phase;
-
-if(phase==="morning"){
-document.getElementById("morning-check").classList.remove("hidden");
-document.getElementById("day-ui").classList.add("hidden");
-} else {
-document.getElementById("morning-check").classList.add("hidden");
-document.getElementById("day-ui").classList.remove("hidden");
-}
-
-updateModeLabel();
-}
-
-function updateUI(){
-document.querySelectorAll("#day-ui button").forEach(b=>{
-if(!b.classList.contains("start")) b.classList.remove("active");
-});
-
-document.getElementById("c_"+context)?.classList.add("active");
-document.getElementById("s_"+state)?.classList.add("active");
-
-updateModeLabel();
-}
-
-function updateModeLabel(){
-document.getElementById("mode").innerText =
-"Aktiv: Zustand = " + state + " | Kontext = " + context;
-}
-
-function setContext(c){
-context = c;
-localStorage.setItem("context",c);
-updateUI();
-}
-
-function setState(s){
-state = s;
-localStorage.setItem("state",s);
-updateUI();
-}
-
-/* =========================
-MORNING
-========================= */
-
-function startMorning(mode){
-
-let steps;
-
-if(mode==="bed") steps = [
-step("Augen zu",15,"Augen geschlossen lassen"),
-step("Öffnen",20,"Langsam öffnen"),
-step("Blinzeln",15,"Ruhig blinzeln")
-];
-
-if(mode==="normal") steps = [
-step("Blinzeln",20,"Ruhig blinzeln"),
-step("Palmieren",30,"Hände auflegen"),
-step("Fernblick",40,"In die Ferne schauen")
-];
-
-if(mode==="sticky") steps = [
-step("Wärme",40,"Warme Hände auflegen"),
-step("Reinigung",20,"Augenlider reinigen"),
-step("Blinzeln",15,"Langsam blinzeln")
-];
-
-phase="day"
-localStorage.setItem("phase",phase);
-updatePhase();
-
-runSteps(steps);
-}
-
-/* =========================
-PLAN LOGIK (FIXED)
+PLAN (ABSOLUT PRIORITY FIX)
 ========================= */
 
 function buildPlan(){
 
-// 🔴 OVERLOAD (absolute Priorität)
+let state = getState();
+let context = getContext();
+
+console.log("PLAN MIT:", state, context);
+
+// 🔴 OVERLOAD HART
 if(state === "overload"){
 return [
 step("Blinzeln",10,"Ruhig blinzeln"),
-step("Palmieren",25,"Hände auf die Augen legen"),
+step("Palmieren",25,"Hände auflegen"),
 step("Freier Blick",20,"Blick weich lassen")
 ];
 }
 
-// 🟡 STICKY
-if(state === "sticky"){
-return [
-step("Wärme",40,"Warme Hände"),
-step("Reinigung",20,"Reinigen"),
-step("Blinzeln",15,"Blinzeln"),
-step("Fernblick",30,"Fernblick")
-];
-}
-
-// 🟡 DRY
 if(state === "dry"){
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
 step("Uhr",20,"Oben rechts unten links"),
-step("Fernblick",30,"In die Ferne schauen")
+step("Fernblick",30,"Fernblick")
 ];
 }
 
-// 🟢 NORMAL + Kontext
 if(context === "screen"){
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
@@ -225,13 +162,6 @@ step("Freier Blick",30,"Blick wandern lassen")
 ];
 }
 
-if(context === "stress"){
-return [
-step("Palmieren",30,"Hände auflegen"),
-step("Freier Blick",30,"Blick wandern lassen")
-];
-}
-
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
 step("Freier Blick",30,"Blick wandern lassen")
@@ -239,7 +169,7 @@ step("Freier Blick",30,"Blick wandern lassen")
 }
 
 /* =========================
-RUNNER
+RUN
 ========================= */
 
 function step(t,s,v){
@@ -247,7 +177,6 @@ return {t,s,v};
 }
 
 function startDay(){
-console.log("STATE:", state, "CONTEXT:", context);
 runSteps(buildPlan());
 }
 
@@ -297,16 +226,6 @@ clearInterval(interval);
 speechSynthesis.cancel();
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
-}
-
-/* =========================
-NIGHT
-========================= */
-
-function goodNight(){
-phase="morning"
-localStorage.setItem("phase",phase);
-updatePhase();
 }
 
 </script>
