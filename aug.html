@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.8.1</title>
+<title>MeineAugen 5.9</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
@@ -32,7 +32,7 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.8.1</h2>
+<h2>👁️ MeineAugen 5.9</h2>
 <div id="phase"></div>
 
 <div id="morning-check">
@@ -45,15 +45,15 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 <div id="day-ui" class="hidden">
 
 <h4>Kontext</h4>
-<button id="c_screen" onclick="setContext('screen')">📱 Bildschirm</button>
-<button id="c_stress" onclick="setContext('stress')">⚠️ Stress</button>
-<button id="c_nature" onclick="setContext('nature')">🌿 Natur</button>
+<button onclick="setContext('screen')">📱 Bildschirm</button>
+<button onclick="setContext('stress')">⚠️ Stress</button>
+<button onclick="setContext('nature')">🌿 Natur</button>
 
 <h4>Zustand</h4>
-<button id="s_normal" onclick="setState('normal')">🙂 Normal</button>
-<button id="s_dry" onclick="setState('dry')">😵 Trocken</button>
-<button id="s_sticky" onclick="setState('sticky')">🟡 Verklebt</button>
-<button id="s_over" onclick="setState('overload')">🔴 Überreizt</button>
+<button onclick="setState('normal')">🙂 Normal</button>
+<button onclick="setState('dry')">😵 Trocken</button>
+<button onclick="setState('sticky')">🟡 Verklebt</button>
+<button onclick="setState('overload')">🔴 Überreizt</button>
 
 <button class="start" onclick="startDay()">▶ Start</button>
 
@@ -64,14 +64,11 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 </div>
 
 <div id="run" class="card hidden">
-
 <div id="title"></div>
 <div id="timer"></div>
 <div id="desc"></div>
 
-<button onclick="finish()">✔️ Fertig</button>
 <button onclick="abort()">Abbrechen</button>
-
 </div>
 
 <script>
@@ -79,14 +76,12 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 let phase = localStorage.getItem("phase") || "morning"
 let context = "screen"
 let state = "normal"
-
 let interval;
-let speechQueueRunning = false;
 
 updatePhase();
 
 /* =========================
-UI PHASE
+PHASE
 ========================= */
 
 function updatePhase(){
@@ -102,27 +97,6 @@ document.getElementById("day-ui").classList.remove("hidden");
 }
 
 /* =========================
-SPEECH FIX (stabil)
-========================= */
-
-function speak(text, cb){
-if(!window.speechSynthesis){
-cb?.();
-return;
-}
-
-speechSynthesis.cancel();
-
-let u = new SpeechSynthesisUtterance(text);
-u.lang = "de-DE"
-u.rate = 0.95;
-
-u.onend = () => cb?.();
-
-speechSynthesis.speak(u);
-}
-
-/* =========================
 MORNING
 ========================= */
 
@@ -130,103 +104,111 @@ function startMorning(mode){
 
 let steps;
 
-if(mode === "sticky") steps = morningCare();
-if(mode === "normal") steps = morningNormal();
-if(mode === "bed") steps = morningBedStart();
+if(mode==="sticky") steps = baseRecovery();
+if(mode==="normal") steps = morningNormal();
+if(mode==="bed") steps = morningBed();
 
-phase = "day"
-localStorage.setItem("phase", phase);
+phase="day"
+localStorage.setItem("phase",phase);
 
 updatePhase();
-startSteps(steps);
+runSteps(steps);
 }
 
 function morningNormal(){
 return [
-{t:"Augen geschlossen", s:20, v:"Augen geschlossen lassen."},
+{t:"Blinzeln", s:20, v:"Ruhig blinzeln."},
 {t:"Palmieren", s:40, v:"Hände auf die Augen legen."},
-{t:"Blinzeln", s:20, v:"Langsam blinzeln."},
 {t:"Fernblick", s:50, v:"In die Ferne schauen."}
 ];
 }
 
-function morningCare(){
+function morningBed(){
 return [
-{t:"Wärme", s:60, v:"Warme Hände auf die Augen legen."},
-{t:"Reinigung", s:30, v:"Lider vorsichtig reinigen."},
-{t:"Blinzeln", s:20, v:"Langsam blinzeln."},
-{t:"Fernblick", s:50, v:"In die Ferne schauen."}
-];
-}
-
-function morningBedStart(){
-return [
-{t:"Ruhe", s:15, v:"Augen geschlossen lassen."},
-{t:"Öffnen", s:20, v:"Langsam öffnen, nicht fixieren."},
+{t:"Öffnen", s:20, v:"Langsam die Augen öffnen."},
 {t:"Blinzeln", s:15, v:"Ruhig blinzeln."},
 {t:"Orientieren", s:30, v:"Weicher Blick im Raum."}
 ];
 }
 
 /* =========================
-DAY LOGIC
+BASE RECOVERY
 ========================= */
 
-function setContext(c){
-context = c;
-updateUI();
-}
-
-function setState(s){
-state = s;
-updateUI();
-}
-
-function updateUI(){
-document.querySelectorAll("#day-ui button").forEach(b=>{
-if(!b.classList.contains("start")) b.classList.remove("active");
-});
-
-document.getElementById("c_"+context)?.classList.add("active");
-document.getElementById("s_"+state)?.classList.add("active");
-}
-
-function buildPlan(){
-
-if(state==="sticky") return ["sticky"];
-if(state==="overload") return ["palmieren"];
-if(state==="dry") return ["blinzeln_fern"];
-
-if(context==="screen") return ["blinzeln_fern"];
-if(context==="stress") return ["palmieren"];
-if(context==="nature") return ["fernblick"];
-
-return ["blinzeln"];
-}
-
-function build(type){
-
-if(type==="sticky"){
+function baseRecovery(){
 return [
-{t:"Wärme", s:60, v:"Hände auf die Augen legen."},
-{t:"Reinigung", s:30, v:"Lider reinigen."},
+{t:"Wärme", s:60, v:"Warme Hände auf die Augen legen."},
+{t:"Reinigung", s:30, v:"Lider vorsichtig reinigen."},
 {t:"Blinzeln", s:20, v:"Langsam blinzeln."},
 {t:"Fernblick", s:40, v:"In die Ferne schauen."}
 ];
 }
 
-if(type==="palmieren"){
-return [{t:"Palmieren", s:60, v:"Hände auf die Augen legen."}];
+/* =========================
+AUTO ENGINE 5.9
+========================= */
+
+function buildPlan(){
+
+let load = 0;
+
+if(state==="sticky") load = 3;
+else if(state==="dry") load = 2;
+else if(state==="overload") load = 3;
+else load = 1;
+
+if(context==="screen") load += 1;
+if(context==="stress") load += 1;
+
+let plan = [];
+
+// RESET
+plan.push("reset");
+
+// BEWEGUNG nur bei mittlerer Belastung+
+if(load >= 2) plan.push("movement");
+
+// FOKUS bei Bildschirm / trockenen Augen
+if(context==="screen" || state==="dry") plan.push("focus");
+
+// INTEGRATION immer am Ende
+plan.push("integration");
+
+return plan;
 }
 
-if(type==="blinzeln_fern"){
+/* =========================
+MODULES
+========================= */
+
+function build(type){
+
+if(type==="reset"){
 return [
-{t:"Blinzeln", s:15, v:"Ruhig blinzeln."},
-{t:"Fernblick", s:40, v:"In die Ferne schauen."}
+{t:"Blinzeln", s:15, v:"Ruhig blinzeln."}
 ];
 }
 
-return [{t:"Blinzeln", s:20, v:"Ruhig blinzeln."}];
+if(type==="movement"){
+return [
+{t:"Uhr", s:40, v:"Blick springt zwischen Punkten wie einer Uhr."},
+{t:"Acht", s:50, v:"Folge einer liegenden Acht mit den Augen."}
+];
+}
+
+if(type==="focus"){
+return [
+{t:"Nah–Fern", s:60, v:"Wechsle zwischen nah und fern."}
+];
+}
+
+if(type==="integration"){
+return [
+{t:"Freier Blick", s:40, v:"Blick wandern lassen ohne Fixieren."}
+];
+}
+
+return [];
 }
 
 /* =========================
@@ -234,19 +216,14 @@ RUN
 ========================= */
 
 function startDay(){
-let plan = buildPlan();
-let steps = [];
-
-for(let p of plan){
-steps = steps.concat(build(p));
+runSteps(buildPlan().flatMap(build));
 }
 
-startSteps(steps);
-}
+function runSteps(steps){
 
-function startSteps(steps){
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
+
 run(steps,0);
 }
 
@@ -254,7 +231,6 @@ function run(steps,i){
 
 if(i>=steps.length){
 document.getElementById("timer").innerText="✓"
-speak("Fertig");
 return;
 }
 
@@ -262,8 +238,6 @@ let s = steps[i];
 
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-
-speak(s.v, ()=>{
 
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
@@ -279,18 +253,14 @@ run(steps,i+1);
 }
 
 },1000);
-});
 }
 
 /* =========================
 CONTROL
 ========================= */
 
-function finish(){ abort(); }
-
 function abort(){
 clearInterval(interval);
-speechSynthesis.cancel();
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
@@ -303,7 +273,6 @@ function goodNight(){
 phase="morning"
 localStorage.setItem("phase",phase);
 updatePhase();
-alert("Gute Nacht");
 }
 
 </script>
