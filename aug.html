@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.7.2</title>
+<title>MeineAugen 5.8.1</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
@@ -19,7 +19,6 @@ background:#2980b9; color:white; opacity:0.7;
 button.active { opacity:1; outline:3px solid #2ecc71; }
 .start { background:#27ae60; opacity:1; }
 .night { background:#2c3e50; }
-
 .hidden { display:none; }
 
 #title { font-size:20px; }
@@ -33,13 +32,14 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.7.2</h2>
+<h2>👁️ MeineAugen 5.8.1</h2>
 <div id="phase"></div>
 
 <div id="morning-check">
 <h4>Morgen</h4>
-<button onclick="startMorning(true)">🟡 Verklebte Augen</button>
-<button onclick="startMorning(false)">🙂 Normal</button>
+<button onclick="startMorning('sticky')">🟡 Verklebte Augen</button>
+<button onclick="startMorning('normal')">🙂 Normal</button>
+<button onclick="startMorning('bed')">🛏️ Im Bett starten</button>
 </div>
 
 <div id="day-ui" class="hidden">
@@ -76,30 +76,19 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <script>
 
-// ===== STATE =====
 let phase = localStorage.getItem("phase") || "morning"
 let context = "screen"
 let state = "normal"
+
 let interval;
+let speechQueueRunning = false;
 
-// ===== SPEECH (mit Callback) =====
-function speak(text, cb){
-if(!window.speechSynthesis){ if(cb) cb(); return; }
-
-let u = new SpeechSynthesisUtterance(text);
-u.lang = "de-DE"
-u.rate = 0.95;
-
-u.onend = () => { if(cb) cb(); };
-
-speechSynthesis.cancel();
-speechSynthesis.speak(u);
-}
-
-// ===== INIT =====
 updatePhase();
 
-// ===== PHASE =====
+/* =========================
+UI PHASE
+========================= */
+
 function updatePhase(){
 document.getElementById("phase").innerText = "Phase: " + phase;
 
@@ -112,45 +101,92 @@ document.getElementById("day-ui").classList.remove("hidden");
 }
 }
 
-// ===== MORNING =====
-function startMorning(sticky){
+/* =========================
+SPEECH FIX (stabil)
+========================= */
 
-let steps = sticky ? morningCare() : morningNormal();
+function speak(text, cb){
+if(!window.speechSynthesis){
+cb?.();
+return;
+}
 
-phase="day"
-localStorage.setItem("phase",phase);
+speechSynthesis.cancel();
+
+let u = new SpeechSynthesisUtterance(text);
+u.lang = "de-DE"
+u.rate = 0.95;
+
+u.onend = () => cb?.();
+
+speechSynthesis.speak(u);
+}
+
+/* =========================
+MORNING
+========================= */
+
+function startMorning(mode){
+
+let steps;
+
+if(mode === "sticky") steps = morningCare();
+if(mode === "normal") steps = morningNormal();
+if(mode === "bed") steps = morningBedStart();
+
+phase = "day"
+localStorage.setItem("phase", phase);
+
 updatePhase();
-
 startSteps(steps);
 }
 
-// ===== MORNING ROUTINES =====
 function morningNormal(){
 return [
-{t:"Augen geschlossen", s:30, v:"Lass die Augen geschlossen. Reibe nicht."},
-{t:"Palmieren", s:60, v:"Reibe deine Hände warm. Lege sie locker auf die geschlossenen Augen. Kein Druck."},
-{t:"Blinzeln", s:20, v:"Öffne die Augen langsam. Blinzle ruhig und regelmäßig."},
-{t:"Aufstehen", s:5, v:"Steh jetzt auf."},
-{t:"Fernblick", s:60, v:"Schau in die Ferne. Blinzle normal. Fixiere nichts. Lass den Blick weich."}
+{t:"Augen geschlossen", s:20, v:"Augen geschlossen lassen."},
+{t:"Palmieren", s:40, v:"Hände auf die Augen legen."},
+{t:"Blinzeln", s:20, v:"Langsam blinzeln."},
+{t:"Fernblick", s:50, v:"In die Ferne schauen."}
 ];
 }
 
 function morningCare(){
 return [
-{t:"Wärme", s:90, v:"Lege warme Hände auf deine geschlossenen Augen."},
-{t:"Lidmassage", s:30, v:"Streiche sanft über die Lider. Kein Druck auf den Augapfel."},
-{t:"Reinigung", s:30, v:"Reinige die Lider vorsichtig mit Wasser."},
-{t:"Blinzeln", s:20, v:"Blinzle ruhig und locker."},
-{t:"Fernblick", s:60, v:"Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."}
+{t:"Wärme", s:60, v:"Warme Hände auf die Augen legen."},
+{t:"Reinigung", s:30, v:"Lider vorsichtig reinigen."},
+{t:"Blinzeln", s:20, v:"Langsam blinzeln."},
+{t:"Fernblick", s:50, v:"In die Ferne schauen."}
 ];
 }
 
-// ===== DAY =====
-function setContext(c){ context=c; updateUI(); }
-function setState(s){ state=s; updateUI(); }
+function morningBedStart(){
+return [
+{t:"Ruhe", s:15, v:"Augen geschlossen lassen."},
+{t:"Öffnen", s:20, v:"Langsam öffnen, nicht fixieren."},
+{t:"Blinzeln", s:15, v:"Ruhig blinzeln."},
+{t:"Orientieren", s:30, v:"Weicher Blick im Raum."}
+];
+}
+
+/* =========================
+DAY LOGIC
+========================= */
+
+function setContext(c){
+context = c;
+updateUI();
+}
+
+function setState(s){
+state = s;
+updateUI();
+}
 
 function updateUI(){
-document.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+document.querySelectorAll("#day-ui button").forEach(b=>{
+if(!b.classList.contains("start")) b.classList.remove("active");
+});
+
 document.getElementById("c_"+context)?.classList.add("active");
 document.getElementById("s_"+state)?.classList.add("active");
 }
@@ -168,46 +204,38 @@ if(context==="nature") return ["fernblick"];
 return ["blinzeln"];
 }
 
-// ===== EXERCISES =====
 function build(type){
 
 if(type==="sticky"){
 return [
-{t:"Augen schließen", s:30, v:"Schließe die Augen. Reibe nicht."},
-{t:"Wärme", s:60, v:"Lege warme Hände auf die Augen."},
-{t:"Blinzeln", s:20, v:"Öffne die Augen und blinzle langsam."},
-{t:"Fernblick", s:40, v:"Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."}
+{t:"Wärme", s:60, v:"Hände auf die Augen legen."},
+{t:"Reinigung", s:30, v:"Lider reinigen."},
+{t:"Blinzeln", s:20, v:"Langsam blinzeln."},
+{t:"Fernblick", s:40, v:"In die Ferne schauen."}
 ];
 }
 
 if(type==="palmieren"){
-return [
-{t:"Palmieren", s:60, v:"Reibe deine Hände warm. Lege sie locker auf die geschlossenen Augen. Kein Druck."}
-];
+return [{t:"Palmieren", s:60, v:"Hände auf die Augen legen."}];
 }
 
 if(type==="blinzeln_fern"){
 return [
-{t:"Blinzeln", s:15, v:"Blinzle ruhig und vollständig."},
-{t:"Fernblick", s:40, v:"Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."}
+{t:"Blinzeln", s:15, v:"Ruhig blinzeln."},
+{t:"Fernblick", s:40, v:"In die Ferne schauen."}
 ];
 }
 
-if(type==="fernblick"){
-return [
-{t:"Fernblick", s:40, v:"Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."}
-];
+return [{t:"Blinzeln", s:20, v:"Ruhig blinzeln."}];
 }
 
-return [
-{t:"Blinzeln", s:20, v:"Blinzle ruhig und vollständig."}
-];
-}
+/* =========================
+RUN
+========================= */
 
-// ===== START =====
 function startDay(){
 let plan = buildPlan();
-let steps=[];
+let steps = [];
 
 for(let p of plan){
 steps = steps.concat(build(p));
@@ -216,12 +244,9 @@ steps = steps.concat(build(p));
 startSteps(steps);
 }
 
-// ===== RUN =====
 function startSteps(steps){
-
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
-
 run(steps,0);
 }
 
@@ -237,14 +262,14 @@ let s = steps[i];
 
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-document.getElementById("timer").innerText = "..."
 
-speak(s.v, function(){
+speak(s.v, ()=>{
 
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
 
 interval = setInterval(()=>{
+
 sec--;
 document.getElementById("timer").innerText = sec;
 
@@ -252,26 +277,33 @@ if(sec<=0){
 clearInterval(interval);
 run(steps,i+1);
 }
-},1000);
 
+},1000);
 });
 }
 
-// ===== CONTROL =====
+/* =========================
+CONTROL
+========================= */
+
 function finish(){ abort(); }
 
 function abort(){
 clearInterval(interval);
+speechSynthesis.cancel();
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
 
-// ===== NIGHT =====
+/* =========================
+NIGHT
+========================= */
+
 function goodNight(){
 phase="morning"
 localStorage.setItem("phase",phase);
 updatePhase();
-alert("Gute Nacht. Morgen startet wieder die Morgenroutine.");
+alert("Gute Nacht");
 }
 
 </script>
