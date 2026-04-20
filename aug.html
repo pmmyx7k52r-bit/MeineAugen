@@ -3,216 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.9.5</title>
-
+<title>MeineAugen 6.0.0</title>
 <style>
-body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:20px; }
+body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:15px; color: #2c3e50; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-button {
-padding:14px; margin:6px; width:100%;
-border:none; border-radius:15px;
-font-weight:600; font-size:15px;
-background:#2980b9; color:white; opacity:0.6;
-cursor: pointer;
-transition: opacity 0.2s;
+/* Stabiles Grid für die Auswahl */
+.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
+
+button.option {
+padding: 12px; border: none; border-radius: 15px;
+font-weight: 600; font-size: 14px;
+background: #bdc3c7; color: white;
+cursor: pointer; transition: all 0.2s;
+flex: 1 1 45%; /* Zwei Buttons pro Zeile */
 }
 
-button.active { opacity:1; outline:3px solid #2ecc71; }
-.start { background:#27ae60; opacity:1; margin-top: 20px; }
-.reset { background:#e74c3c; opacity:1; margin-top: 10px; }
-.hidden { display:none; }
+button.option.active { background: #2980b9; outline: 3px solid #2ecc71; opacity: 1; }
 
-#mode { font-size:13px; color:#555; margin-bottom:10px; }
-#runmode { font-size:13px; color:#999; margin-bottom:10px; }
+/* Haupt-Aktionsbuttons */
+.action-btn {
+padding: 16px; margin: 8px 0; width: 100%;
+border: none; border-radius: 18px;
+font-weight: bold; font-size: 16px;
+cursor: pointer; color: white;
+}
 
-#title { font-size:24px; font-weight: bold; margin-bottom: 10px; }
-#timer { font-size:64px; color:#e67e22; font-weight: bold; margin: 20px 0; }
-#desc { font-size:18px; color:#444; margin-bottom: 20px; }
+.start-morning { background: #f1c40f; color: #2c3e50; }
+.start-run { background: #27ae60; }
+.night { background: #2c3e50; }
+.reset { background: #e74c3c; width: 50%; font-size: 11px; padding: 8px; margin-top: 20px; }
+
+.hidden { display: none; }
+#mode-info { font-size: 12px; color: #7f8c8d; margin-bottom: 15px; background: #f0f0f0; padding: 8px; border-radius: 12px; }
+#title { font-size: 24px; font-weight: bold; }
+#timer { font-size: 64px; color: #e67e22; font-weight: bold; margin: 15px 0; }
+#desc { font-size: 18px; color: #444; min-height: 60px; }
 </style>
 </head>
-
 <body>
 
 <div id="menu" class="card">
+<h2>👁️ MeineAugen 6.0.0</h2>
+<div id="mode-info">Lädt...</div>
 
-<h2>👁️ MeineAugen 5.9.5</h2>
-<div id="mode"></div>
+<h4 style="margin:10px 0">Kontext</h4>
+<div class="grid">
+<button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
+<button id="c_stress" class="option" onclick="STATE.setContext('stress')">⚠️ Stress</button>
+<button id="c_nature" class="option" style="flex: 1 1 92%" onclick="STATE.setContext('nature')">🌿 Natur</button>
+</div>
 
-<h4>Kontext</h4>
-<button id="c_screen" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
-<button id="c_stress" onclick="STATE.setContext('stress')">⚠️ Stress</button>
-<button id="c_nature" onclick="STATE.setContext('nature')">🌿 Natur</button>
+<h4 style="margin:10px 0">Zustand</h4>
+<div class="grid">
+<button id="s_normal" class="option" onclick="STATE.setState('normal')">🙂 Normal</button>
+<button id="s_dry" class="option" onclick="STATE.setState('dry')">😵 Trocken</button>
+<button id="s_overload" class="option" style="flex: 1 1 92%" onclick="STATE.setState('overload')">🔴 Überreizt</button>
+</div>
 
-<h4>Zustand</h4>
-<button id="s_normal" onclick="STATE.setState('normal')">🙂 Normal</button>
-<button id="s_dry" onclick="STATE.setState('dry')">😵 Trocken</button>
-<button id="s_overload" onclick="STATE.setState('overload')">🔴 Überreizt</button>
+<hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
 
-<button class="start" onclick="startDay()">▶ Start</button>
-<button class="reset" onclick="STATE.reset()">Reset</button>
-
+<button class="action-btn start-morning" onclick="startSession('wake')">☀️ Morgen-Pflege (Bett/Bad)</button>
+<button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
+<button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
+<button class="action-btn reset" onclick="STATE.reset()">Reset</button>
 </div>
 
 <div id="run" class="card hidden">
-<div id="runmode"></div>
 <div id="title"></div>
 <div id="timer"></div>
 <div id="desc"></div>
-
-<button onclick="abort()" style="background:#95a5a6; opacity:1;">Abbrechen</button>
+<button onclick="abort()" class="action-btn" style="background:#95a5a6;">Abbrechen</button>
 </div>
 
 <script>
-
-/* =========================
-ZENTRALER STATE
-========================= */
-
 const STATE = {
-
-get(){
+get() {
 return {
-state: localStorage.getItem("state") || "normal",
-context: localStorage.getItem("context") || "screen"
+state: localStorage.getItem("ma_state") || "normal",
+context: localStorage.getItem("ma_context") || "screen"
 };
 },
-
-setState(s){
-localStorage.setItem("state", s);
+setState(s) {
+localStorage.setItem("ma_state", s);
 this.updateUI();
 },
-
-setContext(c){
-localStorage.setItem("context", c);
+setContext(c) {
+localStorage.setItem("ma_context", c);
 this.updateUI();
 },
-
-reset(){
-localStorage.clear();
+reset() {
+localStorage.removeItem("ma_state");
+localStorage.removeItem("ma_context");
 location.reload();
 },
+updateUI() {
+const data = this.get();
+// Alle Optionen zurücksetzen
+document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
+// Aktive markieren
+const stateBtn = document.getElementById("s_" + data.state);
+const contextBtn = document.getElementById("c_" + data.context);
+if(stateBtn) stateBtn.classList.add('active');
+if(contextBtn) contextBtn.classList.add('active');
 
-updateUI(){
-let {state, context} = this.get();
-
-// Alle aktiven Klassen entfernen
-document.querySelectorAll("button").forEach(b=>{
-b.classList.remove("active");
-});
-
-// Die richtigen Buttons markieren
-document.getElementById("s_" + state)?.classList.add("active");
-document.getElementById("c_" + context)?.classList.add("active");
-
-document.getElementById("mode").innerText =
-"Aktiv: " + state + " | " + context;
+document.getElementById("mode-info").innerText =
+`AKTIV: ${data.context.toUpperCase()} | STATUS: ${data.state.toUpperCase()}`;
 }
 };
 
-// Initialer Aufruf beim Laden
+// Initialisierung
 STATE.updateUI();
 
-/* =========================
-SPEECH
-========================= */
+/* --- Logik & Ablauf --- */
 
-function speak(text, cb){
-if(!window.speechSynthesis){ cb?.(); return; }
+function step(t, s, v) { return {t, s, v}; }
 
+function buildPlan(type) {
+const {state, context} = STATE.get();
+
+if(type === 'wake') {
+return [
+step("Im Bett", 15, "Handflächen auflegen und Augen wärmen"),
+step("Blinzeln", 12, "Ganz sanft in den Raum blinzeln"),
+step("Im Bad", 20, "Augen mit kühlem Wasser erfrischen"),
+step("Bewegung", 20, "Sanfte Augen-Acht beschreiben")
+];
+}
+if(type === 'night') {
+return [
+step("Entspannung", 40, "Dunkelheit hinter den Handflächen genießen"),
+step("Gähnen", 15, "Tief gähnen und locker lassen"),
+step("Ruhe", 10, "Gute Nacht.")
+];
+}
+// Training Tagsüber
+if(state === "overload") {
+return [
+step("Ruhe", 25, "Augen zu und tief atmen"),
+step("Klopfen", 20, "Augenbrauen sanft abklopfen"),
+step("Fernblick", 20, "Blick weich in die Ferne richten")
+];
+}
+return [
+step("Blinzeln", 15, "Augen befeuchten"),
+step("Nah-Fern", 30, "Fokus-Wechsel trainieren"),
+step("Rollen", 20, "Augen kreisen lassen")
+];
+}
+
+let interval;
+function speak(text, cb) {
+if(!window.speechSynthesis) { cb?.(); return; }
 speechSynthesis.cancel();
-
-let u = new SpeechSynthesisUtterance(text);
+const u = new SpeechSynthesisUtterance(text);
 u.lang = "de-DE"
-u.rate = 1.0;
-
-u.onend = ()=>cb?.();
+u.onend = () => cb?.();
 speechSynthesis.speak(u);
 }
 
-/* =========================
-PLAN
-========================= */
-
-function buildPlan(){
-let {state, context} = STATE.get();
-
-if(state === "overload"){
-return [
-step("Blinzeln", 10, "Ruhig blinzeln"),
-step("Palmieren", 20, "Hände auflegen"),
-step("Freier Blick", 20, "Blick weich lassen")
-];
-}
-
-if(state === "dry"){
-return [
-step("Blinzeln", 15, "Ruhig blinzeln"),
-step("Uhr", 20, "Oben rechts unten links"),
-step("Fernblick", 30, "In die Ferne schauen")
-];
-}
-
-if(context === "screen"){
-return [
-step("Blinzeln", 15, "Ruhig blinzeln"),
-step("Uhr", 20, "Oben rechts unten links"),
-step("Nah-Fern", 40, "Nah und fern wechseln"),
-step("Freier Blick", 30, "Blick wandern lassen")
-];
-}
-
-// ... weitere Bedingungen bleiben gleich
-return [
-step("Blinzeln", 15, "Ruhig blinzeln"),
-step("Freier Blick", 30, "Blick wandern lassen")
-];
-}
-
-/* =========================
-RUN
-========================= */
-
-let interval;
-
-function step(t,s,v){
-return {t,s,v};
-}
-
-function startDay(){
-let {state, context} = STATE.get();
-document.getElementById("runmode").innerText = "Läuft: " + state + " | " + context;
-runSteps(buildPlan());
-}
-
-function runSteps(steps){
+function startSession(type) {
+const steps = buildPlan(type);
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 run(steps, 0);
 }
 
-function run(steps, i){
-if(i >= steps.length){
+function run(steps, i) {
+if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-document.getElementById("title").innerText = "Fertig!"
-document.getElementById("desc").innerText = "Gut gemacht."
-speak("Training abgeschlossen");
+speak("Fertig");
+setTimeout(abort, 3000);
 return;
 }
-
-let s = steps[i];
+const s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-
-speak(s.v, ()=>{
+speak(s.v, () => {
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
-
-interval = setInterval(()=>{
+interval = setInterval(() => {
 sec--;
 document.getElementById("timer").innerText = sec;
-
-if(sec <= 0){
+if(sec <= 0) {
 clearInterval(interval);
 run(steps, i + 1);
 }
@@ -220,14 +193,12 @@ run(steps, i + 1);
 });
 }
 
-function abort(){
+function abort() {
 clearInterval(interval);
 if(window.speechSynthesis) speechSynthesis.cancel();
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
-
 </script>
-
 </body>
 </html>
