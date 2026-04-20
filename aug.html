@@ -3,48 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.0.0</title>
+<title>MeineAugen 6.0.2</title>
 <style>
 body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:15px; color: #2c3e50; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-
-/* Stabiles Grid für die Auswahl */
 .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
-
 button.option {
 padding: 12px; border: none; border-radius: 15px;
 font-weight: 600; font-size: 14px;
 background: #bdc3c7; color: white;
-cursor: pointer; transition: all 0.2s;
-flex: 1 1 45%; /* Zwei Buttons pro Zeile */
+cursor: pointer; flex: 1 1 45%;
 }
-
 button.option.active { background: #2980b9; outline: 3px solid #2ecc71; opacity: 1; }
-
-/* Haupt-Aktionsbuttons */
 .action-btn {
 padding: 16px; margin: 8px 0; width: 100%;
 border: none; border-radius: 18px;
 font-weight: bold; font-size: 16px;
 cursor: pointer; color: white;
 }
-
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; }
 .night { background: #2c3e50; }
 .reset { background: #e74c3c; width: 50%; font-size: 11px; padding: 8px; margin-top: 20px; }
-
 .hidden { display: none; }
 #mode-info { font-size: 12px; color: #7f8c8d; margin-bottom: 15px; background: #f0f0f0; padding: 8px; border-radius: 12px; }
-#title { font-size: 24px; font-weight: bold; }
-#timer { font-size: 64px; color: #e67e22; font-weight: bold; margin: 15px 0; }
-#desc { font-size: 18px; color: #444; min-height: 60px; }
+#title { font-size: 28px; font-weight: bold; margin-top: 10px; }
+#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 20px 0; }
+#desc { font-size: 20px; color: #444; min-height: 80px; padding: 0 10px; line-height: 1.4; }
 </style>
 </head>
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.0.0</h2>
+<h2>👁️ MeineAugen 6.0.2</h2>
 <div id="mode-info">Lädt...</div>
 
 <h4 style="margin:10px 0">Kontext</h4>
@@ -63,7 +54,7 @@ cursor: pointer; color: white;
 
 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
 
-<button class="action-btn start-morning" onclick="startSession('wake')">☀️ Morgen-Pflege (Bett/Bad)</button>
+<button class="action-btn start-morning" onclick="startSession('wake')">☀️ Morgen-Pflege</button>
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
 <button class="action-btn reset" onclick="STATE.reset()">Reset</button>
@@ -84,38 +75,19 @@ state: localStorage.getItem("ma_state") || "normal",
 context: localStorage.getItem("ma_context") || "screen"
 };
 },
-setState(s) {
-localStorage.setItem("ma_state", s);
-this.updateUI();
-},
-setContext(c) {
-localStorage.setItem("ma_context", c);
-this.updateUI();
-},
-reset() {
-localStorage.removeItem("ma_state");
-localStorage.removeItem("ma_context");
-location.reload();
-},
+setState(s) { localStorage.setItem("ma_state", s); this.updateUI(); },
+setContext(c) { localStorage.setItem("ma_context", c); this.updateUI(); },
+reset() { localStorage.clear(); location.reload(); },
 updateUI() {
 const data = this.get();
-// Alle Optionen zurücksetzen
 document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
-// Aktive markieren
-const stateBtn = document.getElementById("s_" + data.state);
-const contextBtn = document.getElementById("c_" + data.context);
-if(stateBtn) stateBtn.classList.add('active');
-if(contextBtn) contextBtn.classList.add('active');
-
-document.getElementById("mode-info").innerText =
-`AKTIV: ${data.context.toUpperCase()} | STATUS: ${data.state.toUpperCase()}`;
+document.getElementById("s_" + data.state)?.classList.add('active');
+document.getElementById("c_" + data.context)?.classList.add('active');
+document.getElementById("mode-info").innerText = `KONTEXT: ${data.context.toUpperCase()} | STATUS: ${data.state.toUpperCase()}`;
 }
 };
 
-// Initialisierung
 STATE.updateUI();
-
-/* --- Logik & Ablauf --- */
 
 function step(t, s, v) { return {t, s, v}; }
 
@@ -124,31 +96,48 @@ const {state, context} = STATE.get();
 
 if(type === 'wake') {
 return [
-step("Im Bett", 15, "Handflächen auflegen und Augen wärmen"),
-step("Blinzeln", 12, "Ganz sanft in den Raum blinzeln"),
-step("Im Bad", 20, "Augen mit kühlem Wasser erfrischen"),
-step("Bewegung", 20, "Sanfte Augen-Acht beschreiben")
+step("Sunning", 25, "Schließe die Augen. Drehe dein Gesicht sanft zum Fenster und bewege den Kopf langsam von links nach rechts."),
+step("Palmieren", 20, "Decke deine Augen mit den warmen Handflächen ab. Genieße die Dunkelheit."),
+step("Frische-Kick", 15, "Wasche deine geschlossenen Augen jetzt im Bad mit kühlem Wasser."),
+step("Blinzeln", 15, "Blinzle nun ganz locker und schnell, um die Augen zu befeuchten.")
 ];
 }
 if(type === 'night') {
 return [
-step("Entspannung", 40, "Dunkelheit hinter den Handflächen genießen"),
-step("Gähnen", 15, "Tief gähnen und locker lassen"),
-step("Ruhe", 10, "Gute Nacht.")
+step("Palmieren", 45, "Lege die Handflächen auf. Lass alle Bilder des Tages in der Dunkelheit verblassen."),
+step("Gähnen", 20, "Gähne jetzt tief und herzhaft, um deinen Kiefer und die Augen zu entspannen."),
+step("Ruhe", 10, "Lass die Augen nun geschlossen. Gute Nacht.")
 ];
 }
-// Training Tagsüber
-if(state === "overload") {
+
+if(state === "overload" || context === "stress") {
 return [
-step("Ruhe", 25, "Augen zu und tief atmen"),
-step("Klopfen", 20, "Augenbrauen sanft abklopfen"),
-step("Fernblick", 20, "Blick weich in die Ferne richten")
+step("Großes Schwingen", 35, "Stehe locker. Drehe deinen Oberkörper von links nach rechts. Dein Blick gleitet entspannt mit."),
+step("Palmieren", 30, "Hände auflegen. Atme tief in den Bauch und schirme alle Reize ab."),
+step("Weicher Blick", 20, "Öffne die Augen. Schau ganz entspannt in die Ferne, ohne etwas Bestimmtes zu fixieren.")
 ];
 }
+
+if(context === "screen") {
 return [
-step("Blinzeln", 15, "Augen befeuchten"),
-step("Nah-Fern", 30, "Fokus-Wechsel trainieren"),
-step("Rollen", 20, "Augen kreisen lassen")
+step("Zentralisation", 20, "Suche dir einen winzigen Punkt am Bildschirm. Sieh nur diesen scharf, alles andere wird weich."),
+step("Nah-Fern", 30, "Schau auf deinen Daumen, dann in die Ferne. Wiederhole das im Wechsel."),
+step("Großes Blinzeln", 15, "Kneife die Augen fest zu und öffne sie dann ganz weit.")
+];
+}
+
+if(state === "dry") {
+return [
+step("Blinzel-Flash", 20, "Blinzle so schnell und locker wie möglich, wie ein Schmetterling mit den Flügeln schlägt."),
+step("Gähnen", 15, "Gähne tief, um den natürlichen Tränenfluss deiner Augen anzuregen."),
+step("Augenrollen", 20, "Halte die Augen geschlossen und rolle sie langsam in einem großen Kreis.")
+];
+}
+
+return [
+step("Blinzeln", 15, "Blinzle regelmäßig, um den Tränenfilm zu erneuern."),
+step("Fernblick", 30, "Suche dir einen Punkt ganz weit draußen und lass deinen Blick dort ruhen."),
+step("Acht malen", 20, "Stelle dir eine liegende Acht vor und fahre sie mit den Augen langsam nach.")
 ];
 }
 
@@ -158,6 +147,7 @@ if(!window.speechSynthesis) { cb?.(); return; }
 speechSynthesis.cancel();
 const u = new SpeechSynthesisUtterance(text);
 u.lang = "de-DE"
+u.rate = 0.95; // Etwas langsamer für bessere Verständlichkeit
 u.onend = () => cb?.();
 speechSynthesis.speak(u);
 }
@@ -172,13 +162,14 @@ run(steps, 0);
 function run(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Fertig");
-setTimeout(abort, 3000);
+speak("Das Training ist beendet. Deine Augen sind nun entspannt.");
+setTimeout(abort, 4000);
 return;
 }
 const s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
+// Zuerst die Anweisung sprechen, dann Timer starten
 speak(s.v, () => {
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
