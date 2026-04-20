@@ -3,24 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.0.4</title>
+<title>MeineAugen 6.0.6</title>
 <style>
 body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:15px; color: #2c3e50; }
 .card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
-button.option {
-padding: 12px; border: none; border-radius: 15px;
-font-weight: 600; font-size: 14px;
-background: #bdc3c7; color: white;
-cursor: pointer; flex: 1 1 45%;
-}
+button.option { padding: 12px; border: none; border-radius: 15px; font-weight: 600; font-size: 14px; background: #bdc3c7; color: white; cursor: pointer; flex: 1 1 45%; }
 button.option.active { background: #2980b9; outline: 3px solid #2ecc71; opacity: 1; }
-.action-btn {
-padding: 16px; margin: 8px 0; width: 100%;
-border: none; border-radius: 18px;
-font-weight: bold; font-size: 16px;
-cursor: pointer; color: white;
-}
+.action-btn { padding: 16px; margin: 8px 0; width: 100%; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; }
 .night { background: #2c3e50; }
@@ -34,14 +24,15 @@ cursor: pointer; color: white;
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.0.4</h2>
+<h2>👁️ MeineAugen 6.0.6</h2>
 <div id="mode-info">Lädt...</div>
 
 <h4 style="margin:10px 0">Kontext</h4>
 <div class="grid">
 <button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
+<button id="c_allergy" class="option" onclick="STATE.setContext('allergy')">🤧 Allergie</button>
 <button id="c_stress" class="option" onclick="STATE.setContext('stress')">⚠️ Stress</button>
-<button id="c_nature" class="option" style="flex: 1 1 92%" onclick="STATE.setContext('nature')">🌿 Natur</button>
+<button id="c_nature" class="option" onclick="STATE.setContext('nature')">🌿 Natur</button>
 </div>
 
 <h4 style="margin:10px 0">Zustand</h4>
@@ -80,52 +71,67 @@ document.getElementById("c_" + data.context)?.classList.add('active');
 document.getElementById("mode-info").innerText = `KONTEXT: ${data.context.toUpperCase()} | STATUS: ${data.state.toUpperCase()}`;
 }
 };
-
 STATE.updateUI();
 
-// Hilfsfunktion für Übungsschritte
-// t: Titel, s: Sekunden, v: Beschreibungstext, split: Ob Richtungswechsel nötig
 function step(t, s, v, split = false) { return {t, s, v, split}; }
 
 function buildPlan(type) {
 const {state, context} = STATE.get();
 
+// 1. KORRIGIERTE MORGENROUTINE
 if(type === 'wake') {
 return [
-step("Sunning", 30, "Schließe die Augen. Drehe dein Gesicht sanft zum Licht und bewege den Kopf langsam von links nach rechts.", true),
-step("Palmieren", 20, "Decke deine Augen mit den warmen Handflächen ab."),
-step("Frische-Kick", 15, "Wasche deine geschlossenen Augen nun im Bad mit kühlem Wasser."),
-step("Augen-Acht", 24, "Beschreibe mit den Augen eine liegende Acht.", true)
+step("Augen geschlossen", 20, "Augen geschlossen lassen. Nicht reiben."),
+step("Wärme", 60, "Warme Hände auf die geschlossenen Augen legen."),
+step("Lidmassage", 30, "Streiche sanft über die Lider. Oben nach unten, unten nach oben. Kein Druck."),
+step("Reinigung", 20, "Augenlider vorsichtig mit Wasser reinigen."),
+step("Blinzeln", 20, "Augen öffnen und ruhig blinzeln."),
+step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts.")
 ];
 }
+
+// 2. ALLERGIE RICHTIG FORMULIERT
+if(context === 'allergy') {
+return [
+step("Kühlung", 30, "Lege ein kühles, feuchtes Tuch auf die geschlossenen Augen. Nicht reiben."),
+step("Augen schließen", 20, "Augen geschlossen halten. Reiz runterfahren."),
+step("Sanftes Blinzeln", 20, "Augen öffnen und leicht blinzeln. Nicht pressen."),
+step("Fernblick", 30, "Schau entspannt in die Ferne. Blinzle normal. Kein Fixieren.")
+];
+}
+
+// 3. TROCKENE AUGEN – SAUBER GEMACHT
+if(state === "dry") {
+return [
+step("Wärme", 40, "Warme Hände auf die Augen legen."),
+step("Lidmassage", 30, "Sanft ausstreichen. Oben nach unten, unten nach oben."),
+step("Blinzeln", 20, "Langsam und vollständig blinzeln."),
+step("Fernblick", 30, "In die Ferne schauen. Blinzeln erlaubt. Nicht fixieren.")
+];
+}
+
+// Standard-Routinen (gestrafft)
 if(type === 'night') {
 return [
-step("Palmieren", 45, "Lege die Handflächen auf. Lass alle Bilder des Tages verblassen."),
-step("Gähnen", 20, "Gähne tief und herzhaft, um Kiefer und Augen zu lockern."),
-step("Ruhe", 10, "Gute Nacht.")
+step("Palmieren", 45, "Hände auflegen. Dunkelheit genießen."),
+step("Gähnen", 20, "Tief gähnen. Kiefer und Augen locker lassen."),
+step("Ruhe", 15, "Augen geschlossen halten. Gute Nacht.")
 ];
 }
 
 if(state === "overload" || context === "stress") {
 return [
-step("Großes Schwingen", 40, "Drehe den Oberkörper locker von links nach rechts. Der Blick gleitet mit.", true),
-step("Palmieren", 30, "Hände auflegen und tief durchatmen."),
-step("Weicher Blick", 20, "Schau ganz entspannt ohne Fokus in die Ferne.")
+step("Großes Schwingen", 40, "Oberkörper locker drehen. Blick entspannt fließen lassen.", true),
+step("Palmieren", 30, "Hände auflegen. Tief durchatmen."),
+step("Weicher Blick", 20, "Ohne Fokus in die Ferne schauen.")
 ];
 }
 
-if(state === "dry") {
-return [
-step("Blinzel-Flash", 20, "Blinzle ganz schnell und locker."),
-step("Gähnen", 15, "Tief gähnen für die Tränendrüsen."),
-step("Augenrollen", 24, "Rolle die Augen langsam in einem großen Kreis.", true)
-];
-}
-
+// Default Training (Bildschirm / Natur / Normal)
 return [
 step("Blinzeln", 15, "Locker blinzeln."),
-step("Fernblick", 30, "In die weite Ferne schauen."),
-step("Acht malen", 24, "Fahre eine liegende Acht mit den Augen nach.", true)
+step("Nah-Fern", 30, "Wechselnd Daumen und fernen Punkt fokussieren."),
+step("Acht malen", 24, "Liegende Acht mit den Augen verfolgen.", true)
 ];
 }
 
@@ -164,15 +170,8 @@ document.getElementById("timer").innerText = sec;
 interval = setInterval(() => {
 sec--;
 document.getElementById("timer").innerText = sec;
-// NEU: Richtungswechsel-Ansage
-if(s.split && sec === half) {
-speak("Jetzt Richtungswechsel.");
-}
-
-if(sec <= 0) {
-clearInterval(interval);
-run(steps, i + 1);
-}
+if(s.split && sec === half) speak("Jetzt Richtungswechsel.");
+if(sec <= 0) { clearInterval(interval); run(steps, i + 1); }
 }, 1000);
 });
 }
