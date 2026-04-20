@@ -3,28 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.9.4</title>
+<title>MeineAugen 5.9.5</title>
 
 <style>
-body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
-.card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; }
+body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:20px; }
+.card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
 button {
 padding:14px; margin:6px; width:100%;
 border:none; border-radius:15px;
 font-weight:600; font-size:15px;
 background:#2980b9; color:white; opacity:0.6;
+cursor: pointer;
+transition: opacity 0.2s;
 }
 
 button.active { opacity:1; outline:3px solid #2ecc71; }
-.start { background:#27ae60; opacity:1; }
-.night { background:#2c3e50; }
+.start { background:#27ae60; opacity:1; margin-top: 20px; }
+.reset { background:#e74c3c; opacity:1; margin-top: 10px; }
 .hidden { display:none; }
 
 #mode { font-size:13px; color:#555; margin-bottom:10px; }
-#title { font-size:20px; }
-#timer { font-size:42px; color:#e67e22; }
-#desc { font-size:14px; color:#444; }
+#runmode { font-size:13px; color:#999; margin-bottom:10px; }
+
+#title { font-size:24px; font-weight: bold; margin-bottom: 10px; }
+#timer { font-size:64px; color:#e67e22; font-weight: bold; margin: 20px 0; }
+#desc { font-size:18px; color:#444; margin-bottom: 20px; }
 </style>
 </head>
 
@@ -32,81 +36,82 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.9.4</h2>
+<h2>👁️ MeineAugen 5.9.5</h2>
 <div id="mode"></div>
 
-<div id="day-ui">
-
 <h4>Kontext</h4>
-<button id="c_screen" onclick="setContext('screen')">📱 Bildschirm</button>
-<button id="c_stress" onclick="setContext('stress')">⚠️ Stress</button>
+<button id="c_screen" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
+<button id="c_stress" onclick="STATE.setContext('stress')">⚠️ Stress</button>
+<button id="c_nature" onclick="STATE.setContext('nature')">🌿 Natur</button>
 
 <h4>Zustand</h4>
-<button id="s_normal" onclick="setState('normal')">🙂 Normal</button>
-<button id="s_dry" onclick="setState('dry')">😵 Trocken</button>
-<button id="s_over" onclick="setState('overload')">🔴 Überreizt</button>
+<button id="s_normal" onclick="STATE.setState('normal')">🙂 Normal</button>
+<button id="s_dry" onclick="STATE.setState('dry')">😵 Trocken</button>
+<button id="s_overload" onclick="STATE.setState('overload')">🔴 Überreizt</button>
 
 <button class="start" onclick="startDay()">▶ Start</button>
-
-</div>
+<button class="reset" onclick="STATE.reset()">Reset</button>
 
 </div>
 
 <div id="run" class="card hidden">
+<div id="runmode"></div>
 <div id="title"></div>
 <div id="timer"></div>
 <div id="desc"></div>
 
-<button onclick="abort()">Abbrechen</button>
+<button onclick="abort()" style="background:#95a5a6; opacity:1;">Abbrechen</button>
 </div>
 
 <script>
 
-let interval;
-
 /* =========================
-STATE HELPERS
+ZENTRALER STATE
 ========================= */
 
-function getState(){
-return localStorage.getItem("state") || "normal"
-}
+const STATE = {
 
-function getContext(){
-return localStorage.getItem("context") || "screen"
-}
+get(){
+return {
+state: localStorage.getItem("state") || "normal",
+context: localStorage.getItem("context") || "screen"
+};
+},
 
-function setState(s){
+setState(s){
 localStorage.setItem("state", s);
-updateUI();
-}
+this.updateUI();
+},
 
-function setContext(c){
+setContext(c){
 localStorage.setItem("context", c);
-updateUI();
-}
+this.updateUI();
+},
 
-/* =========================
-UI
-========================= */
+reset(){
+localStorage.clear();
+location.reload();
+},
 
-function updateUI(){
+updateUI(){
+let {state, context} = this.get();
 
-let state = getState();
-let context = getContext();
-
+// Alle aktiven Klassen entfernen
 document.querySelectorAll("button").forEach(b=>{
 b.classList.remove("active");
 });
 
-document.getElementById("s_"+state)?.classList.add("active");
-document.getElementById("c_"+context)?.classList.add("active");
+// Die richtigen Buttons markieren
+document.getElementById("s_" + state)?.classList.add("active");
+document.getElementById("c_" + context)?.classList.add("active");
 
 document.getElementById("mode").innerText =
 "Aktiv: " + state + " | " + context;
 }
+};
 
-updateUI();
+// Initialer Aufruf beim Laden
+STATE.updateUI();
 
 /* =========================
 SPEECH
@@ -119,52 +124,48 @@ speechSynthesis.cancel();
 
 let u = new SpeechSynthesisUtterance(text);
 u.lang = "de-DE"
+u.rate = 1.0;
 
 u.onend = ()=>cb?.();
-
 speechSynthesis.speak(u);
 }
 
 /* =========================
-PLAN (ABSOLUT PRIORITY FIX)
+PLAN
 ========================= */
 
 function buildPlan(){
+let {state, context} = STATE.get();
 
-let state = getState();
-let context = getContext();
-
-console.log("PLAN MIT:", state, context);
-
-// 🔴 OVERLOAD HART
 if(state === "overload"){
 return [
-step("Blinzeln",10,"Ruhig blinzeln"),
-step("Palmieren",25,"Hände auflegen"),
-step("Freier Blick",20,"Blick weich lassen")
+step("Blinzeln", 10, "Ruhig blinzeln"),
+step("Palmieren", 20, "Hände auflegen"),
+step("Freier Blick", 20, "Blick weich lassen")
 ];
 }
 
 if(state === "dry"){
 return [
-step("Blinzeln",15,"Ruhig blinzeln"),
-step("Uhr",20,"Oben rechts unten links"),
-step("Fernblick",30,"Fernblick")
+step("Blinzeln", 15, "Ruhig blinzeln"),
+step("Uhr", 20, "Oben rechts unten links"),
+step("Fernblick", 30, "In die Ferne schauen")
 ];
 }
 
 if(context === "screen"){
 return [
-step("Blinzeln",15,"Ruhig blinzeln"),
-step("Uhr",20,"Oben rechts unten links"),
-step("Nah-Fern",40,"Nah und fern wechseln"),
-step("Freier Blick",30,"Blick wandern lassen")
+step("Blinzeln", 15, "Ruhig blinzeln"),
+step("Uhr", 20, "Oben rechts unten links"),
+step("Nah-Fern", 40, "Nah und fern wechseln"),
+step("Freier Blick", 30, "Blick wandern lassen")
 ];
 }
 
+// ... weitere Bedingungen bleiben gleich
 return [
-step("Blinzeln",15,"Ruhig blinzeln"),
-step("Freier Blick",30,"Blick wandern lassen")
+step("Blinzeln", 15, "Ruhig blinzeln"),
+step("Freier Blick", 30, "Blick wandern lassen")
 ];
 }
 
@@ -172,35 +173,38 @@ step("Freier Blick",30,"Blick wandern lassen")
 RUN
 ========================= */
 
+let interval;
+
 function step(t,s,v){
 return {t,s,v};
 }
 
 function startDay(){
+let {state, context} = STATE.get();
+document.getElementById("runmode").innerText = "Läuft: " + state + " | " + context;
 runSteps(buildPlan());
 }
 
 function runSteps(steps){
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
-run(steps,0);
+run(steps, 0);
 }
 
-function run(steps,i){
-
-if(i>=steps.length){
-document.getElementById("timer").innerText="✓"
-speak("Fertig");
+function run(steps, i){
+if(i >= steps.length){
+document.getElementById("timer").innerText = "✓"
+document.getElementById("title").innerText = "Fertig!"
+document.getElementById("desc").innerText = "Gut gemacht."
+speak("Training abgeschlossen");
 return;
 }
 
 let s = steps[i];
-
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
 
 speak(s.v, ()=>{
-
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
 
@@ -208,22 +212,17 @@ interval = setInterval(()=>{
 sec--;
 document.getElementById("timer").innerText = sec;
 
-if(sec<=0){
+if(sec <= 0){
 clearInterval(interval);
-run(steps,i+1);
+run(steps, i + 1);
 }
-
-},1000);
+}, 1000);
 });
 }
 
-/* =========================
-CONTROL
-========================= */
-
 function abort(){
 clearInterval(interval);
-speechSynthesis.cancel();
+if(window.speechSynthesis) speechSynthesis.cancel();
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
