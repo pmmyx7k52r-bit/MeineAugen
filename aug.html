@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 5.9.2</title>
+<title>MeineAugen 5.9.3</title>
 
 <style>
 body { font-family:-apple-system; background:#fdfcfb; text-align:center; padding:20px; }
@@ -25,6 +25,7 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 #timer { font-size:42px; color:#e67e22; }
 #desc { font-size:14px; color:#444; }
 #phase { font-size:12px; color:#888; margin-bottom:10px; }
+#mode { font-size:13px; color:#555; margin-bottom:10px; }
 </style>
 </head>
 
@@ -32,8 +33,9 @@ button.active { opacity:1; outline:3px solid #2ecc71; }
 
 <div id="menu" class="card">
 
-<h2>👁️ MeineAugen 5.9.2</h2>
+<h2>👁️ MeineAugen 5.9.3</h2>
 <div id="phase"></div>
+<div id="mode"></div>
 
 <div id="morning-check">
 <h4>Morgen</h4>
@@ -114,6 +116,8 @@ document.getElementById("day-ui").classList.add("hidden");
 document.getElementById("morning-check").classList.add("hidden");
 document.getElementById("day-ui").classList.remove("hidden");
 }
+
+updateModeLabel();
 }
 
 function updateUI(){
@@ -123,6 +127,13 @@ if(!b.classList.contains("start")) b.classList.remove("active");
 
 document.getElementById("c_"+context)?.classList.add("active");
 document.getElementById("s_"+state)?.classList.add("active");
+
+updateModeLabel();
+}
+
+function updateModeLabel(){
+document.getElementById("mode").innerText =
+"Aktiv: Zustand = " + state + " | Kontext = " + context;
 }
 
 function setContext(c){
@@ -171,13 +182,13 @@ runSteps(steps);
 }
 
 /* =========================
-PLAN LOGIK
+PLAN LOGIK (FIXED)
 ========================= */
 
 function buildPlan(){
 
-// 🔴 OVERLOAD
-if(state==="overload"){
+// 🔴 OVERLOAD (absolute Priorität)
+if(state === "overload"){
 return [
 step("Blinzeln",10,"Ruhig blinzeln"),
 step("Palmieren",25,"Hände auf die Augen legen"),
@@ -186,7 +197,7 @@ step("Freier Blick",20,"Blick weich lassen")
 }
 
 // 🟡 STICKY
-if(state==="sticky"){
+if(state === "sticky"){
 return [
 step("Wärme",40,"Warme Hände"),
 step("Reinigung",20,"Reinigen"),
@@ -196,7 +207,7 @@ step("Fernblick",30,"Fernblick")
 }
 
 // 🟡 DRY
-if(state==="dry"){
+if(state === "dry"){
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
 step("Uhr",20,"Oben rechts unten links"),
@@ -204,8 +215,8 @@ step("Fernblick",30,"In die Ferne schauen")
 ];
 }
 
-// 🟢 SCREEN
-if(context==="screen"){
+// 🟢 NORMAL + Kontext
+if(context === "screen"){
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
 step("Uhr",20,"Oben rechts unten links"),
@@ -214,7 +225,13 @@ step("Freier Blick",30,"Blick wandern lassen")
 ];
 }
 
-// 🟢 DEFAULT
+if(context === "stress"){
+return [
+step("Palmieren",30,"Hände auflegen"),
+step("Freier Blick",30,"Blick wandern lassen")
+];
+}
+
 return [
 step("Blinzeln",15,"Ruhig blinzeln"),
 step("Freier Blick",30,"Blick wandern lassen")
@@ -230,6 +247,7 @@ return {t,s,v};
 }
 
 function startDay(){
+console.log("STATE:", state, "CONTEXT:", context);
 runSteps(buildPlan());
 }
 
