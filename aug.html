@@ -2,48 +2,42 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.1.4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MeineAugen 6.1.6</title>
 <style>
 :root { --bg: #fdfcfb; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #1a1a1a; --card: #2c2c2c; --text: #ecf0f1; --accent: #3498db; --gray: #7f8c8d; }
 
-body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: all 0.3s; margin: 0; }
-.card { background: var(--card); padding:20px; border-radius:30px; max-width:400px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: all 0.3s; margin: 0; touch-action: manipulation; }
+.card { background: var(--card); padding:15px; border-radius:30px; max-width:420px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 
-/* Morgen-Akkordeon */
 .morning-section { margin-bottom: 10px; }
-#morning-sub {
-max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
-display: flex; gap: 10px; padding: 0 5px;
-}
+#morning-sub { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; display: flex; gap: 8px; padding: 0 5px; }
 #morning-sub.open { max-height: 100px; margin: 10px 0; }
 
-h4 { margin: 15px 0 8px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #7f8c8d; }
-
-.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 5px; }
-button.option { padding: 14px; border: none; border-radius: 18px; font-weight: 600; font-size: 14px; background: var(--gray); color: white; cursor: pointer; flex: 1 1 45%; transition: 0.2s; }
+h4 { margin: 12px 0 6px 0; font-size: 12px; text-transform: uppercase; color: #7f8c8d; }
+.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 5px; }
+button.option { padding: 14px 8px; border: none; border-radius: 18px; font-weight: 600; font-size: 13px; background: var(--gray); color: white; cursor: pointer; flex: 1 1 45%; }
 button.option.active { background: var(--accent); outline: 3px solid var(--active); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-.action-btn { padding: 18px; margin: 8px 0; width: 100%; border: none; border-radius: 20px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
+.action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
-.sub-btn { font-size: 14px; flex: 1; padding: 15px; border-radius: 18px; }
+.sub-btn { font-size: 14px; flex: 1; padding: 14px; border-radius: 15px; }
 .start-bed { background: #f39c12; }
 .start-bath { background: #3498db; }
 .start-run { background: #27ae60; margin-top: 15px; }
 .night { background: #2c3e50; }
 
 #mode-info { font-size: 11px; color: #7f8c8d; margin-bottom: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 12px; font-weight: bold; }
-#title { font-size: 26px; font-weight: bold; margin-top: 5px; }
-#timer { font-size: 85px; color: #e67e22; font-weight: bold; margin: 10px 0; }
-#desc { font-size: 19px; color: var(--text); min-height: 90px; padding: 0 10px; line-height: 1.5; }
+#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 10px 0; }
+.hidden { display: none !important; }
 </style>
 </head>
-<body id="body">
+<body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.1.4</h2>
-<div id="mode-info">Kontext: NORMAL | Status: OK</div>
+<h2>👁️ MeineAugen 6.1.6</h2>
+<div id="mode-info">Initialisierung...</div>
 
 <div class="morning-section">
 <button class="action-btn start-morning" onclick="toggleMorning()">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -56,46 +50,55 @@ button.option.active { background: var(--accent); outline: 3px solid var(--activ
 <h4>Kontext</h4>
 <div class="grid">
 <button id="c_screen" class="option" onclick="toggleOption('context', 'screen')">📱 Bildschirm</button>
+<button id="c_outdoor" class="option" onclick="toggleOption('context', 'outdoor')">🌳 Draußen</button>
+<button id="c_stress" class="option" onclick="toggleOption('context', 'stress')">⚖️ Stress</button>
 <button id="c_allergy" class="option" onclick="toggleOption('context', 'allergy')">🤧 Allergie</button>
 </div>
 
 <h4>Zustand / Symptome</h4>
 <div class="grid">
 <button id="s_dry" class="option" onclick="toggleOption('state', 'dry')">😵 Trocken</button>
-<button id="s_overload" class="option" onclick="toggleOption('state', 'overload')">🔴 Überreizt/Müde</button>
+<button id="s_tired" class="option" onclick="toggleOption('state', 'tired')">🔴 Müde/Überreizt</button>
+<button id="s_light" class="option" onclick="toggleOption('state', 'light')">🔆 Lichtscheu</button>
+<button id="s_tense" class="option" onclick="toggleOption('state', 'tense')">🧱 Verspannt</button>
 </div>
 
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
-<div onclick="resetApp()" style="color:#e74c3c; font-size:11px; cursor:pointer; margin-top:20px; text-decoration: underline;">Daten zurücksetzen</div>
+<div onclick="resetApp()" style="color:#e74c3c; font-size:11px; cursor:pointer; margin-top:20px;">App zurücksetzen</div>
 </div>
 
 <div id="run" class="card hidden">
-<div id="title"></div>
-<div id="timer"></div>
-<div id="desc"></div>
-<button onclick="abort()" class="action-btn" style="background:#95a5a6;">Abbrechen</button>
+<div id="title" style="font-weight:bold; font-size: 24px; margin-bottom:10px;"></div>
+<div id="timer">0</div>
+<div id="desc" style="font-size: 19px; line-height: 1.4; min-height: 80px;"></div>
+<button onclick="abort()" class="action-btn" style="background:#95a5a6; margin-top:20px;">Abbrechen</button>
 </div>
 
 <script>
-let currentContext = localStorage.getItem("ma_context") || "normal"
-let currentState = localStorage.getItem("ma_state") || "normal"
+let curCtx = localStorage.getItem("ma_context") || "normal"
+let curState = localStorage.getItem("ma_state") || "normal"
 
 function updateUI() {
 document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
-if(currentContext !== "normal") document.getElementById("c_" + currentContext)?.classList.add('active');
-if(currentState !== "normal") document.getElementById("s_" + currentState)?.classList.add('active');
-document.getElementById("mode-info").innerText =
-`Kontext: ${currentContext.toUpperCase()} | Status: ${currentState.toUpperCase()}`;
+if(curCtx !== "normal") {
+const btn = document.getElementById("c_" + curCtx);
+if(btn) btn.classList.add('active');
+}
+if(curState !== "normal") {
+const btn = document.getElementById("s_" + curState);
+if(btn) btn.classList.add('active');
+}
+document.getElementById("mode-info").innerText = `Kontext: ${curCtx.toUpperCase()} | Status: ${curState.toUpperCase()}`;
 }
 
-function toggleOption(type, value) {
+function toggleOption(type, val) {
 if(type === 'context') {
-currentContext = (currentContext === value) ? "normal" : value;
-localStorage.setItem("ma_context", currentContext);
+curCtx = (curCtx === val) ? "normal" : val;
+localStorage.setItem("ma_context", curCtx);
 } else {
-currentState = (currentState === value) ? "normal" : value;
-localStorage.setItem("ma_state", currentState);
+curState = (curState === val) ? "normal" : val;
+localStorage.setItem("ma_state", curState);
 }
 updateUI();
 }
@@ -108,7 +111,7 @@ arrow.innerText = sub.classList.contains('open') ? "▲" : "▼"
 }
 
 function resetApp() {
-if(confirm("Alles zurücksetzen?")) {
+if(confirm("Alle Daten löschen?")) {
 localStorage.clear();
 location.reload();
 }
@@ -117,98 +120,68 @@ location.reload();
 function step(t, s, v, split = false) { return {t, s, v, split}; }
 
 function buildPlan(type) {
-if(type === 'bed') return [
-step("Ruhe", 15, "Lass die Augen geschlossen. Atme tief ein."),
-step("Dehnen", 30, "Strecke dich im Bett. Gähne tief und herzhaft."),
-step("Wärme", 45, "Hände warm reiben und auf die Augen legen."),
-step("Blinzeln", 15, "Öffne die Augen und blinzle ganz locker.")
-];
-if(type === 'bath') return [
-step("Wärme", 40, "Warmes Tuch auf deine Augen halten."),
-step("Massage", 30, "Sanft oben nach unten und unten nach oben streichen."),
-step("Reinigung", 20, "Augen vorsichtig mit Wasser abspülen."),
-step("Fernblick", 30, "Entspannt in die Ferne schauen.")
-];
-if(currentContext === 'allergy') return [
-step("Kühlung", 30, "Kühles Tuch auflegen. Nicht reiben."),
-step("Ruhe", 20, "Augen geschlossen halten."),
-step("Blinzeln", 20, "Leicht blinzeln."),
-step("Fernblick", 30, "Entspannt in die Ferne schauen.")
-];
-if(currentState === "dry") return [
-step("Wärme", 40, "Warme Hände auflegen."),
-step("Lidmassage", 30, "Sanft ausstreichen."),
-step("Blinzeln", 20, "Vollständig blinzeln."),
-step("Fernblick", 30, "In die Ferne schauen.")
-];
-if(type === 'night') return [
-step("Palmieren", 45, "Hände auflegen. Dunkelheit genießen."),
-step("Gähnen", 20, "Kiefer locker lassen."),
-step("Ruhe", 15, "Gute Nacht.")
-];
-if(currentState === "overload") return [
-step("Schwingen", 45, "Oberkörper locker drehen. Blick gleitet mit."),
-step("Palmieren", 30, "Hände auflegen und tief atmen."),
-step("Weicher Blick", 20, "In die Ferne schauen.")
-];
-return [
-step("Blinzeln", 15, "Locker blinzeln."),
-step("Nah-Fern", 30, "Daumen und Fernpunkt im Wechsel."),
-step("Acht malen", 24, "Liegende Acht verfolgen.", true)
-];
+if(type === 'bed') return [step("Ruhe", 15, "Augen zu. Tief atmen."), step("Dehnen", 30, "Strecke dich. Gähne herzhaft."), step("Wärme", 45, "Hände warm auflegen."), step("Blinzeln", 15, "Locker blinzeln.")];
+if(type === 'bath') return [step("Wärme", 40, "Warmes Tuch auflegen."), step("Massage", 30, "Lider sanft ausstreichen."), step("Reinigung", 20, "Mit Wasser abspülen."), step("Fernblick", 30, "In die Ferne schauen.")];
+if(type === 'night') return [step("Palmieren", 45, "Dunkelheit genießen."), step("Gähnen", 20, "Kiefer locker."), step("Ruhe", 15, "Gute Nacht.")];
+if(curCtx === 'allergy') return [step("Kühlung", 35, "Kühles Tuch auflegen."), step("Ruhe", 25, "Augen zu."), step("Sanftes Blinzeln", 20, "Ganz leicht blinzeln.")];
+if(curCtx === 'stress' || curState === 'tense') return [step("Schwingen", 45, "Locker drehen."), step("Palmieren", 40, "Wärme genießen."), step("Schultern", 20, "Nacken locker.")];
+return [step("Blinzeln", 15, "Locker blinzeln."), step("Nah-Fern", 30, "Fokus wechseln."), step("Acht malen", 24, "Acht verfolgen.", true)];
 }
 
 let interval;
-function speak(text, cb) {
-if(!window.speechSynthesis) { cb?.(); return; }
-speechSynthesis.cancel();
-const u = new SpeechSynthesisUtterance(text);
-u.lang = "de-DE" u.rate = 0.95;
-u.onend = () => cb?.();
-speechSynthesis.speak(u);
-}
-
 function startSession(type) {
 const steps = buildPlan(type);
-if(type === 'bed' || type === 'night') document.getElementById("body").classList.add("dark");
+if(type === 'bed' || type === 'night' || curState === 'light') document.body.classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
-run(steps, 0);
+runStep(steps, 0);
 }
 
-function run(steps, i) {
+function runStep(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Fertig.");
-setTimeout(abort, 3000);
+if(window.speechSynthesis) {
+const u = new SpeechSynthesisUtterance("Fertig.");
+u.lang = "de-DE"
+speechSynthesis.speak(u);
+}
+setTimeout(abort, 2500);
 return;
 }
 const s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-speak(s.v, () => {
+if(window.speechSynthesis) {
+speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(s.v);
+u.lang = "de-DE"
+u.onend = () => {
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
 interval = setInterval(() => {
 sec--;
 document.getElementById("timer").innerText = sec;
-if(s.split && sec === Math.floor(s.s/2)) speak("Richtungswechsel.");
-if(sec <= 0) { clearInterval(interval); run(steps, i + 1); }
+if(s.split && sec === Math.floor(s.s/2)) {
+const r = new SpeechSynthesisUtterance("Richtungswechsel");
+r.lang = "de-DE"
+speechSynthesis.speak(r);
+}
+if(sec <= 0) { clearInterval(interval); runStep(steps, i + 1); }
 }, 1000);
-});
+};
+speechSynthesis.speak(u);
+}
 }
 
 function abort() {
 clearInterval(interval);
-speechSynthesis.cancel();
-document.getElementById("body").classList.remove("dark");
+if(window.speechSynthesis) speechSynthesis.cancel();
+document.body.classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
-document.getElementById('morning-sub').classList.remove('open');
-document.getElementById('arrow').innerText = "▼"
 }
 
-updateUI();
+window.onload = updateUI;
 </script>
 </body>
 </html>
