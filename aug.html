@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.0.9</title>
+<title>MeineAugen 6.1.0</title>
 <style>
-/* Basis-Stile & Dark Mode Logik */
 :root { --bg: #fdfcfb; --card: white; --text: #2c3e50; --accent: #2980b9; }
 body.dark { --bg: #1a1a1a; --card: #2c2c2c; --text: #ecf0f1; --accent: #3498db; }
 
@@ -16,13 +15,16 @@ body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:
 button.option { padding: 12px; border: none; border-radius: 15px; font-weight: 600; font-size: 13px; background: #bdc3c7; color: white; cursor: pointer; flex: 1 1 45%; transition: 0.2s; }
 button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
 
-.action-btn { padding: 16px; margin: 8px 0; width: 100%; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
-.start-bed { background: #f1c40f; color: #2c3e50; }
-.start-bath { background: #3498db; }
+.action-btn { padding: 16px; margin: 8px 0; width: 100%; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; transition: 0.3s; }
+.start-morning { background: #f1c40f; color: #2c3e50; }
+.start-bed { background: #f39c12; font-size: 14px; width: 48%; margin: 4px 1%; }
+.start-bath { background: #3498db; font-size: 14px; width: 48%; margin: 4px 1%; }
 .start-run { background: #27ae60; }
 .night { background: #2c3e50; }
 
 .hidden { display: none; }
+.sub-menu { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease-out; }
+
 #mode-info { font-size: 11px; color: #7f8c8d; margin-bottom: 15px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 12px; text-transform: uppercase; }
 #title { font-size: 28px; font-weight: bold; margin-top: 10px; }
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 15px 0; }
@@ -32,22 +34,27 @@ button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
 <body id="body">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.0.9</h2>
+<h2>👁️ MeineAugen 6.1.0</h2>
 <div id="mode-info">Lädt...</div>
 
-<div class="grid">
-<button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Screen</button>
-<button id="c_allergy" class="option" onclick="STATE.setContext('allergy')">🤧 Allergie</button>
-<button id="s_dry" class="option" onclick="STATE.setState('dry')">😵 Trocken</button>
-<button id="s_overload" class="option" onclick="STATE.setState('overload')">🔴 Überreizt</button>
+<button class="action-btn start-morning" onclick="toggleMorning()">☀️ Morgen-Routine ▼</button>
+<div id="morning-sub" class="sub-menu hidden">
+<button class="action-btn start-bed" onclick="startSession('bed')">🛌 Im Bett</button>
+<button class="action-btn start-bath" onclick="startSession('bath')">🚿 Im Bad</button>
 </div>
 
 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-<button class="action-btn start-bed" onclick="startSession('bed')">🛌 1. Im Bett</button>
-<button class="action-btn start-bath" onclick="startSession('bath')">🚿 2. Im Bad</button>
+
+<div class="grid">
+<button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
+<button id="c_allergy" class="option" onclick="STATE.setContext('allergy')">🤧 Allergie</button>
+<button id="s_dry" class="option" onclick="STATE.setState('dry')">😵 Trocken</button>
+<button id="s_overload" class="option" onclick="STATE.setState('overload')">🔴 Überreizt/Müde</button>
+</div>
+
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
-<button onclick="STATE.reset()" style="background:none; border:none; color:#e74c3c; font-size:11px; cursor:pointer; margin-top:10px;">Daten zurücksetzen</button>
+<button onclick="STATE.reset()" style="background:none; border:none; color:#e74c3c; font-size:11px; cursor:pointer; margin-top:15px;">Daten zurücksetzen</button>
 </div>
 
 <div id="run" class="card hidden">
@@ -68,10 +75,17 @@ const data = this.get();
 document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
 document.getElementById("s_" + data.state)?.classList.add('active');
 document.getElementById("c_" + data.context)?.classList.add('active');
-document.getElementById("mode-info").innerText = `Kontext: ${data.context} | Status: ${data.state}`;
+const ctxLabel = data.context === 'screen' ? 'BILDSCHIRM' : data.context.toUpperCase();
+const stateLabel = data.state === 'overload' ? 'ÜBERREIZT/MÜDE' : data.state.toUpperCase();
+document.getElementById("mode-info").innerText = `Kontext: ${ctxLabel} | Status: ${stateLabel}`;
 }
 };
 STATE.updateUI();
+
+function toggleMorning() {
+const sub = document.getElementById('morning-sub');
+sub.classList.toggle('hidden');
+}
 
 function step(t, s, v, split = false) { return {t, s, v, split}; }
 
@@ -104,7 +118,7 @@ step("Fernblick", 30, "Entspannt in die Ferne schauen.")
 }
 if(state === "dry") {
 return [
-step("Wärme", 40, "Warme Hände auf die Augen legen."),
+step("Wärme", 40, "Warme Hände auflegen."),
 step("Lidmassage", 30, "Sanft ausstreichen oben nach unten und unten nach oben."),
 step("Blinzeln", 20, "Langsam und vollständig blinzeln."),
 step("Fernblick", 30, "In die Ferne schauen.")
@@ -119,14 +133,14 @@ step("Ruhe", 15, "Augen geschlossen halten. Gute Nacht.")
 }
 if(state === "overload" || context === "stress") {
 return [
-step("Großes Schwingen", 45, "Drehe den Oberkörper locker von links nach rechts. Der Blick gleitet entspannt mit."), // split entfernt
+step("Großes Schwingen", 45, "Drehe den Oberkörper locker von links nach rechts. Der Blick gleitet entspannt mit."),
 step("Palmieren", 30, "Hände auflegen und tief durchatmen."),
 step("Weicher Blick", 20, "Ohne Fokus in die Ferne schauen.")
 ];
 }
 return [
 step("Blinzeln", 15, "Locker blinzeln."),
-step("Nah-Fern", 30, "Daumen und fernen Punkt im Wechsel fokussieren."),
+step("Nah-Fern", 30, "Fokussiere abwechselnd deinen Daumen und einen Punkt in der Ferne."),
 step("Acht malen", 24, "Liegende Acht mit den Augen verfolgen.", true)
 ];
 }
@@ -179,6 +193,8 @@ if(window.speechSynthesis) speechSynthesis.cancel();
 document.getElementById("body").classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
+// Sub-Menü wieder schließen für sauberen Reset
+document.getElementById('morning-sub').classList.add('hidden');
 }
 </script>
 </body>
