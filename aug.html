@@ -3,61 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.1.8</title>
+<title>MeineAugen 6.2.2</title>
 <style>
 :root { --bg: #fdfcfb; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #1a1a1a; --card: #2c2c2c; --text: #ecf0f1; --accent: #3498db; --gray: #7f8c8d; }
-
 body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: 0.3s; margin: 0; touch-action: manipulation; }
-.card { background: var(--card); padding:15px; border-radius:30px; max-width:420px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-
+.card { background: var(--card); padding:15px; border-radius:30px; max-width:440px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 #morning-sub { max-height: 0; overflow: hidden; transition: 0.3s; display: flex; gap: 8px; }
 #morning-sub.open { max-height: 120px; margin: 10px 0; }
-
-h4 { margin: 12px 0 6px 0; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
-.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 5px; }
-button.option { padding: 14px 5px; border: none; border-radius: 18px; font-weight: 600; font-size: 12px; background: var(--gray); color: white; flex: 1 1 30%; transition: 0.2s; }
-button.option.active { background: var(--accent); outline: 3px solid var(--active); }
-
+h4 { margin: 12px 0 8px 0; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; padding: 0 5px; }
+button.option { padding: 12px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
+button.option span { font-size: 18px; margin-bottom: 3px; }
+button.option.active { background: var(--accent); outline: 2px solid var(--active); }
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
-.sub-btn { font-size: 14px; flex: 1; padding: 14px; border-radius: 15px; }
-.start-run { background: #27ae60; margin-top: 15px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
+.start-run { background: #27ae60; margin-top: 10px; }
 .night { background: #2c3e50; }
-
 #mode-info { font-size: 10px; color: #7f8c8d; margin-bottom: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 10px; font-weight: bold; }
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 18px; min-height: 100px; padding: 0 15px; line-height: 1.5; display: flex; align-items: center; justify-content: center; }
+#desc { font-size: 18px; min-height: 110px; padding: 0 15px; line-height: 1.5; display: flex; align-items: center; justify-content: center; }
 .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.1.8</h2>
+<h2>👁️ MeineAugen 6.2.2</h2>
 <div id="mode-info">Lädt...</div>
 
 <div class="morning-section">
 <button class="action-btn start-morning" onclick="toggleMorning()">☀️ Morgen-Routine <span id="arrow">▼</span></button>
 <div id="morning-sub">
-<button class="action-btn sub-btn" style="background:#f39c12" onclick="startSession('bed')">🛌 Bett</button>
-<button class="action-btn sub-btn" style="background:#3498db" onclick="startSession('bath')">🚿 Bad</button>
+<button class="action-btn" style="background:#f39c12; flex:1; border-radius:15px; border:none; color:white; font-weight:bold;" onclick="startSession('bed')">🛌 Bett</button>
+<button class="action-btn" style="background:#3498db; flex:1; border-radius:15px; border:none; color:white; font-weight:bold;" onclick="startSession('bath')">🚿 Bad</button>
 </div>
 </div>
 
 <h4>Kontext</h4>
 <div class="grid">
-<button id="c_normal" class="option" onclick="setOpt('ctx','normal')">🔄 Normal</button>
-<button id="c_screen" class="option" onclick="setOpt('ctx','screen')">📱 Screen</button>
-<button id="c_allergy" class="option" onclick="setOpt('ctx','allergy')">🤧 Allergie</button>
+<button id="c_screen" class="option" onclick="setOpt('ctx','screen')"><span>📱</span>Screen</button>
+<button id="c_nature" class="option" onclick="setOpt('ctx','nature')"><span>🌳</span>Natur</button>
+<button id="c_stress" class="option" onclick="setOpt('ctx','stress')"><span>⚖️</span>Stress</button>
+<button id="c_allergy" class="option" onclick="setOpt('ctx','allergy')"><span>🤧</span>Allergie</button>
 </div>
 
 <h4>Zustand / Symptome</h4>
 <div class="grid">
-<button id="s_normal" class="option" onclick="setOpt('st','normal')">✅ OK</button>
-<button id="s_dry" class="option" onclick="setOpt('st','dry')">😵 Trocken</button>
-<button id="s_tired" class="option" onclick="setOpt('st','tired')">🔴 Müde</button>
-<button id="s_light" class="option" onclick="setOpt('st','light')">🔆 Lichtscheu</button>
+<button id="s_normal" class="option" onclick="setOpt('st','normal')"><span>✅</span>OK</button>
+<button id="s_dry" class="option" onclick="setOpt('st','dry')"><span>😵</span>Trocken</button>
+<button id="s_tired" class="option" onclick="setOpt('st','tired')"><span>🔴</span>Müde</button>
+<button id="s_light" class="option" onclick="setOpt('st','light')"><span>🔆</span>Licht</button>
 </div>
 
 <button class="action-btn start-run" onclick="startSession('train')">🚀 Training starten</button>
@@ -66,24 +62,26 @@ button.option.active { background: var(--accent); outline: 3px solid var(--activ
 
 <div id="run" class="card hidden">
 <div id="title" style="font-weight:bold; font-size: 22px; margin-bottom: 10px;"></div>
-<div id="timer">0</div>
+<div id="timer">...</div>
 <div id="desc"></div>
 <button onclick="abort()" class="action-btn" style="background:#95a5a6; margin-top:20px;">Abbrechen</button>
 </div>
 
 <script>
-let curCtx = localStorage.getItem("ma_ctx") || "normal"
+let curCtx = localStorage.getItem("ma_ctx") || "none"
 let curSt = localStorage.getItem("ma_st") || "normal"
+let timer;
 
 function updateUI() {
 document.querySelectorAll('.option').forEach(b => b.classList.remove('active'));
-document.getElementById("c_" + curCtx)?.classList.add('active');
+if(curCtx !== "none") document.getElementById("c_" + curCtx)?.classList.add('active');
 document.getElementById("s_" + curSt)?.classList.add('active');
-document.getElementById("mode-info").innerText = `MODUS: ${curCtx.toUpperCase()} | STATUS: ${curSt.toUpperCase()}`;
+document.getElementById("mode-info").innerText = `KONTEXT: ${curCtx.toUpperCase()} | STATUS: ${curSt.toUpperCase()}`;
 }
 
 function setOpt(t, v) {
-if(t==='ctx') curCtx = v; else curSt = v;
+if(t==='ctx') curCtx = (curCtx === v) ? "none" : v;
+else curSt = v;
 localStorage.setItem("ma_ctx", curCtx);
 localStorage.setItem("ma_st", curSt);
 updateUI();
@@ -99,42 +97,62 @@ function step(t, s, v, split = false) { return {t, s, v, split}; }
 
 function buildPlan(type) {
 if(type==='bed') return [
-step("Ruhe", 15, "Lass die Augen ganz entspannt zu und atme dreimal tief durch die Nase ein."),
-step("Palmieren", 40, "Reibe deine Hände warm und lege sie wie kleine Schalen über die geschlossenen Augen."),
-step("Blinzeln", 15, "Öffne die Augen und blinzle ganz schnell und locker, wie ein Schmetterling.")
+step("Ruhe", 15, "Augen zu. Atme tief ein."),
+step("Palmieren", 40, "Hände warm auf die Augen legen."),
+step("Blinzeln", 15, "Ganz locker blinzeln.")
+];
+if(type==='bath') return [
+step("Wärme", 60, "Warme Hände auf die geschlossenen Augen legen."),
+step("Lidmassage", 30, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel."),
+step("Reinigung", 20, "Augenlider vorsichtig mit Wasser reinigen."),
+step("Blinzeln", 20, "Augen öffnen und ruhig blinzeln."),
+step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen.")
 ];
 if(type==='night') return [
-step("Dunkelheit", 45, "Decke die Augen mit den Händen ab. Such das tiefste Schwarz hinter deinen Lidern."),
-step("Kiefer lockern", 20, "Lass den Unterkiefer hängen und atme sanft aus. Entspannung für die Sehnerven."),
-step("Gute Nacht", 10, "Genieße die Ruhe. Du kannst die Augen jetzt geschlossen halten.")
+step("Dunkelheit", 45, "Hände auflegen. Tiefes Schwarz suchen."),
+step("Kiefer lockern", 20, "Unterkiefer hängen lassen und ausatmen.")
 ];
-// Symptom-spezifisch
 if(curSt==='light') return [
-step("Palmieren", 60, "Komplette Dunkelheit. Decke die Augen ab, bis kein Lichtstrahl mehr durchkommt."),
-step("Sanftes Rollen", 30, "Lass die Augen hinter den geschlossenen Lidern ganz langsam kreisen."),
-step("Weicher Blick", 30, "Öffne die Augen nur einen Spalt und schau ohne Fokus auf den Boden.")
+step("Augen schließen", 40, "Augen geschlossen halten. Lichtreiz reduzieren."),
+step("Palmieren", 60, "Hände locker auflegen. Kein Druck."),
+step("Ruhe", 30, "Augen entspannt geschlossen halten.")
 ];
 if(curCtx==='allergy') return [
-step("Kühlung", 40, "Lege ein kühles Tuch auf. Nicht drücken, nur die Kälte wirken lassen."),
-step("Ruhe", 25, "Halte die Augen still. Versuche, dem Juckreiz nicht nachzugeben."),
-step("Fernblick", 20, "Schau entspannt aus dem Fenster in den weitesten Punkt am Horizont.")
+step("Kühlung", 40, "Kühles Tuch auflegen. Nicht reiben."),
+step("Ruhe", 25, "Augen absolut still halten.")
+];
+
+if(curCtx==='stress') return [
+step("Schwingen", 45, "Oberkörper locker drehen. Blick fließt mit."),
+step("Gähnen", 20, "Weit gähnen, um den Kiefer zu lockern.")
 ];
 
 if(curSt==='dry' || curCtx==='screen') return [
-step("Power-Blinzeln", 25, "Blinzle ganz bewusst und vollständig. Spüre, wie sich der Tränenfilm verteilt."),
-step("Lidmassage", 35, "Streiche mit dem Zeigefinger sanft von oben nach unten über die geschlossenen Lider."),
-step("Fokus-Wechsel", 30, "Schau erst auf deinen Daumen direkt vor der Nase, dann weit weg an die Wand.")
+step("Blinzeln", 25, "Langsam und vollständig blinzeln. Augen kurz geschlossen halten."),
+step("Lidmassage", 35, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck."),
+step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen.")
 ];
-// Standard-Training (Normal)
+
+if(curCtx==='nature') return [
+step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."),
+step("Peripherie", 30, "Geradeaus schauen, Seiten wahrnehmen.")
+];
 return [
-step("Locker blinzeln", 15, "Blinzle ganz entspannt, um die Augen zu befeuchten."),
-step("Nah-Fern-Check", 30, "Fokussiere deinen Daumen für 2 Sekunden, dann einen Punkt in der Ferne."),
-step("Acht malen", 30, "Stell dir eine liegende Acht vor und verfolge sie mit den Augen.", true),
-step("Palmieren", 20, "Kurze Ruhepause. Hände warm reiben und auflegen.")
+step("Locker blinzeln", 15, "Augenoberfläche kurz erfrischen."),
+step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."),
+step("Acht malen", 30, "Liegende Acht in der Luft verfolgen.", true)
 ];
 }
 
-let timer;
+function speak(txt, cb) {
+if(!window.speechSynthesis) { cb?.(); return; }
+speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(txt);
+u.lang = "de-DE"
+u.onend = () => cb?.();
+speechSynthesis.speak(u);
+}
+
 function startSession(type) {
 const steps = buildPlan(type);
 if(type==='night' || curSt==='light') document.body.classList.add("dark");
@@ -146,31 +164,23 @@ run(steps, 0);
 function run(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Training beendet. Gut gemacht.");
-setTimeout(abort, 3000);
+speak("Fertig.", () => setTimeout(abort, 2000));
 return;
 }
 const s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
-speak(s.v);
+document.getElementById("timer").innerText = "..."
+speak(s.v, () => {
 let sec = s.s;
 document.getElementById("timer").innerText = sec;
 timer = setInterval(() => {
 sec--;
 document.getElementById("timer").innerText = sec;
-if(s.split && sec === Math.floor(s.s/2)) speak("Jetzt in die andere Richtung.");
+if(s.split && sec === Math.floor(s.s/2)) speak("Richtungswechsel.");
 if(sec <= 0) { clearInterval(timer); run(steps, i+1); }
 }, 1000);
-}
-
-function speak(txt) {
-if(!window.speechSynthesis) return;
-speechSynthesis.cancel();
-const u = new SpeechSynthesisUtterance(txt);
-u.lang = "de-DE"
-u.rate = 1.0;
-speechSynthesis.speak(u);
+});
 }
 
 function abort() {
