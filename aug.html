@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.1.2</title>
+<title>MeineAugen 6.1.3</title>
 <style>
 :root { --bg: #fdfcfb; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; }
 body.dark { --bg: #1a1a1a; --card: #2c2c2c; --text: #ecf0f1; --accent: #3498db; --gray: #7f8c8d; }
@@ -12,7 +12,7 @@ body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:
 .card { background: var(--card); padding:20px; border-radius:30px; max-width:400px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 
 /* Morgen-Routine Akkordeon */
-.morning-section { margin-bottom: 20px; }
+.morning-section { margin-bottom: 10px; }
 #morning-sub {
 max-height: 0;
 overflow: hidden;
@@ -21,18 +21,20 @@ display: flex;
 gap: 10px;
 padding: 0 5px;
 }
-#morning-sub.open { max-height: 100px; margin-top: 10px; }
+#morning-sub.open { max-height: 100px; margin-top: 10px; margin-bottom: 15px; }
 
-.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; }
-button.option { padding: 14px; border: none; border-radius: 18px; font-weight: 600; font-size: 13px; background: var(--gray); color: white; cursor: pointer; flex: 1 1 45%; transition: 0.2s; }
-button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
+h4 { margin: 15px 0 8px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #7f8c8d; }
 
-.action-btn { padding: 18px; margin: 5px 0; width: 100%; border: none; border-radius: 20px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
-.start-morning { background: #f1c40f; color: #2c3e50; position: relative; }
+.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 5px; }
+button.option { padding: 12px; border: none; border-radius: 15px; font-weight: 600; font-size: 13px; background: var(--gray); color: white; cursor: pointer; flex: 1 1 45%; transition: 0.2s; }
+button.option.active { background: var(--accent); outline: 3px solid #2ecc71; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+
+.action-btn { padding: 18px; margin: 8px 0; width: 100%; border: none; border-radius: 20px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
+.start-morning { background: #f1c40f; color: #2c3e50; }
 .sub-btn { font-size: 14px; flex: 1; padding: 15px; border-radius: 15px; }
 .start-bed { background: #f39c12; }
 .start-bath { background: #3498db; }
-.start-run { background: #27ae60; margin-top: 10px; }
+.start-run { background: #27ae60; margin-top: 15px; }
 .night { background: #2c3e50; }
 
 .hidden { display: none; }
@@ -45,7 +47,7 @@ button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
 <body id="body">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.1.2</h2>
+<h2>👁️ MeineAugen 6.1.3</h2>
 <div id="mode-info">Lädt...</div>
 
 <div class="morning-section">
@@ -56,14 +58,21 @@ button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
 </div>
 </div>
 
-<hr style="border:0; border-top:1px solid #eee;">
+<hr style="border:0; border-top:1px solid #eee; margin: 10px 0;">
 
+<h4>Kontext</h4>
 <div class="grid">
 <button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
 <button id="c_allergy" class="option" onclick="STATE.setContext('allergy')">🤧 Allergie</button>
+</div>
+
+<h4>Zustand / Symptome</h4>
+<div class="grid">
 <button id="s_dry" class="option" onclick="STATE.setState('dry')">😵 Trocken</button>
 <button id="s_overload" class="option" onclick="STATE.setState('overload')">🔴 Überreizt/Müde</button>
 </div>
+
+<hr style="border:0; border-top:1px solid #eee; margin: 20px 0 10px 0;">
 
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
@@ -78,18 +87,27 @@ button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
 </div>
 
 <script>
+// Logik für Speicherung und UI
 const STATE = {
 get() { return { state: localStorage.getItem("ma_state") || "normal", context: localStorage.getItem("ma_context") || "screen" }; },
-setState(s) { localStorage.setItem("ma_state", s); this.updateUI(); },
-setContext(c) { localStorage.setItem("ma_context", c); this.updateUI(); },
+setState(s) {
+const current = this.get().state;
+localStorage.setItem("ma_state", current === s ? "normal" : s);
+this.updateUI();
+},
+setContext(c) {
+const current = this.get().context;
+localStorage.setItem("ma_context", current === c ? "screen" : c);
+this.updateUI();
+},
 reset() { if(confirm("App zurücksetzen?")) { localStorage.clear(); location.reload(); } },
 updateUI() {
 const data = this.get();
 document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
-document.getElementById("s_" + data.state)?.classList.add('active');
-document.getElementById("c_" + data.context)?.classList.add('active');
-const ctxLabel = data.context === 'screen' ? 'BILDSCHIRM' : data.context.toUpperCase();
-const stateLabel = data.state === 'overload' ? 'ÜBERREIZT/MÜDE' : data.state.toUpperCase();
+if(data.state !== "normal") document.getElementById("s_" + data.state)?.classList.add('active');
+if(data.context !== "screen") document.getElementById("c_" + data.context)?.classList.add('active');
+const ctxLabel = data.context === 'screen' ? 'NORMAL' : data.context.toUpperCase();
+const stateLabel = data.state === 'normal' ? 'OK' : data.state.toUpperCase();
 document.getElementById("mode-info").innerText = `KONTEXT: ${ctxLabel} | STATUS: ${stateLabel}`;
 }
 };
@@ -106,6 +124,7 @@ function step(t, s, v, split = false) { return {t, s, v, split}; }
 
 function buildPlan(type) {
 const {state, context} = STATE.get();
+// Routinen wie besprochen (Bett, Bad, Allergie, Trocken, Nacht, Overload, Default)
 if(type === 'bed') return [
 step("Ruhe", 15, "Lass die Augen geschlossen. Atme tief ein."),
 step("Dehnen", 30, "Strecke dich im Bett. Gähne tief und herzhaft."),
@@ -126,24 +145,24 @@ step("Fernblick", 30, "Entspannt in die Ferne schauen.")
 ];
 if(state === "dry") return [
 step("Wärme", 40, "Warme Hände auflegen."),
-step("Lidmassage", 30, "Sanft ausstreichen oben nach unten und unten nach oben."),
-step("Blinzeln", 20, "Langsam und vollständig blinzeln."),
+step("Lidmassage", 30, "Sanft ausstreichen."),
+step("Blinzeln", 20, "Vollständig blinzeln."),
 step("Fernblick", 30, "In die Ferne schauen.")
 ];
 if(type === 'night') return [
 step("Palmieren", 45, "Hände auflegen. Dunkelheit genießen."),
 step("Gähnen", 20, "Kiefer locker lassen."),
-step("Ruhe", 15, "Augen geschlossen halten.")
+step("Ruhe", 15, "Gute Nacht.")
 ];
-if(state === "overload" || context === "stress") return [
-step("Schwingen", 45, "Drehe den Oberkörper locker. Der Blick gleitet entspannt mit."),
+if(state === "overload") return [
+step("Schwingen", 45, "Drehe den Oberkörper locker. Blick gleitet mit."),
 step("Palmieren", 30, "Hände auflegen und tief durchatmen."),
-step("Weicher Blick", 20, "Ohne Fokus in die Ferne schauen.")
+step("Weicher Blick", 20, "In die Ferne schauen.")
 ];
 return [
 step("Blinzeln", 15, "Locker blinzeln."),
-step("Nah-Fern", 30, "Fokussiere Daumen und Fernpunkt im Wechsel."),
-step("Acht malen", 24, "Liegende Acht mit den Augen verfolgen.", true)
+step("Nah-Fern", 30, "Daumen und Fernpunkt im Wechsel."),
+step("Acht malen", 24, "Liegende Acht verfolgen.", true)
 ];
 }
 
