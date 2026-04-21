@@ -3,51 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeineAugen 6.0.6</title>
+<title>MeineAugen 6.0.9</title>
 <style>
-body { font-family:-apple-system, sans-serif; background:#fdfcfb; text-align:center; padding:15px; color: #2c3e50; }
-.card { background:white; padding:20px; border-radius:25px; max-width:420px; margin:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+/* Basis-Stile & Dark Mode Logik */
+:root { --bg: #fdfcfb; --card: white; --text: #2c3e50; --accent: #2980b9; }
+body.dark { --bg: #1a1a1a; --card: #2c2c2c; --text: #ecf0f1; --accent: #3498db; }
+
+body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:15px; color: var(--text); transition: all 0.3s; margin: 0; }
+.card { background: var(--card); padding:20px; border-radius:25px; max-width:420px; margin:20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
 .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
-button.option { padding: 12px; border: none; border-radius: 15px; font-weight: 600; font-size: 14px; background: #bdc3c7; color: white; cursor: pointer; flex: 1 1 45%; }
-button.option.active { background: #2980b9; outline: 3px solid #2ecc71; opacity: 1; }
+button.option { padding: 12px; border: none; border-radius: 15px; font-weight: 600; font-size: 13px; background: #bdc3c7; color: white; cursor: pointer; flex: 1 1 45%; transition: 0.2s; }
+button.option.active { background: var(--accent); outline: 3px solid #2ecc71; }
+
 .action-btn { padding: 16px; margin: 8px 0; width: 100%; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
-.start-morning { background: #f1c40f; color: #2c3e50; }
+.start-bed { background: #f1c40f; color: #2c3e50; }
+.start-bath { background: #3498db; }
 .start-run { background: #27ae60; }
 .night { background: #2c3e50; }
+
 .hidden { display: none; }
-#mode-info { font-size: 12px; color: #7f8c8d; margin-bottom: 15px; background: #f0f0f0; padding: 8px; border-radius: 12px; }
+#mode-info { font-size: 11px; color: #7f8c8d; margin-bottom: 15px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 12px; text-transform: uppercase; }
 #title { font-size: 28px; font-weight: bold; margin-top: 10px; }
-#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 20px 0; }
-#desc { font-size: 20px; color: #444; min-height: 80px; padding: 0 10px; line-height: 1.4; }
+#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 15px 0; }
+#desc { font-size: 19px; color: var(--text); min-height: 80px; padding: 0 10px; line-height: 1.4; }
 </style>
 </head>
-<body>
+<body id="body">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.0.6</h2>
+<h2>👁️ MeineAugen 6.0.9</h2>
 <div id="mode-info">Lädt...</div>
 
-<h4 style="margin:10px 0">Kontext</h4>
 <div class="grid">
-<button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Bildschirm</button>
+<button id="c_screen" class="option" onclick="STATE.setContext('screen')">📱 Screen</button>
 <button id="c_allergy" class="option" onclick="STATE.setContext('allergy')">🤧 Allergie</button>
-<button id="c_stress" class="option" onclick="STATE.setContext('stress')">⚠️ Stress</button>
-<button id="c_nature" class="option" onclick="STATE.setContext('nature')">🌿 Natur</button>
-</div>
-
-<h4 style="margin:10px 0">Zustand</h4>
-<div class="grid">
-<button id="s_normal" class="option" onclick="STATE.setState('normal')">🙂 Normal</button>
 <button id="s_dry" class="option" onclick="STATE.setState('dry')">😵 Trocken</button>
-<button id="s_overload" class="option" style="flex: 1 1 92%" onclick="STATE.setState('overload')">🔴 Überreizt</button>
+<button id="s_overload" class="option" onclick="STATE.setState('overload')">🔴 Überreizt</button>
 </div>
 
 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-
-<button class="action-btn start-morning" onclick="startSession('wake')">☀️ Morgen-Pflege</button>
+<button class="action-btn start-bed" onclick="startSession('bed')">🛌 1. Im Bett</button>
+<button class="action-btn start-bath" onclick="startSession('bath')">🚿 2. Im Bad</button>
 <button class="action-btn start-run" onclick="startSession('training')">🚀 Training starten</button>
 <button class="action-btn night" onclick="startSession('night')">🌙 Gute Nacht</button>
-<button class="action-btn reset" onclick="STATE.reset()" style="background:#e74c3c; width:50%; font-size:11px;">Reset</button>
+<button onclick="STATE.reset()" style="background:none; border:none; color:#e74c3c; font-size:11px; cursor:pointer; margin-top:10px;">Daten zurücksetzen</button>
 </div>
 
 <div id="run" class="card hidden">
@@ -68,7 +68,7 @@ const data = this.get();
 document.querySelectorAll('.option').forEach(btn => btn.classList.remove('active'));
 document.getElementById("s_" + data.state)?.classList.add('active');
 document.getElementById("c_" + data.context)?.classList.add('active');
-document.getElementById("mode-info").innerText = `KONTEXT: ${data.context.toUpperCase()} | STATUS: ${data.state.toUpperCase()}`;
+document.getElementById("mode-info").innerText = `Kontext: ${data.context} | Status: ${data.state}`;
 }
 };
 STATE.updateUI();
@@ -78,59 +78,55 @@ function step(t, s, v, split = false) { return {t, s, v, split}; }
 function buildPlan(type) {
 const {state, context} = STATE.get();
 
-// 1. KORRIGIERTE MORGENROUTINE
-if(type === 'wake') {
+if(type === 'bed') {
 return [
-step("Augen geschlossen", 20, "Augen geschlossen lassen. Nicht reiben."),
-step("Wärme", 60, "Warme Hände auf die geschlossenen Augen legen."),
-step("Lidmassage", 30, "Streiche sanft über die Lider. Oben nach unten, unten nach oben. Kein Druck."),
-step("Reinigung", 20, "Augenlider vorsichtig mit Wasser reinigen."),
-step("Blinzeln", 20, "Augen öffnen und ruhig blinzeln."),
-step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts.")
+step("Ruhe", 15, "Lass die Augen geschlossen. Atme tief durch die Nase ein."),
+step("Dehnen & Gähnen", 30, "Strecke dich im Bett. Gähne tief und herzhaft."),
+step("Wärme", 45, "Reibe deine Hände warm und lege sie sanft auf die Augen."),
+step("Blinzeln", 15, "Öffne die Augen und blinzle ganz locker.")
 ];
 }
-
-// 2. ALLERGIE RICHTIG FORMULIERT
+if(type === 'bath') {
+return [
+step("Wärme-Kompresse", 40, "Halte ein warmes Tuch auf deine Augen."),
+step("Lidmassage", 30, "Streiche sanft oben nach unten und unten nach oben."),
+step("Reinigung", 20, "Spüle die Augen vorsichtig mit klarem Wasser ab."),
+step("Fernblick", 30, "Schau kurz entspannt in die Ferne.")
+];
+}
 if(context === 'allergy') {
 return [
-step("Kühlung", 30, "Lege ein kühles, feuchtes Tuch auf die geschlossenen Augen. Nicht reiben."),
-step("Augen schließen", 20, "Augen geschlossen halten. Reiz runterfahren."),
-step("Sanftes Blinzeln", 20, "Augen öffnen und leicht blinzeln. Nicht pressen."),
-step("Fernblick", 30, "Schau entspannt in die Ferne. Blinzle normal. Kein Fixieren.")
+step("Kühlung", 30, "Kühles Tuch auflegen. Nicht reiben."),
+step("Ruhe", 20, "Augen geschlossen halten. Reiz minimieren."),
+step("Sanftes Blinzeln", 20, "Leicht blinzeln. Nicht pressen."),
+step("Fernblick", 30, "Entspannt in die Ferne schauen.")
 ];
 }
-
-// 3. TROCKENE AUGEN – SAUBER GEMACHT
 if(state === "dry") {
 return [
 step("Wärme", 40, "Warme Hände auf die Augen legen."),
-step("Lidmassage", 30, "Sanft ausstreichen. Oben nach unten, unten nach oben."),
+step("Lidmassage", 30, "Sanft ausstreichen oben nach unten und unten nach oben."),
 step("Blinzeln", 20, "Langsam und vollständig blinzeln."),
-step("Fernblick", 30, "In die Ferne schauen. Blinzeln erlaubt. Nicht fixieren.")
+step("Fernblick", 30, "In die Ferne schauen.")
 ];
 }
-
-// Standard-Routinen (gestrafft)
 if(type === 'night') {
 return [
 step("Palmieren", 45, "Hände auflegen. Dunkelheit genießen."),
-step("Gähnen", 20, "Tief gähnen. Kiefer und Augen locker lassen."),
+step("Gähnen", 20, "Kiefer locker lassen."),
 step("Ruhe", 15, "Augen geschlossen halten. Gute Nacht.")
 ];
 }
-
 if(state === "overload" || context === "stress") {
 return [
-step("Großes Schwingen", 40, "Oberkörper locker drehen. Blick entspannt fließen lassen.", true),
-step("Palmieren", 30, "Hände auflegen. Tief durchatmen."),
+step("Großes Schwingen", 45, "Drehe den Oberkörper locker von links nach rechts. Der Blick gleitet entspannt mit."), // split entfernt
+step("Palmieren", 30, "Hände auflegen und tief durchatmen."),
 step("Weicher Blick", 20, "Ohne Fokus in die Ferne schauen.")
 ];
 }
-
-// Default Training (Bildschirm / Natur / Normal)
 return [
 step("Blinzeln", 15, "Locker blinzeln."),
-step("Nah-Fern", 30, "Wechselnd Daumen und fernen Punkt fokussieren."),
+step("Nah-Fern", 30, "Daumen und fernen Punkt im Wechsel fokussieren."),
 step("Acht malen", 24, "Liegende Acht mit den Augen verfolgen.", true)
 ];
 }
@@ -148,6 +144,7 @@ speechSynthesis.speak(u);
 
 function startSession(type) {
 const steps = buildPlan(type);
+if(type === 'bed' || type === 'night') document.getElementById("body").classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 run(steps, 0);
@@ -179,6 +176,7 @@ if(sec <= 0) { clearInterval(interval); run(steps, i + 1); }
 function abort() {
 clearInterval(interval);
 if(window.speechSynthesis) speechSynthesis.cancel();
+document.getElementById("body").classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
