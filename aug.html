@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.3.3</title>
+<title>MeineAugen 6.3.4</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --gray: #444; }
@@ -29,7 +29,7 @@ button.option.active { background-color: var(--accent) !important; color: white 
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.3.3</h2>
+<h2>👁️ MeineAugen 6.3.4</h2>
 <div id="storage-warn">⚠️ Speicher blockiert - Einstellungen halten nur bis Refresh</div>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">LÄDT...</div>
 
@@ -112,32 +112,36 @@ s.classList.toggle('open');
 document.getElementById('arrow').innerText = s.classList.contains('open') ? "▲" : "▼"
 }
 
-function step(t, s, v) { return {t: t, s: s, v: v}; }
+// t: Titel, s: Sekunden, v: Ansage, split: Richtungswechsel bei halber Zeit
+function step(t, s, v, split) { return {t: t, s: s, v: v, split: !!split}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 45, "Stell dir ein Zifferblatt vor. Blicke auf 12, 3, 6 und 9. Kopf bleibt still."),
+step("Zifferblatt", 45, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Kopf stillhalten. Nach dem Signal die Richtung wechseln.", true),
 step("Peripherie", 35, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.")
 ],
 smooth: [
-step("Folgeblick", 40, "Strecke den Arm. Bewege den Daumen im Kreis. Verfolge ihn flüssig mit den Augen.")
+step("Folgeblick", 40, "Strecke den Arm. Bewege den Daumen langsam im Kreis. Verfolge ihn flüssig. Nach dem Signal Richtung wechseln.", true)
 ],
 akkommodation: [
 step("Fokus-Wechsel", 40, "Daumen nah ansehen bis er scharf ist. Dann Ferne. Warte auf die Schärfe.")
 ],
 entlastung: [
 step("Palmieren", 60, "Hände warm reiben. Augen abdecken. Atme tief in die Dunkelheit."),
-step("Lid-Pflege", 35, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel.")
+step("Lid-Pflege", 40, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel.")
 ],
 blinzeln: [
 step("Schmetterling", 25, "Blinzle ganz schnell und federleicht. Befeuchtet sofort.")
 ]
 };
 
-function getRnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function getRnd(arr, last) {
+let filtered = arr.filter(item => item.t !== (last ? last.t : ''));
+if (filtered.length === 0) filtered = arr;
+return filtered[Math.floor(Math.random() * filtered.length)];
+}
 
 function buildPlan(type) {
-// 1) Spezial-Szenarien (Morgen / Nacht / Allergie)
 if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), step("Palmieren", 45, "Hände warm auflegen."), lib.blinzeln[0]];
 if (type === 'bath') return [
 step("Wärme", 60, "Warmes Tuch auf die geschlossenen Augen legen."),
@@ -154,13 +158,34 @@ step("Sanftes Blinzeln", 20, "Augen öffnen und leicht blinzeln. Kein Pressen.")
 step("Fernblick", 30, "Locker in die Ferne schauen. Nichts fixieren.")
 ];
 
-// 2) Dynamische Trainings-Logik
 if (curSt === 'light') return [step("Reiz-Stopp", 50, "Augen zu."), step("Palmieren", 60, "Abdunkeln.")];
-if (curCtx === 'stress') return [getRnd(lib.neuro), step("Gähnen", 25, "Weit gähnen."), getRnd(lib.entlastung)];
-if (curSt === 'dry' || curCtx === 'screen') return [getRnd(lib.blinzeln), getRnd(lib.entlastung), getRnd(lib.akkommodation)];
-if (curSt === 'tired') return [getRnd(lib.entlastung), getRnd(lib.entlastung), getRnd(lib.smooth)];
-// Standard
-return [getRnd(lib.neuro), getRnd(lib.akkommodation), getRnd(lib.smooth)];
+// Dynamischer Plan ohne Duplikate
+let plan = [];
+if (curCtx === 'stress') {
+let s1 = getRnd(lib.neuro);
+plan.push(s1);
+plan.push(step("Gähnen", 25, "Weit gähnen. Lockere das Gesicht."));
+plan.push(getRnd(lib.entlastung));
+} else if (curSt === 'dry' || curCtx === 'screen') {
+let s1 = lib.blinzeln[0];
+plan.push(s1);
+let s2 = getRnd(lib.entlastung, s1);
+plan.push(s2);
+plan.push(getRnd(lib.akkommodation, s2));
+} else if (curSt === 'tired') {
+let s1 = lib.entlastung[0];
+plan.push(s1);
+let s2 = lib.entlastung[1];
+plan.push(s2);
+plan.push(getRnd(lib.smooth, s2));
+} else {
+let s1 = getRnd(lib.neuro);
+plan.push(s1);
+let s2 = getRnd(lib.akkommodation, s1);
+plan.push(s2);
+plan.push(getRnd(lib.smooth, s2));
+}
+return plan;
 }
 
 function speak(txt, cb) {
@@ -198,6 +223,11 @@ document.getElementById("timer").innerText = sec;
 timer = setInterval(function() {
 sec--;
 document.getElementById("timer").innerText = sec;
+// Richtungswechsel-Ansage bei Split-Übungen
+if (s.split && sec === Math.floor(s.s / 2)) {
+speak("Jetzt in die andere Richtung.");
+}
+
 if (sec <= 0) { clearInterval(timer); run(steps, i + 1); }
 }, 1000);
 });
