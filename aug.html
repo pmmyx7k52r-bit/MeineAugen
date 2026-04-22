@@ -3,40 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.2.3</title>
+<title>MeineAugen 6.2.8</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --gray: #444; }
-
 body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: 0.3s; margin: 0; touch-action: manipulation; }
 .card { background: var(--card); padding:15px; border-radius:30px; max-width:440px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-
 #morning-sub { max-height: 0; overflow: hidden; transition: 0.3s; display: flex; gap: 8px; }
 #morning-sub.open { max-height: 120px; margin: 10px 0; }
-
 h4 { margin: 12px 0 8px 0; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
-
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; padding: 0 5px; }
 button.option { padding: 12px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
 button.option span { font-size: 18px; margin-bottom: 3px; }
 button.option.active { background: var(--accent); outline: 2px solid var(--active); }
-
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
 .night { background: #2c3e50; }
-
-#mode-info { font-size: 10px; color: #7f8c8d; margin-bottom: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 10px; font-weight: bold; }
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 19px; min-height: 130px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+#desc { font-size: 18px; min-height: 140px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.2.3</h2>
-<div id="mode-info">Lädt...</div>
+<h2>👁️ MeineAugen 6.2.8</h2>
+<div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">DYNAMIC COACHING</div>
 
 <div class="morning-section">
 <button class="action-btn start-morning" onclick="toggleMorning()">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -48,13 +41,13 @@ button.option.active { background: var(--accent); outline: 2px solid var(--activ
 
 <h4>Kontext</h4>
 <div class="grid">
-<button id="c_screen" class="option" onclick="setOpt('ctx','screen')"><span>📱</span>Screen</button>
+<button id="c_screen" class="option" onclick="setOpt('ctx','screen')"><span>📱</span>Bildschirm</button>
 <button id="c_nature" class="option" onclick="setOpt('ctx','nature')"><span>🌳</span>Natur</button>
 <button id="c_stress" class="option" onclick="setOpt('ctx','stress')"><span>⚖️</span>Stress</button>
 <button id="c_allergy" class="option" onclick="setOpt('ctx','allergy')"><span>🤧</span>Allergie</button>
 </div>
 
-<h4>Zustand / Symptome</h4>
+<h4>Zustand</h4>
 <div class="grid">
 <button id="s_normal" class="option" onclick="setOpt('st','normal')"><span>✅</span>OK</button>
 <button id="s_dry" class="option" onclick="setOpt('st','dry')"><span>😵</span>Trocken</button>
@@ -67,7 +60,7 @@ button.option.active { background: var(--accent); outline: 2px solid var(--activ
 </div>
 
 <div id="run" class="card hidden">
-<div id="title" style="font-weight:bold; font-size: 22px; margin-bottom: 10px; color: var(--accent);"></div>
+<div id="title" style="font-weight:bold; font-size: 20px; margin-bottom: 5px; color: var(--accent);"></div>
 <div id="timer">...</div>
 <div id="desc"></div>
 <button onclick="abort()" class="action-btn" style="background:#95a5a6; margin-top:20px;">Abbrechen</button>
@@ -101,68 +94,58 @@ document.getElementById('arrow').innerText = s.classList.contains('open') ? "▲
 
 function step(t, s, v, split = false) { return {t, s, v, split}; }
 
+const lib = {
+neuro: [
+step("Zifferblatt", 45, "Halte den Kopf still. Blicke nacheinander auf die 12, die 3, die 6 und die 9 Uhr Position. Gehe bis zum äußeren Rand."),
+step("Peripherie", 35, "Schau starr geradeaus. Strecke die Arme seitlich aus und wackle mit den Fingern. Nimm die Bewegung am Rand wahr.")
+],
+smooth: [
+step("Daumen-Folge", 40, "Strecke den Arm aus. Bewege den Daumen langsam in einem großen Kreis. Verfolge ihn flüssig mit den Augen."),
+step("Horizontal-Pendel", 30, "Bewege den Daumen langsam von ganz links nach ganz rechts. Folge ihm flüssig bis zum Augen-Anschlag.")
+],
+akkommodation: [
+step("Scharf-Wechsel", 40, "Schau den Daumen nah an, bis er scharf ist. Dann blicke in die Ferne auf ein Detail. Warte auf die Schärfe, dann wechsel."),
+step("Drei-Punkte", 35, "Wähle drei Punkte: Ganz nah, mittlere Distanz, ganz fern. Springe mit dem Blick dazwischen hin und her.")
+],
+entlastung: [
+step("Palmieren", 60, "Hände kräftig warm reiben. Als Schalen locker über die Augen legen. Atme tief in die absolute Dunkelheit."),
+step("Lid-Massage", 35, "Ganz sanft ohne Druck: Das Oberlid von oben nach unten ausstreichen. Das Unterlid von unten nach oben.")
+],
+blinzeln: [
+step("Lockeres Blinzeln", 25, "Blinzle ganz schnell und federleicht, wie ein Schmetterling. Das befeuchtet die Augenoberfläche sofort."),
+step("Pause-Blinzeln", 30, "Schließe die Augen für 2 Sekunden fest, dann öffne sie und blicke entspannt in die weite Ferne.")
+]
+};
+
+function getRnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 function buildPlan(type) {
-if(type==='bed') return [
-step("Ruhe", 20, "Augen noch geschlossen halten. Atme tief in den Bauch ein und aus."),
-step("Palmieren", 45, "Hände kräftig warm reiben und locker auf die Augen legen. Dunkelheit genießen."),
-step("Blinzeln", 20, "Augen öffnen und ganz locker blinzeln. Nicht anstrengen.")
-];
-if(type==='bath') return [
-step("Wärme", 50, "Warme Hände (oder ein warmes Tuch) auf die geschlossenen Augen legen."),
-step("Lidmassage", 40, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel."),
-step("Reinigung", 20, "Augenlider vorsichtig mit klarem Wasser reinigen."),
-step("Blinzeln", 20, "Langsam und vollständig blinzeln. Augen kurz geschlossen halten."),
-step("Fernblick", 45, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen.")
-];
-if(type==='night') return [
-step("Dunkelheit", 50, "Hände locker auflegen. Das tiefste Schwarz hinter den Lidern suchen."),
-step("Kiefer lockern", 25, "Unterkiefer hängen lassen, Lippen leicht lösen. Entspannt die Sehnerven.")
-];
-if(curSt==='light') return [
-step("Ruhe", 40, "Augen entspannt geschlossen halten. Lichtreiz konsequent reduzieren."),
-step("Palmieren", 60, "Hände locker wie Schalen auflegen. Keinen Druck ausüben."),
-step("Entspannung", 30, "Ganz ruhig atmen. Die Augenmuskeln dürfen komplett loslassen.")
-];
-if(curCtx==='allergy') return [
-step("Kühlung", 45, "Kühles Tuch locker auflegen. Die Kälte beruhigt, ohne zu reiben."),
-step("Stille", 30, "Augen absolut unbewegt lassen. Kiefer entspannen.")
-];
+if(type==='bed') return [step("Ankommen", 20, "Lass die Augen geschlossen. Atme ruhig. Spüre wie die Augenmuskeln weich werden."), step("Palmieren", 45, "Reibe die Hände warm und lege sie sanft auf."), getRnd(lib.blinzeln)];
+if(type==='bath') return [step("Wärme-Impuls", 45, "Lege ein warmes Tuch oder deine warmen Hände auf die Lider."), step("Lid-Pflege", 40, "Oberlid von oben nach unten, Unterlid von unten nach oben streichen. Keinen Druck ausüben."), getRnd(lib.neuro)];
+if(type==='night') return [step("Dunkel-Fokus", 50, "Decke die Augen ab. Lass alles Licht verschwinden. Entspanne den Sehnerv."), step("Kiefer-Entspannung", 30, "Lass den Unterkiefer locker hängen. Das löst Spannungen bis in die Augenhöhle.")];
 
-if(curCtx==='stress') return [
-step("Schwingen", 50, "Oberkörper locker von links nach rechts drehen. Der Blick gleitet weich mit."),
-step("Weites Gähnen", 25, "Bewusst und weit gähnen. Lockert die gesamte Gesichtsmuskulatur.")
-];
+if(curSt==='light') return [step("Reiz-Stopp", 50, "Schließe die Augen sofort. Vermeide jeden Lichtreiz."), step("Tiefen-Palmieren", 60, "Decke die Augen komplett ab. Atme tief in die Dunkelheit.")];
+let plan = [];
+if(curCtx==='stress') plan = [getRnd(lib.neuro), step("Großes Gähnen", 25, "Gähne weit und kräftig. Lockere dabei dein ganzes Gesicht."), getRnd(lib.entlastung)];
+else if(curSt==='dry' || curCtx==='screen') plan = [getRnd(lib.blinzeln), getRnd(lib.entlastung), getRnd(lib.akkommodation)];
+else if(curSt==='tired') plan = [getRnd(lib.entlastung), getRnd(lib.entlastung), getRnd(lib.smooth)];
+else if(curCtx==='nature' || curSt==='normal') plan = [getRnd(lib.neuro), getRnd(lib.akkommodation), getRnd(lib.smooth)];
+else plan = [getRnd(lib.entlastung), getRnd(lib.neuro), getRnd(lib.smooth)];
 
-if(curSt==='dry' || curCtx==='screen') return [
-step("Blinzeln", 30, "Langsam und vollständig blinzeln. Augen einen Moment geschlossen halten."),
-step("Lidmassage", 40, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Ganz sanft."),
-step("Fernblick", 45, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen.")
-];
-
-if(curCtx==='nature') return [
-step("Weiche Ferne", 45, "In die Weite schauen. Fixiere nichts. Lass den Blick einfach ruhen."),
-step("Raumgefühl", 35, "Geradeaus schauen, aber die Umgebung links und rechts bewusst wahrnehmen.")
-];
-return [
-step("Locker blinzeln", 20, "Augenoberfläche kurz erfrischen. Ganz leichtes Schmettern."),
-step("Fernblick", 40, "Schau in die Ferne. Blinzle normal. Fixiere nichts. Blick weich lassen."),
-step("Acht malen", 35, "Liegende Acht in der Luft verfolgen. Große, weiche Bewegungen.", true)
-];
+return plan;
 }
 
 function speak(txt, cb) {
 if(!window.speechSynthesis) { cb?.(); return; }
 speechSynthesis.cancel();
 const u = new SpeechSynthesisUtterance(txt);
-u.lang = "de-DE"
-u.onend = () => cb?.();
+u.lang = "de-DE" u.onend = () => cb?.();
 speechSynthesis.speak(u);
 }
 
 function startSession(type) {
 const steps = buildPlan(type);
-// Dark Mode für Morgen, Nacht und Lichtscheu
-if(type==='night' || type==='bed' || type==='bath' || curSt==='light') document.body.classList.add("dark");
+if(['night','bed','bath','light'].includes(type) || curSt==='light') document.body.classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 run(steps, 0);
@@ -171,7 +154,7 @@ run(steps, 0);
 function run(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Training beendet. Hab einen entspannten Moment.", () => setTimeout(abort, 2500));
+speak("Training beendet. Blinzle ein paar mal und behalte den weichen Blick bei.", () => setTimeout(abort, 2500));
 return;
 }
 const s = steps[i];
