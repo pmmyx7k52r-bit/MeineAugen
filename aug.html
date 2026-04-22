@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.2.8</title>
+<title>MeineAugen 6.2.9</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --gray: #444; }
@@ -15,7 +15,7 @@ h4 { margin: 12px 0 8px 0; font-size: 11px; text-transform: uppercase; color: #7
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; padding: 0 5px; }
 button.option { padding: 12px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
 button.option span { font-size: 18px; margin-bottom: 3px; }
-button.option.active { background: var(--accent); outline: 2px solid var(--active); }
+button.option.active { background: var(--accent); outline: 2px solid var(--active); box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); }
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
@@ -28,8 +28,8 @@ button.option.active { background: var(--accent); outline: 2px solid var(--activ
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.2.8</h2>
-<div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">DYNAMIC COACHING</div>
+<h2>👁️ MeineAugen 6.2.9</h2>
+<div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">STATUS: GESPEICHERT</div>
 
 <div class="morning-section">
 <button class="action-btn start-morning" onclick="toggleMorning()">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -67,22 +67,30 @@ button.option.active { background: var(--accent); outline: 2px solid var(--activ
 </div>
 
 <script>
+// Initiales Laden aus dem Speicher
 let curCtx = localStorage.getItem("ma_ctx") || "none"
 let curSt = localStorage.getItem("ma_st") || "normal"
 let timer;
 
 function updateUI() {
+// Buttons zurücksetzen
 document.querySelectorAll('.option').forEach(b => b.classList.remove('active'));
-if(curCtx !== "none") document.getElementById("c_" + curCtx)?.classList.add('active');
-document.getElementById("s_" + curSt)?.classList.add('active');
-document.getElementById("mode-info").innerText = `KONTEXT: ${curCtx.toUpperCase()} | STATUS: ${curSt.toUpperCase()}`;
+// Gespeicherte Buttons aktivieren
+const activeCtx = document.getElementById("c_" + curCtx);
+if(activeCtx) activeCtx.classList.add('active');
+const activeSt = document.getElementById("s_" + curSt);
+if(activeSt) activeSt.classList.add('active');
+document.getElementById("mode-info").innerText = `KONTEXT: ${curCtx.toUpperCase()} | ZUSTAND: ${curSt.toUpperCase()}`;
 }
 
 function setOpt(t, v) {
-if(t==='ctx') curCtx = (curCtx === v) ? "none" : v;
-else curSt = v;
+if(t==='ctx') {
+curCtx = (curCtx === v) ? "none" : v;
 localStorage.setItem("ma_ctx", curCtx);
+} else {
+curSt = v;
 localStorage.setItem("ma_st", curSt);
+}
 updateUI();
 }
 
@@ -94,13 +102,14 @@ document.getElementById('arrow').innerText = s.classList.contains('open') ? "▲
 
 function step(t, s, v, split = false) { return {t, s, v, split}; }
 
+// Übungs-Bibliothek (Schwerpunkt: Eurich, Angart, Bates)
 const lib = {
 neuro: [
 step("Zifferblatt", 45, "Halte den Kopf still. Blicke nacheinander auf die 12, die 3, die 6 und die 9 Uhr Position. Gehe bis zum äußeren Rand."),
-step("Peripherie", 35, "Schau starr geradeaus. Strecke die Arme seitlich aus und wackle mit den Fingern. Nimm die Bewegung am Rand wahr.")
+step("Peripherie", 35, "Schau geradeaus. Strecke die Arme seitlich aus und wackle mit den Fingern. Nimm die Bewegung am Rand wahr.")
 ],
 smooth: [
-step("Daumen-Folge", 40, "Strecke den Arm aus. Bewege den Daumen langsam in einem großen Kreis. Verfolge ihn flüssig mit den Augen."),
+step("Daumen-Folge", 40, "Strecke den Arm aus. Bewege den Daumen langsam in einem Kreis. Verfolge ihn flüssig mit den Augen."),
 step("Horizontal-Pendel", 30, "Bewege den Daumen langsam von ganz links nach ganz rechts. Folge ihm flüssig bis zum Augen-Anschlag.")
 ],
 akkommodation: [
@@ -109,10 +118,10 @@ step("Drei-Punkte", 35, "Wähle drei Punkte: Ganz nah, mittlere Distanz, ganz fe
 ],
 entlastung: [
 step("Palmieren", 60, "Hände kräftig warm reiben. Als Schalen locker über die Augen legen. Atme tief in die absolute Dunkelheit."),
-step("Lid-Massage", 35, "Ganz sanft ohne Druck: Das Oberlid von oben nach unten ausstreichen. Das Unterlid von unten nach oben.")
+step("Lid-Massage", 35, "Ganz sanft: Das Oberlid von oben nach unten ausstreichen. Das Unterlid von unten nach oben. Ohne Druck.")
 ],
 blinzeln: [
-step("Lockeres Blinzeln", 25, "Blinzle ganz schnell und federleicht, wie ein Schmetterling. Das befeuchtet die Augenoberfläche sofort."),
+step("Schmetterling", 25, "Blinzle ganz schnell und federleicht. Das befeuchtet die Augenoberfläche sofort."),
 step("Pause-Blinzeln", 30, "Schließe die Augen für 2 Sekunden fest, dann öffne sie und blicke entspannt in die weite Ferne.")
 ]
 };
@@ -120,18 +129,16 @@ step("Pause-Blinzeln", 30, "Schließe die Augen für 2 Sekunden fest, dann öffn
 function getRnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function buildPlan(type) {
-if(type==='bed') return [step("Ankommen", 20, "Lass die Augen geschlossen. Atme ruhig. Spüre wie die Augenmuskeln weich werden."), step("Palmieren", 45, "Reibe die Hände warm und lege sie sanft auf."), getRnd(lib.blinzeln)];
-if(type==='bath') return [step("Wärme-Impuls", 45, "Lege ein warmes Tuch oder deine warmen Hände auf die Lider."), step("Lid-Pflege", 40, "Oberlid von oben nach unten, Unterlid von unten nach oben streichen. Keinen Druck ausüben."), getRnd(lib.neuro)];
-if(type==='night') return [step("Dunkel-Fokus", 50, "Decke die Augen ab. Lass alles Licht verschwinden. Entspanne den Sehnerv."), step("Kiefer-Entspannung", 30, "Lass den Unterkiefer locker hängen. Das löst Spannungen bis in die Augenhöhle.")];
-
-if(curSt==='light') return [step("Reiz-Stopp", 50, "Schließe die Augen sofort. Vermeide jeden Lichtreiz."), step("Tiefen-Palmieren", 60, "Decke die Augen komplett ab. Atme tief in die Dunkelheit.")];
+if(type==='bed') return [step("Ankommen", 20, "Lass die Augen geschlossen. Atme ruhig. Spüre wie die Augenmuskeln weich werden."), step("Palmieren", 45, "Hände warm auflegen."), getRnd(lib.blinzeln)];
+if(type==='bath') return [step("Wärme", 45, "Warmes Tuch oder Hände auflegen."), step("Lid-Pflege", 40, "Oberlid oben-unten, Unterlid unten-oben streichen. Kein Druck."), getRnd(lib.neuro)];
+if(type==='night') return [step("Dunkel-Fokus", 50, "Decke die Augen ab. Entspanne den Sehnerv."), step("Kiefer", 30, "Lass den Unterkiefer locker hängen.")];
+if(curSt==='light') return [step("Reiz-Stopp", 50, "Schließe die Augen sofort."), step("Palmieren", 60, "Decke die Augen komplett ab.")];
 let plan = [];
-if(curCtx==='stress') plan = [getRnd(lib.neuro), step("Großes Gähnen", 25, "Gähne weit und kräftig. Lockere dabei dein ganzes Gesicht."), getRnd(lib.entlastung)];
+if(curCtx==='stress') plan = [getRnd(lib.neuro), step("Großes Gähnen", 25, "Gähne weit und kräftig. Lockere dein ganzes Gesicht."), getRnd(lib.entlastung)];
 else if(curSt==='dry' || curCtx==='screen') plan = [getRnd(lib.blinzeln), getRnd(lib.entlastung), getRnd(lib.akkommodation)];
 else if(curSt==='tired') plan = [getRnd(lib.entlastung), getRnd(lib.entlastung), getRnd(lib.smooth)];
 else if(curCtx==='nature' || curSt==='normal') plan = [getRnd(lib.neuro), getRnd(lib.akkommodation), getRnd(lib.smooth)];
 else plan = [getRnd(lib.entlastung), getRnd(lib.neuro), getRnd(lib.smooth)];
-
 return plan;
 }
 
@@ -154,7 +161,7 @@ run(steps, 0);
 function run(steps, i) {
 if(i >= steps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Training beendet. Blinzle ein paar mal und behalte den weichen Blick bei.", () => setTimeout(abort, 2500));
+speak("Fertig. Behalte den weichen Blick bei.", () => setTimeout(abort, 2500));
 return;
 }
 const s = steps[i];
@@ -181,6 +188,7 @@ document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
 
+// Beim Starten der Seite UI synchronisieren
 window.onload = updateUI;
 </script>
 </body>
