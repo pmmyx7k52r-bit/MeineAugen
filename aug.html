@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.3.5</title>
+<title>MeineAugen 6.3.4</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 body.dark { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --gray: #444; }
@@ -23,12 +23,14 @@ button.option.active { background-color: var(--accent) !important; color: white 
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
 #desc { font-size: 18px; min-height: 140px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
+#storage-warn { font-size: 9px; color: #e74c3c; margin-bottom: 5px; display: none; }
 </style>
 </head>
 <body>
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.3.5</h2>
+<h2>👁️ MeineAugen 6.3.4</h2>
+<div id="storage-warn">⚠️ Speicher blockiert - Einstellungen halten nur bis Refresh</div>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">LÄDT...</div>
 
 <div class="morning-section">
@@ -71,20 +73,36 @@ var curCtx = getStore("ma_ctx", "none");
 var curSt = getStore("ma_st", "normal");
 var timer;
 
-function getStore(k, def) { try { return localStorage.getItem(k) || def; } catch(e) { return def; } }
-function setStore(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+function getStore(k, def) {
+try { return localStorage.getItem(k) || def; }
+catch(e) { document.getElementById('storage-warn').style.display='block'; return def; }
+}
+function setStore(k, v) {
+try { localStorage.setItem(k, v); }
+catch(e) { console.error("Storage blocked"); }
+}
 
 function updateUI() {
 var btns = document.getElementsByClassName('option');
 for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
-if (curCtx !== "none") { document.getElementById("c_" + curCtx)?.classList.add('active'); }
-document.getElementById("s_" + curSt)?.classList.add('active');
-document.getElementById("mode-info").innerText = "MODUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
+if (curCtx !== "none") {
+var cBtn = document.getElementById("c_" + curCtx);
+if (cBtn) cBtn.classList.add('active');
+}
+var sBtn = document.getElementById("s_" + curSt);
+if (sBtn) sBtn.classList.add('active');
+var info = document.getElementById("mode-info");
+if (info) info.innerText = "MODUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
 }
 
 function setOpt(type, val) {
-if (type === 'ctx') { curCtx = (curCtx === val) ? "none" : val; setStore("ma_ctx", curCtx); }
-else { curSt = val; setStore("ma_st", curSt); }
+if (type === 'ctx') {
+curCtx = (curCtx === val) ? "none" : val;
+setStore("ma_ctx", curCtx);
+} else {
+curSt = val;
+setStore("ma_st", curSt);
+}
 updateUI();
 }
 
@@ -94,46 +112,79 @@ s.classList.toggle('open');
 document.getElementById('arrow').innerText = s.classList.contains('open') ? "▲" : "▼"
 }
 
+// t: Titel, s: Sekunden, v: Ansage, split: Richtungswechsel bei halber Zeit
 function step(t, s, v, split) { return {t: t, s: s, v: v, split: !!split}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 46, "Stell dir ein großes Zifferblatt vor. Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Der Kopf bleibt völlig still. Nach dem Signal die Richtung wechseln.", true),
-step("Peripherie", 35, "Schau geradeaus. Wackle mit den Fingern am äußersten Sichtfeldrand. Nimm die Bewegung wahr, ohne direkt hinzusehen.")
+step("Zifferblatt", 45, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Kopf stillhalten. Nach dem Signal die Richtung wechseln.", true),
+step("Peripherie", 35, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.")
 ],
 smooth: [
-step("Folgeblick", 40, "Strecke den Arm. Bewege den Daumen langsam in einem großen Kreis. Verfolge ihn flüssig mit den Augen. Nach dem Signal Richtung wechseln.", true)
+step("Folgeblick", 40, "Strecke den Arm. Bewege den Daumen langsam im Kreis. Verfolge ihn flüssig. Nach dem Signal Richtung wechseln.", true)
 ],
-akko: [
-step("Fokus-Wechsel", 40, "Blicke auf deinen Daumen direkt vor der Nase bis er scharf ist. Dann blicke auf ein Detail in der Ferne. Warte auf die Schärfe.")
+akkommodation: [
+step("Fokus-Wechsel", 40, "Daumen nah ansehen bis er scharf ist. Dann Ferne. Warte auf die Schärfe.")
 ],
-entsp: [
-step("Palmieren", 60, "Hände warm reiben. Wölbe die Handflächen und decke die Augen lichtdicht ab. Kein Druck auf den Augapfel. Genieße die absolute Dunkelheit."),
-step("Lid-Pflege", 40, "Oberlid sanft von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf das Auge."),
-step("Gähnen", 25, "Gähne ganz weit und tief. Lass den Unterkiefer locker hängen und entspanne die Gesichtszüge.")
+entlastung: [
+step("Palmieren", 60, "Hände warm reiben. Augen abdecken. Atme tief in die Dunkelheit."),
+step("Lid-Pflege", 40, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel.")
 ],
-blinz: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht, wie ein Schmetterling mit den Flügeln schlägt. Befeuchtet sofort.")
+blinzeln: [
+step("Schmetterling", 25, "Blinzle ganz schnell und federleicht. Befeuchtet sofort.")
 ]
 };
 
 function getRnd(arr, last) {
 let filtered = arr.filter(item => item.t !== (last ? last.t : ''));
+if (filtered.length === 0) filtered = arr;
 return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
 function buildPlan(type) {
-if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), lib.entsp[0], lib.blinz[0]];
-if (type === 'bath') return [step("Wärme", 60, "Warmes Tuch auf die geschlossenen Augen legen."), lib.entsp[1], step("Reinigung", 20, "Augenlider vorsichtig mit klarem Wasser reinigen."), lib.blinz[0]];
-if (type === 'night') return [lib.entsp[0], step("Kiefer-Entspannung", 30, "Lass den Unterkiefer ganz locker hängen. Zähne berühren sich nicht.")];
-if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles, feuchtes Tuch auflegen. Nicht reiben."), step("Augenruhe", 40, "Augen geschlossen halten. Reize reduzieren."), lib.blinz[0]];
-if (curSt === 'light') return [step("Reiz-Stopp", 40, "Augen sofort schließen."), lib.entsp[0]];
+if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), step("Palmieren", 45, "Hände warm auflegen."), lib.blinzeln[0]];
+if (type === 'bath') return [
+step("Wärme", 60, "Warmes Tuch auf die geschlossenen Augen legen."),
+step("Lid-Pflege", 40, "Oberlid von oben nach unten, Unterlid von unten nach oben streichen."),
+step("Reinigung", 20, "Augenlider vorsichtig mit Wasser reinigen."),
+step("Blinzeln", 20, "Augen öffnen und ruhig blinzeln.")
+];
 
+if (type === 'night') return [step("Dunkelheit", 50, "Augen abdecken. Ruhe genießen."), step("Kiefer", 30, "Lass den Unterkiefer hängen.")];
+if (curCtx === 'allergy') return [
+step("Kühlung", 40, "Kühles, feuchtes Tuch auf die geschlossenen Augen legen. Nicht reiben."),
+step("Augenruhe", 30, "Augen geschlossen halten. Reiz reduzieren."),
+step("Sanftes Blinzeln", 20, "Augen öffnen und leicht blinzeln. Kein Pressen."),
+step("Fernblick", 30, "Locker in die Ferne schauen. Nichts fixieren.")
+];
+
+if (curSt === 'light') return [step("Reiz-Stopp", 50, "Augen zu."), step("Palmieren", 60, "Abdunkeln.")];
+// Dynamischer Plan ohne Duplikate
 let plan = [];
-if (curCtx === 'stress') { plan.push(getRnd(lib.neuro)); plan.push(lib.entsp[2]); plan.push(lib.entsp[0]); }
-else if (curSt === 'dry' || curCtx === 'screen') { plan.push(lib.blinz[0]); plan.push(lib.entsp[1]); plan.push(getRnd(lib.akko)); }
-else if (curSt === 'tired') { plan.push(lib.entsp[0]); plan.push(lib.entsp[1]); plan.push(lib.smooth[0]); }
-else { plan.push(getRnd(lib.neuro)); plan.push(getRnd(lib.akko)); plan.push(lib.smooth[0]); }
+if (curCtx === 'stress') {
+let s1 = getRnd(lib.neuro);
+plan.push(s1);
+plan.push(step("Gähnen", 25, "Weit gähnen. Lockere das Gesicht."));
+plan.push(getRnd(lib.entlastung));
+} else if (curSt === 'dry' || curCtx === 'screen') {
+let s1 = lib.blinzeln[0];
+plan.push(s1);
+let s2 = getRnd(lib.entlastung, s1);
+plan.push(s2);
+plan.push(getRnd(lib.akkommodation, s2));
+} else if (curSt === 'tired') {
+let s1 = lib.entlastung[0];
+plan.push(s1);
+let s2 = lib.entlastung[1];
+plan.push(s2);
+plan.push(getRnd(lib.smooth, s2));
+} else {
+let s1 = getRnd(lib.neuro);
+plan.push(s1);
+let s2 = getRnd(lib.akkommodation, s1);
+plan.push(s2);
+plan.push(getRnd(lib.smooth, s2));
+}
 return plan;
 }
 
@@ -141,20 +192,27 @@ function speak(txt, cb) {
 if (!window.speechSynthesis) { if (cb) cb(); return; }
 speechSynthesis.cancel();
 var u = new SpeechSynthesisUtterance(txt);
-u.lang = "de-DE" u.onend = function() { if (cb) cb(); };
+u.lang = "de-DE"
+u.onend = function() { if (cb) cb(); };
 speechSynthesis.speak(u);
 }
 
 function startSession(type) {
 var steps = buildPlan(type);
-if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light' || curCtx === 'allergy') document.body.classList.add("dark");
+if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light' || curCtx === 'allergy') {
+document.body.classList.add("dark");
+}
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 run(steps, 0);
 }
 
 function run(steps, i) {
-if (i >= steps.length) { document.getElementById("timer").innerText = "✓" speak("Training beendet.", function() { setTimeout(abort, 2500); }); return; }
+if (i >= steps.length) {
+document.getElementById("timer").innerText = "✓"
+speak("Training beendet.", function() { setTimeout(abort, 2500); });
+return;
+}
 var s = steps[i];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
@@ -163,22 +221,42 @@ speak(s.v, function() {
 var sec = s.s;
 document.getElementById("timer").innerText = sec;
 timer = setInterval(function() {
-sec--; document.getElementById("timer").innerText = sec;
-if (s.split && sec === Math.floor(s.s / 2)) speak("Jetzt in die andere Richtung.");
+sec--;
+document.getElementById("timer").innerText = sec;
+// Richtungswechsel-Ansage bei Split-Übungen
+if (s.split && sec === Math.floor(s.s / 2)) {
+speak("Jetzt in die andere Richtung.");
+}
+
 if (sec <= 0) { clearInterval(timer); run(steps, i + 1); }
 }, 1000);
 });
 }
 
-function abort() { clearInterval(timer); speechSynthesis.cancel(); document.body.classList.remove("dark"); document.getElementById("run").classList.add("hidden"); document.getElementById("menu").classList.remove("hidden"); }
+function abort() {
+clearInterval(timer);
+speechSynthesis.cancel();
+document.body.classList.remove("dark");
+document.getElementById("run").classList.add("hidden");
+document.getElementById("menu").classList.remove("hidden");
+}
 
-document.getElementById('btn-morning').addEventListener('click', toggleMorning);
-document.getElementById('btn-bed').addEventListener('click', () => startSession('bed'));
-document.getElementById('btn-bath').addEventListener('click', () => startSession('bath'));
-document.getElementById('btn-train').addEventListener('click', () => startSession('train'));
-document.getElementById('btn-night').addEventListener('click', () => startSession('night'));
-document.getElementById('btn-abort').addEventListener('click', abort);
-document.querySelectorAll('.option').forEach(btn => { btn.addEventListener('click', () => { setOpt(btn.id.startsWith('c_')?'ctx':'st', btn.id.split('_')[1]); }); });
+document.getElementById('btn-morning').addEventListener('click', function() { toggleMorning(); });
+document.getElementById('btn-bed').addEventListener('click', function() { startSession('bed'); });
+document.getElementById('btn-bath').addEventListener('click', function() { startSession('bath'); });
+document.getElementById('btn-train').addEventListener('click', function() { startSession('train'); });
+document.getElementById('btn-night').addEventListener('click', function() { startSession('night'); });
+document.getElementById('btn-abort').addEventListener('click', function() { abort(); });
+
+document.getElementById('c_screen').addEventListener('click', function() { setOpt('ctx','screen'); });
+document.getElementById('c_nature').addEventListener('click', function() { setOpt('ctx','nature'); });
+document.getElementById('c_stress').addEventListener('click', function() { setOpt('ctx','stress'); });
+document.getElementById('c_allergy').addEventListener('click', function() { setOpt('ctx','allergy'); });
+
+document.getElementById('s_normal').addEventListener('click', function() { setOpt('st','normal'); });
+document.getElementById('s_dry').addEventListener('click', function() { setOpt('st','dry'); });
+document.getElementById('s_tired').addEventListener('click', function() { setOpt('st','tired'); });
+document.getElementById('s_light').addEventListener('click', function() { setOpt('st','light'); });
 
 updateUI();
 </script>
