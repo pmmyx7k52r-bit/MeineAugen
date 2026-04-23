@@ -3,187 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.3.4</title>
+<title>MeineAugen 6.3.10</title>
 <style>
-:root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
-body.dark { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #3498db; --gray: #444; }
-body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: 0.3s; margin: 0; touch-action: manipulation; }
+:root {
+--bg: #f4f1ee;
+--card: white;
+--text: #2c3e50;
+--accent: #2980b9;
+--gray: #bdc3c7;
+--active: #2ecc71;
+}
+
+/* Maximale Entlastung im OLED-Schwarz-Modus */
+@media (prefers-color-scheme: dark) {
+:root {
+--bg: #000000;
+--card: #121212;
+--text: #dcdcdc;
+--accent: #3498db;
+--gray: #333;
+}
+}
+
+/* Erzwungener Dark Mode für spezifische Übungen */
+body.dark { --bg: #000; --card: #111; --text: #eee; }
+
+body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: background 0.3s; margin: 0; touch-action: manipulation; }
 .card { background: var(--card); padding:15px; border-radius:30px; max-width:440px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-#morning-sub { max-height: 0; overflow: hidden; transition: 0.3s; display: flex; gap: 8px; }
-#morning-sub.open { max-height: 120px; margin: 10px 0; }
+
+#morning-sub { display: none; gap: 8px; margin: 10px 0; }
 h4 { margin: 12px 0 8px 0; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
+
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; padding: 0 5px; }
-button.option { padding: 12px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; transition: 0.2s; -webkit-tap-highlight-color: transparent; }
+button.option { padding: 12px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
 button.option span { font-size: 18px; margin-bottom: 3px; pointer-events: none; }
-button.option.active { background-color: var(--accent) !important; color: white !important; outline: 3px solid var(--active) !important; transform: scale(1.05); }
+button.option.active { background-color: var(--accent) !important; outline: 3px solid var(--active); transform: scale(1.05); }
+
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
-.night { background: #2c3e50; }
-#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 18px; min-height: 140px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+
+#timer { font-size: 90px; color: #e67e22; font-weight: bold; margin: 5px 0; }
+#desc { font-size: 20px; min-height: 160px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
-#storage-warn { font-size: 9px; color: #e74c3c; margin-bottom: 5px; display: none; }
 </style>
 </head>
-<body>
+<body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.3.4</h2>
-<div id="storage-warn">⚠️ Speicher blockiert - Einstellungen halten nur bis Refresh</div>
+<h2>👁️ MeineAugen 6.3.10</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">LÄDT...</div>
 
-<div class="morning-section">
-<button type="button" id="btn-morning" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
+<button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
 <div id="morning-sub">
-<button type="button" id="btn-bed" class="action-btn" style="background:#f39c12; flex:1; border-radius:15px; border:none; color:white; font-weight:bold;">🛌 Bett</button>
-<button type="button" id="btn-bath" class="action-btn" style="background:#3498db; flex:1; border-radius:15px; border:none; color:white; font-weight:bold;">🚿 Bad</button>
-</div>
+<button type="button" onclick="startSession('bed')" class="action-btn" style="background:#f39c12; flex:1; border-radius:15px;">🛌 Bett</button>
+<button type="button" onclick="startSession('bath')" class="action-btn" style="background:#3498db; flex:1; border-radius:15px;">🚿 Bad</button>
 </div>
 
 <h4>Kontext</h4>
 <div class="grid">
-<button type="button" id="c_screen" class="option"><span>📱</span>Bildschirm</button>
-<button type="button" id="c_nature" class="option"><span>🌳</span>Natur</button>
-<button type="button" id="c_stress" class="option"><span>⚖️</span>Stress</button>
-<button type="button" id="c_allergy" class="option"><span>🤧</span>Allergie</button>
+<button type="button" id="c_screen" onclick="setOpt('ctx','screen')" class="option"><span>📱</span>Screen</button>
+<button type="button" id="c_nature" onclick="setOpt('ctx','nature')" class="option"><span>🌳</span>Natur</button>
+<button type="button" id="c_stress" onclick="setOpt('ctx','stress')" class="option"><span>⚖️</span>Stress</button>
+<button type="button" id="c_allergy" onclick="setOpt('ctx','allergy')" class="option"><span>🤧</span>Allergie</button>
 </div>
 
 <h4>Zustand</h4>
 <div class="grid">
-<button type="button" id="s_normal" class="option"><span>✅</span>OK</button>
-<button type="button" id="s_dry" class="option"><span>😵</span>Trocken</button>
-<button type="button" id="s_tired" class="option"><span>🔴</span>Müde</button>
-<button type="button" id="s_light" class="option"><span>🔆</span>Licht</button>
+<button type="button" id="s_normal" onclick="setOpt('st','normal')" class="option"><span>✅</span>OK</button>
+<button type="button" id="s_dry" onclick="setOpt('st','dry')" class="option"><span>😵</span>Trocken</button>
+<button type="button" id="s_tired" onclick="setOpt('st','tired')" class="option"><span>🔴</span>Müde</button>
+<button type="button" id="s_light" onclick="setOpt('st','light')" class="option"><span>🔆</span>Licht</button>
 </div>
 
-<button type="button" id="btn-train" class="action-btn start-run">🚀 Training starten</button>
-<button type="button" id="btn-night" class="action-btn night">🌙 Gute Nacht</button>
+<button type="button" onclick="startSession('train')" class="action-btn start-run">🚀 Training starten</button>
+<button type="button" onclick="startSession('night')" class="action-btn" style="background:#2c3e50;">🌙 Gute Nacht</button>
 </div>
 
 <div id="run" class="card hidden">
-<div id="title" style="font-weight:bold; font-size: 20px; margin-bottom: 5px; color: var(--accent);"></div>
+<div id="title" style="font-weight:bold; font-size: 22px; color: var(--accent);"></div>
 <div id="timer">...</div>
 <div id="desc"></div>
-<button type="button" id="btn-abort" class="action-btn" style="background:#95a5a6; margin-top:20px;">Abbrechen</button>
+<button type="button" onclick="abort()" class="action-btn" style="background:#95a5a6;">Abbrechen</button>
 </div>
 
 <script>
-var curCtx = getStore("ma_ctx", "none");
-var curSt = getStore("ma_st", "normal");
+var curCtx = "none"
+var curSt = "normal"
 var timer;
 
-function getStore(k, def) {
-try { return localStorage.getItem(k) || def; }
-catch(e) { document.getElementById('storage-warn').style.display='block'; return def; }
-}
-function setStore(k, v) {
-try { localStorage.setItem(k, v); }
-catch(e) { console.error("Storage blocked"); }
+function init() {
+try {
+curCtx = localStorage.getItem("ma_ctx") || "none"
+curSt = localStorage.getItem("ma_st") || "normal"
+} catch(e) {}
+updateUI();
 }
 
 function updateUI() {
-var btns = document.getElementsByClassName('option');
-for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
-if (curCtx !== "none") {
-var cBtn = document.getElementById("c_" + curCtx);
-if (cBtn) cBtn.classList.add('active');
-}
-var sBtn = document.getElementById("s_" + curSt);
-if (sBtn) sBtn.classList.add('active');
-var info = document.getElementById("mode-info");
-if (info) info.innerText = "MODUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
+var opts = document.getElementsByClassName('option');
+for (var i = 0; i < opts.length; i++) { opts[i].classList.remove('active'); }
+if (document.getElementById("c_" + curCtx)) document.getElementById("c_" + curCtx).classList.add('active');
+if (document.getElementById("s_" + curSt)) document.getElementById("s_" + curSt).classList.add('active');
+document.getElementById("mode-info").innerText = "MODUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
 }
 
 function setOpt(type, val) {
-if (type === 'ctx') {
-curCtx = (curCtx === val) ? "none" : val;
-setStore("ma_ctx", curCtx);
-} else {
-curSt = val;
-setStore("ma_st", curSt);
-}
+if (type === 'ctx') { curCtx = (curCtx === val) ? "none" : val; try { localStorage.setItem("ma_ctx", curCtx); } catch(e) {} }
+else { curSt = val; try { localStorage.setItem("ma_st", curSt); } catch(e) {} }
 updateUI();
 }
 
 function toggleMorning() {
 var s = document.getElementById('morning-sub');
-s.classList.toggle('open');
-document.getElementById('arrow').innerText = s.classList.contains('open') ? "▲" : "▼"
+var isHidden = (window.getComputedStyle(s).display === 'none');
+s.style.display = isHidden ? 'flex' : 'none';
+document.getElementById('arrow').innerText = isHidden ? "▲" : "▼"
 }
 
-// t: Titel, s: Sekunden, v: Ansage, split: Richtungswechsel bei halber Zeit
 function step(t, s, v, split) { return {t: t, s: s, v: v, split: !!split}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 45, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Kopf stillhalten. Nach dem Signal die Richtung wechseln.", true),
-step("Peripherie", 35, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.")
+step("Zifferblatt", 46, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Der Kopf bleibt völlig still. Nach dem Signal die Richtung wechseln.", true),
+step("Peripherie", 40, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand einer Seite. Nimm die Bewegung wahr. Nach dem Signal die Hand wechseln.", true)
 ],
-smooth: [
-step("Folgeblick", 40, "Strecke den Arm. Bewege den Daumen langsam im Kreis. Verfolge ihn flüssig. Nach dem Signal Richtung wechseln.", true)
+nature: [
+step("Sunning", 45, "Schließe die Augen. Drehe das Gesicht sanft Richtung Sonne oder helles Licht. Spüre die Wärme auf den Lidern."),
+step("Fernblick", 40, "Suche einen Punkt am Horizont. Lass den Blick ganz weich werden und blinzle dabei locker.")
 ],
-akkommodation: [
-step("Fokus-Wechsel", 40, "Daumen nah ansehen bis er scharf ist. Dann Ferne. Warte auf die Schärfe.")
+entsp: [
+step("Palmieren", 60, "Hände warm reiben. Wölbe die Handflächen und decke die Augen lichtdicht ab. Kein Druck auf den Augapfel."),
+step("Lid-Pflege", 40, "Oberlid sanft von oben nach unten, Unterlid von unten nach oben streichen. Sehr vorsichtig."),
+step("Gähnen", 25, "Gähne weit und tief. Lass den Unterkiefer locker hängen und entspanne das Gesicht.")
 ],
-entlastung: [
-step("Palmieren", 60, "Hände warm reiben. Augen abdecken. Atme tief in die Dunkelheit."),
-step("Lid-Pflege", 40, "Oberlid von oben nach unten streichen. Unterlid von unten nach oben. Kein Druck auf den Augapfel.")
+blinz: [
+step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht wie ein Schmetterling. Befeuchtet sofort.")
 ],
-blinzeln: [
-step("Schmetterling", 25, "Blinzle ganz schnell und federleicht. Befeuchtet sofort.")
+akko: [
+step("Fokus-Wechsel", 40, "Blicke auf deinen Daumen vor der Nase bis er scharf ist. Dann weit in die Ferne. Warte auf die Schärfe.")
 ]
 };
 
-function getRnd(arr, last) {
-let filtered = arr.filter(item => item.t !== (last ? last.t : ''));
-if (filtered.length === 0) filtered = arr;
+function getRnd(arr, lastT) {
+var filtered = [];
+for(var i=0; i<arr.length; i++) { if(arr[i].t !== lastT) filtered.push(arr[i]); }
 return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
 function buildPlan(type) {
-if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), step("Palmieren", 45, "Hände warm auflegen."), lib.blinzeln[0]];
-if (type === 'bath') return [
-step("Wärme", 60, "Warmes Tuch auf die geschlossenen Augen legen."),
-step("Lid-Pflege", 40, "Oberlid von oben nach unten, Unterlid von unten nach oben streichen."),
-step("Reinigung", 20, "Augenlider vorsichtig mit Wasser reinigen."),
-step("Blinzeln", 20, "Augen öffnen und ruhig blinzeln.")
-];
+if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), lib.entsp[0], lib.blinz[0]];
+if (type === 'bath') return [step("Wärme", 60, "Warmes Tuch auflegen."), lib.entsp[1], lib.blinz[0]];
+if (type === 'night') return [lib.entsp[0], step("Kiefer-Entspannung", 30, "Lass den Unterkiefer ganz locker hängen.")];
+if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles, feuchtes Tuch auflegen. Nicht reiben."), step("Augenruhe", 40, "Augen geschlossen halten."), lib.blinz[0]];
+if (curSt === 'light') return [step("Reiz-Stopp", 40, "Augen sofort schließen."), lib.entsp[0]];
 
-if (type === 'night') return [step("Dunkelheit", 50, "Augen abdecken. Ruhe genießen."), step("Kiefer", 30, "Lass den Unterkiefer hängen.")];
-if (curCtx === 'allergy') return [
-step("Kühlung", 40, "Kühles, feuchtes Tuch auf die geschlossenen Augen legen. Nicht reiben."),
-step("Augenruhe", 30, "Augen geschlossen halten. Reiz reduzieren."),
-step("Sanftes Blinzeln", 20, "Augen öffnen und leicht blinzeln. Kein Pressen."),
-step("Fernblick", 30, "Locker in die Ferne schauen. Nichts fixieren.")
-];
-
-if (curSt === 'light') return [step("Reiz-Stopp", 50, "Augen zu."), step("Palmieren", 60, "Abdunkeln.")];
-// Dynamischer Plan ohne Duplikate
-let plan = [];
-if (curCtx === 'stress') {
-let s1 = getRnd(lib.neuro);
-plan.push(s1);
-plan.push(step("Gähnen", 25, "Weit gähnen. Lockere das Gesicht."));
-plan.push(getRnd(lib.entlastung));
-} else if (curSt === 'dry' || curCtx === 'screen') {
-let s1 = lib.blinzeln[0];
-plan.push(s1);
-let s2 = getRnd(lib.entlastung, s1);
-plan.push(s2);
-plan.push(getRnd(lib.akkommodation, s2));
-} else if (curSt === 'tired') {
-let s1 = lib.entlastung[0];
-plan.push(s1);
-let s2 = lib.entlastung[1];
-plan.push(s2);
-plan.push(getRnd(lib.smooth, s2));
-} else {
-let s1 = getRnd(lib.neuro);
-plan.push(s1);
-let s2 = getRnd(lib.akkommodation, s1);
-plan.push(s2);
-plan.push(getRnd(lib.smooth, s2));
+var plan = [];
+if (curCtx === 'nature') {
+plan.push(lib.nature[0]);
+plan.push(lib.nature[1]);
+plan.push(lib.entsp[0]);
+}
+else if (curCtx === 'stress') {
+var s1 = getRnd(lib.neuro, ""); plan.push(s1);
+plan.push(lib.entsp[2]); // Gähnen
+plan.push(getRnd(lib.entsp, s1.t));
+}
+else if (curSt === 'dry' || curCtx === 'screen') {
+plan.push(lib.blinz[0]);
+var s2 = getRnd(lib.entsp, ""); plan.push(s2);
+plan.push(lib.akko[0]);
+}
+else if (curSt === 'tired') {
+plan.push(lib.entsp[0]);
+plan.push(lib.entsp[1]);
+plan.push(lib.neuro[1]); // Peripherie mit Split
+}
+else {
+var s1 = getRnd(lib.neuro, ""); plan.push(s1);
+var s2 = getRnd(lib.akko, s1.t); plan.push(s2);
+plan.push(lib.entsp[0]);
 }
 return plan;
 }
@@ -199,9 +198,7 @@ speechSynthesis.speak(u);
 
 function startSession(type) {
 var steps = buildPlan(type);
-if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light' || curCtx === 'allergy') {
-document.body.classList.add("dark");
-}
+if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 run(steps, 0);
@@ -223,11 +220,7 @@ document.getElementById("timer").innerText = sec;
 timer = setInterval(function() {
 sec--;
 document.getElementById("timer").innerText = sec;
-// Richtungswechsel-Ansage bei Split-Übungen
-if (s.split && sec === Math.floor(s.s / 2)) {
-speak("Jetzt in die andere Richtung.");
-}
-
+if (s.split && sec === Math.floor(s.s / 2)) speak("Jetzt die Seite oder Richtung wechseln.");
 if (sec <= 0) { clearInterval(timer); run(steps, i + 1); }
 }, 1000);
 });
@@ -240,25 +233,6 @@ document.body.classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
 }
-
-document.getElementById('btn-morning').addEventListener('click', function() { toggleMorning(); });
-document.getElementById('btn-bed').addEventListener('click', function() { startSession('bed'); });
-document.getElementById('btn-bath').addEventListener('click', function() { startSession('bath'); });
-document.getElementById('btn-train').addEventListener('click', function() { startSession('train'); });
-document.getElementById('btn-night').addEventListener('click', function() { startSession('night'); });
-document.getElementById('btn-abort').addEventListener('click', function() { abort(); });
-
-document.getElementById('c_screen').addEventListener('click', function() { setOpt('ctx','screen'); });
-document.getElementById('c_nature').addEventListener('click', function() { setOpt('ctx','nature'); });
-document.getElementById('c_stress').addEventListener('click', function() { setOpt('ctx','stress'); });
-document.getElementById('c_allergy').addEventListener('click', function() { setOpt('ctx','allergy'); });
-
-document.getElementById('s_normal').addEventListener('click', function() { setOpt('st','normal'); });
-document.getElementById('s_dry').addEventListener('click', function() { setOpt('st','dry'); });
-document.getElementById('s_tired').addEventListener('click', function() { setOpt('st','tired'); });
-document.getElementById('s_light').addEventListener('click', function() { setOpt('st','light'); });
-
-updateUI();
 </script>
 </body>
 </html>
