@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.3.14</title>
+<title>MeineAugen 6.3.15</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
 @media (prefers-color-scheme: dark) { :root { --bg: #000000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
@@ -19,7 +19,7 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
-.pause-btn { background: #e67e22 !important; margin-bottom: 10px; }
+.pause-btn { background: #e67e22 !important; margin-bottom: 5px; }
 #timer { font-size: 90px; color: #e67e22; font-weight: bold; margin: 5px 0; }
 #desc { font-size: 20px; min-height: 160px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
@@ -28,7 +28,7 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.3.14</h2>
+<h2>👁️ MeineAugen 6.3.15</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
 
 <button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -68,11 +68,8 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 <script>
 var curCtx = "none"
 var curSt = "normal"
-var timer;
-var isPaused = false;
-var currentSec = 0;
-var currentSteps = [];
-var currentIndex = 0;
+var timer, isPaused = false, currentSec = 0, currentSteps = [], currentIndex = 0;
+var usedTitles = [];
 
 function init() {
 try {
@@ -107,64 +104,67 @@ function step(t, s, v, split) { return {t: t, s: s, v: v, split: !!split}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 46, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Der Kopf bleibt völlig still. Nach dem Signal die Richtung wechseln.", true),
-step("Peripherie", 40, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand einer Seite. Nimm die Bewegung wahr. Nach dem Signal Seite wechseln.", true),
-step("Große Schaukel", 45, "Stehe locker. Schwinge den Körper sanft von links nach rechts. Lass die Umgebung fließend an dir vorbeiziehen.")
+step("Zifferblatt", 46, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Der Kopf bleibt völlig still.", true),
+step("Peripherie", 40, "Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.", true),
+step("Große Schaukel", 45, "Schwinge den Körper sanft von links nach rechts. Lass die Umgebung vorbeiziehen.")
 ],
 akko: [
-step("Fokus-Wechsel", 40, "Blicke auf deinen Daumen vor der Nase bis er scharf ist. Dann weit in die Ferne. Warte auf die Schärfe."),
-step("Posaune", 40, "Halte einen Text ganz nah vors Auge, bis er gerade noch scharf ist. Dann blicke blitzartig in die Ferne.")
+step("Fokus-Wechsel", 40, "Blicke auf deinen Daumen, dann weit in die Ferne. Wechsel bei Schärfe."),
+step("Posaune", 40, "Halte einen Text ganz nah, dann blicke blitzartig in die Ferne.")
 ],
 entsp: [
-step("Palmieren", 60, "Hände warm reiben. Wölbe die Hände und decke die Augen lichtdicht ab. Kein Druck auf den Augapfel."),
-step("Lidrand-Massage", 50, "Streiche am Oberlid von oben nach unten zur Lidkante. Am Unterlid von unten nach oben. Massiere so den gesamten Rand."),
-step("Gähnen", 25, "Gähne weit und tief. Lass den Unterkiefer locker hängen und entspanne das Gesicht.")
+step("Palmieren", 60, "Hände warm reiben und Augen lichtdicht abdecken. Genieße das Schwarz."),
+step("Lidrand-Massage", 50, "Streiche sanft von oben nach unten (oben) und unten nach oben (unten)."),
+step("Gähnen", 25, "Gähne weit und tief. Entspanne den Kiefer komplett.")
 ],
 blinz: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht wie ein Schmetterling. Befeuchtet sofort.")
+step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht. Befeuchtet sofort.")
 ],
 nature: [
-step("Sunning", 45, "Schließe die Augen. Drehe dein Gesicht sanft Richtung Sonne oder Lichtquelle. Spüre die Wärme."),
-step("Fernblick", 40, "Suche einen Punkt am Horizont. Lass den Blick ganz weich werden und blinzle locker.")
+step("Sunning", 45, "Schließe die Augen. Drehe das Gesicht sanft zur Sonne. Spüre die Wärme."),
+step("Fernblick", 40, "Suche einen Punkt am Horizont. Lass den Blick ganz weich werden.")
 ]
 };
 
-function getRnd(arr, lastT) {
-var filtered = arr.filter(function(s) { return s.t !== lastT; });
-return filtered[Math.floor(Math.random() * filtered.length)];
+function getRndUnique(pool) {
+var available = pool.filter(function(s) { return usedTitles.indexOf(s.t) === -1; });
+if (available.length === 0) return pool[0];
+var picked = available[Math.floor(Math.random() * available.length)];
+usedTitles.push(picked.t);
+return picked;
 }
 
 function buildPlan(type) {
-if (type === 'bed') return [step("Ankommen", 20, "Augen zu. Atme ruhig."), lib.entsp[0], lib.blinz[0]];
+usedTitles = [];
+if (type === 'bed') return [step("Ankommen", 20, "Augen zu."), lib.entsp[0], lib.blinz[0]];
 if (type === 'bath') return [
-step("Vorbereitung", 90, "Mache ein Tuch warm und lege es auf die Augen. Das verflüssigt das Sekret in den Drüsen."),
+step("Vorbereitung", 90, "Tuch warm machen und auf die Augen legen. Drüsen werden flüssig."),
 lib.entsp[1],
-step("Reinigung", 30, "Wische sanft mit einem feuchten Pad von außen nach innen über die Lidkante."),
+step("Reinigung", 30, "Mit feuchtem Pad sanft über die Lidkante wischen."),
 lib.blinz[0]
 ];
-if (type === 'night') return [lib.entsp[0], step("Kiefer-Entspannung", 30, "Lass den Unterkiefer ganz locker hängen.")];
-if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles Tuch auflegen."), step("Augenruhe", 40, "Augen zu."), lib.blinz[0]];
-if (curSt === 'light') return [step("Reiz-Stopp", 40, "Augen sofort schließen."), lib.entsp[0]];
+if (type === 'night') return [lib.entsp[0], step("Kiefer-Entspannung", 30, "Lass den Kiefer hängen.")];
+if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles Tuch."), step("Augenruhe", 40, "Augen zu."), lib.blinz[0]];
+if (curSt === 'light') return [step("Reiz-Stopp", 40, "Sofort schließen."), lib.entsp[0]];
 
 var plan = [];
 if (curCtx === 'nature' && curSt === 'normal') {
 plan.push(lib.nature[0]); plan.push(lib.akko[1]); plan.push(lib.neuro[2]);
 }
-else if (curCtx === 'nature') { plan.push(lib.nature[0]); plan.push(lib.nature[1]); plan.push(lib.entsp[0]); }
+else if (curCtx === 'nature') {
+plan.push(lib.nature[0]); plan.push(lib.nature[1]); plan.push(getRndUnique(lib.entsp));
+}
 else if (curCtx === 'stress') {
-var s1 = getRnd(lib.neuro, ""); plan.push(s1);
-plan.push(lib.entsp[2]); plan.push(getRnd(lib.entsp, s1.t));
+plan.push(getRndUnique(lib.neuro)); plan.push(lib.entsp[2]); plan.push(getRndUnique(lib.entsp));
 }
 else if (curSt === 'dry' || curCtx === 'screen') {
-plan.push(lib.blinz[0]);
-var s2 = getRnd(lib.entsp, ""); plan.push(s2);
-plan.push(lib.akko[0]);
+plan.push(lib.blinz[0]); plan.push(getRndUnique(lib.entsp)); plan.push(getRndUnique(lib.akko));
 }
-else if (curSt === 'tired') { plan.push(lib.entsp[0]); plan.push(lib.entsp[1]); plan.push(lib.neuro[1]); }
+else if (curSt === 'tired') {
+plan.push(lib.entsp[0]); plan.push(lib.entsp[1]); plan.push(lib.neuro[1]);
+}
 else {
-var s1 = getRnd(lib.neuro, ""); plan.push(s1);
-var s2 = getRnd(lib.akko, s1.t); plan.push(s2);
-plan.push(lib.entsp[0]);
+plan.push(getRndUnique(lib.neuro)); plan.push(getRndUnique(lib.akko)); plan.push(getRndUnique(lib.entsp));
 }
 return plan;
 }
@@ -180,8 +180,7 @@ speechSynthesis.speak(u);
 
 function startSession(type) {
 currentSteps = buildPlan(type);
-currentIndex = 0;
-isPaused = false;
+currentIndex = 0; isPaused = false;
 document.getElementById("pauseToggle").innerText = "Pause"
 if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
@@ -192,12 +191,8 @@ runNextStep();
 function togglePause() {
 isPaused = !isPaused;
 document.getElementById("pauseToggle").innerText = isPaused ? "Weiter" : "Pause"
-if (isPaused) {
-clearInterval(timer);
-speechSynthesis.cancel();
-} else {
-startTimer();
-}
+if (isPaused) { clearInterval(timer); speechSynthesis.cancel(); }
+else { startTimer(); }
 }
 
 function runNextStep() {
@@ -210,10 +205,7 @@ var s = currentSteps[currentIndex];
 document.getElementById("title").innerText = s.t;
 document.getElementById("desc").innerText = s.v;
 document.getElementById("timer").innerText = "..."
-speak(s.v, function() {
-currentSec = s.s;
-startTimer();
-});
+speak(s.v, function() { currentSec = s.s; startTimer(); });
 }
 
 function startTimer() {
@@ -225,18 +217,13 @@ currentSec--;
 document.getElementById("timer").innerText = currentSec;
 var s = currentSteps[currentIndex];
 if (s.split && currentSec === Math.floor(s.s / 2)) speak("Jetzt Seite oder Richtung wechseln.");
-if (currentSec <= 0) {
-clearInterval(timer);
-currentIndex++;
-runNextStep();
-}
+if (currentSec <= 0) { clearInterval(timer); currentIndex++; runNextStep(); }
 }
 }, 1000);
 }
 
 function abort() {
-clearInterval(timer);
-speechSynthesis.cancel();
+clearInterval(timer); speechSynthesis.cancel();
 document.body.classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
