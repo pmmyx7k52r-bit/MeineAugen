@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.5.2 - Thermal Edition</title>
+<title>MeineAugen 6.5.3 - Full Grid</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; --shaolin: #e67e22; }
 @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
@@ -11,8 +11,8 @@ body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:
 .card { background: var(--card); padding:15px; border-radius:30px; max-width:440px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 #morning-sub { display: none; gap: 8px; margin: 10px 0; }
 h4 { margin: 12px 0 8px 0; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
-.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; padding: 0 5px; }
-button.option { padding: 10px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 10px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; padding: 0 5px; }
+button.option { padding: 10px 2px; border: none; border-radius: 12px; font-weight: 600; font-size: 9px; background: var(--gray); color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 55px; }
 button.option span { font-size: 18px; margin-bottom: 3px; pointer-events: none; }
 button.option.active { background-color: var(--accent) !important; outline: 3px solid var(--active); transform: scale(1.05); }
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
@@ -29,7 +29,7 @@ body.dark { --bg: #000; --card: #111; --text: #eee; }
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.5.2</h2>
+<h2>👁️ MeineAugen 6.5.3</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
 
 <button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -40,12 +40,20 @@ body.dark { --bg: #000; --card: #111; --text: #eee; }
 
 <button type="button" onclick="startSession('shaolin')" class="action-btn shaolin-btn">🧘 Shaolin Fokus (Schärfung)</button>
 
-<h4>Kontext / Zustand</h4>
+<h4>Kontext (Fokus)</h4>
 <div class="grid">
 <button type="button" id="c_screen" onclick="setOpt('ctx', 'screen')" class="option"><span>📱</span>Screen</button>
 <button type="button" id="c_nature" onclick="setOpt('ctx', 'nature')" class="option"><span>🌳</span>Natur</button>
+<button type="button" id="c_stress" onclick="setOpt('ctx', 'stress')" class="option"><span>⚖️</span>Stress</button>
+<button type="button" id="c_allergy" onclick="setOpt('ctx', 'allergy')" class="option"><span>🤧</span>Allergie</button>
+</div>
+
+<h4>Zustand</h4>
+<div class="grid">
+<button type="button" id="s_normal" onclick="setOpt('st', 'normal')" class="option"><span>✅</span>OK</button>
 <button type="button" id="s_dry" onclick="setOpt('st', 'dry')" class="option"><span>😵</span>Trocken</button>
 <button type="button" id="s_tired" onclick="setOpt('st', 'tired')" class="option"><span>🔴</span>Müde</button>
+<button type="button" id="s_light" onclick="setOpt('st', 'light')" class="option"><span>🔆</span>Licht</button>
 </div>
 
 <button type="button" onclick="startSession('train')" class="action-btn start-run">🚀 Training starten</button>
@@ -79,7 +87,7 @@ var opts = document.getElementsByClassName('option');
 for (var i = 0; i < opts.length; i++) { opts[i].classList.remove('active'); }
 if (document.getElementById("c_" + curCtx)) document.getElementById("c_" + curCtx).classList.add('active');
 if (document.getElementById("s_" + curSt)) document.getElementById("s_" + curSt).classList.add('active');
-document.getElementById("mode-info").innerText = "MODUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
+document.getElementById("mode-info").innerText = "FOKUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
 }
 
 function setOpt(type, val) {
@@ -100,7 +108,7 @@ function step(t, s, v, split, type) { return {t: t, s: s, v: v, split: !!split, 
 
 var lib = {
 neuro: [
-step("Zifferblatt", 46, "Augen weit offen: Blicke auf 12, 3, 6 und 9 Uhr. Kopf absolut stillhalten.", true, 'offen'),
+step("Zifferblatt", 46, "Augen offen: Blicke auf 12, 3, 6 und 9 Uhr. Kopf absolut stillhalten.", true, 'offen'),
 step("Peripherie", 40, "Augen offen: Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand und nimm die Bewegung wahr.", true, 'offen'),
 step("Große Schaukel", 45, "Augen offen: Schwinge den Körper sanft von links nach rechts. Lass die Welt fließen.", false, 'offen')
 ],
@@ -110,7 +118,7 @@ step("Auge des Adlers", 40, "Augen offen: Wähle ein Ziel in der Ferne. Zoome De
 step("Qi-Sammeln", 60, "Augen zu: Hände extrem heiß reiben, auf die Augen legen. Wärme tief einsaugen.", false, 'zu')
 ],
 entsp: [
-step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen dann lichtdicht ab. Atme in die Dunkelheit.", false, 'zu'),
+step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen lichtdicht ab. Atme in die Dunkelheit.", false, 'zu'),
 step("Lidrand-Pflege", 50, "", false, 'offen'),
 step("Gähnen", 25, "Augen locker: Gähne weit und tief. Entspanne Kiefer und Gesicht.", false, 'offen')
 ],
@@ -127,8 +135,8 @@ var avail = pool.filter(function(s) { return sessionHistory.indexOf(s.t) === -1;
 var picked = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : pool[0];
 if (picked.t === "Lidrand-Pflege") {
 picked.v = (sessionHistory.indexOf("Wärme") !== -1 || curCtx === 'bath')
-? "Lidpflege: Streiche am Oberlid abwärts und am Unterlid aufwärts zur Lidkante aus."
-: "Lidpflege: Nur sanft kreisen oder Lider lockern. Ohne Wärme nicht drücken."
+? "Lidrand-Massage: Streiche am Oberlid abwärts und am Unterlid aufwärts zur Lidkante aus."
+: "Lidrand-Pflege: Nur sanft kreisen oder Lider lockern. Ohne Wärme nicht drücken."
 }
 sessionHistory.push(picked.t);
 return picked;
@@ -143,9 +151,15 @@ sessionHistory.push("Wärme");
 return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), getRndUnique([lib.entsp[1]]), step("Reinigung", 30, "Lidrand säubern.", false, 'offen'), lib.blinz[0]];
 }
 if (type === 'night') return [lib.entsp[0], step("Kiefer-Lockerung", 30, "Locker lassen.", false, 'offen')];
+// Logik für Kontext & Zustand
+if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles Tuch auflegen.", false, 'zu'), step("Ruhe", 40, "Augen zu.", false, 'zu'), lib.blinz[0]];
+if (curSt === 'light') return [step("Reiz-Stopp", 45, "Augen sofort fest zu.", false, 'zu'), lib.entsp[0]];
+
 var p = [];
 if (curCtx === 'nature') p = [lib.shaolin[1], lib.akko[0], lib.neuro[2]];
+else if (curCtx === 'stress') p = [lib.neuro[2], lib.entsp[2], lib.entsp[0]];
 else if (curSt === 'dry' || curCtx === 'screen') p = [lib.blinz[0], getRndUnique(lib.entsp), lib.akko[0]];
+else if (curSt === 'tired') p = [lib.entsp[0], lib.neuro[1], lib.blinz[0]];
 else p = [getRndUnique(lib.neuro), lib.akko[0], getRndUnique(lib.entsp)];
 return p;
 }
@@ -161,7 +175,7 @@ speechSynthesis.speak(u);
 function startSession(type) {
 currentSteps = buildPlan(type); currentIndex = 0; isPaused = false;
 document.getElementById("pauseToggle").innerText = "Pause"
-if (['night','bed','bath','shaolin'].indexOf(type) !== -1) document.body.classList.add("dark");
+if (['night','bed','bath','shaolin','light'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
 else document.body.classList.remove("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
