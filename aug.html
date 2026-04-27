@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.5.0 - Final Core</title>
+<title>MeineAugen 6.5.2 - Thermal Edition</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; --shaolin: #e67e22; }
-@media (prefers-color-scheme: dark) { :root { --bg: #000000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
-body.dark { --bg: #000; --card: #111; --text: #eee; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
 body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: 0.3s; margin: 0; touch-action: manipulation; }
 .card { background: var(--card); padding:15px; border-radius:30px; max-width:440px; margin:10px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 #morning-sub { display: none; gap: 8px; margin: 10px 0; }
@@ -21,15 +20,16 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 .start-run { background: #27ae60; margin-top: 10px; }
 .shaolin-btn { background: var(--shaolin); border: 2px solid #d35400; }
 .pause-btn { background: #e67e22 !important; margin-bottom: 5px; }
-#timer { font-size: 90px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 18px; min-height: 180px; padding: 0 15px; line-height: 1.6; display: flex; align-items: center; justify-content: center; font-weight: 500; color: var(--text); }
+#timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
+#desc { font-size: 18px; min-height: 200px; padding: 0 15px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
+body.dark { --bg: #000; --card: #111; --text: #eee; }
 </style>
 </head>
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.5.0</h2>
+<h2>👁️ MeineAugen 6.5.2</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
 
 <button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -40,20 +40,12 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 
 <button type="button" onclick="startSession('shaolin')" class="action-btn shaolin-btn">🧘 Shaolin Fokus (Schärfung)</button>
 
-<h4>Kontext</h4>
+<h4>Kontext / Zustand</h4>
 <div class="grid">
 <button type="button" id="c_screen" onclick="setOpt('ctx', 'screen')" class="option"><span>📱</span>Screen</button>
 <button type="button" id="c_nature" onclick="setOpt('ctx', 'nature')" class="option"><span>🌳</span>Natur</button>
-<button type="button" id="c_stress" onclick="setOpt('ctx', 'stress')" class="option"><span>⚖️</span>Stress</button>
-<button type="button" id="c_allergy" onclick="setOpt('ctx', 'allergy')" class="option"><span>🤧</span>Allergie</button>
-</div>
-
-<h4>Zustand</h4>
-<div class="grid">
-<button type="button" id="s_normal" onclick="setOpt('st', 'normal')" class="option"><span>✅</span>OK</button>
 <button type="button" id="s_dry" onclick="setOpt('st', 'dry')" class="option"><span>😵</span>Trocken</button>
 <button type="button" id="s_tired" onclick="setOpt('st', 'tired')" class="option"><span>🔴</span>Müde</button>
-<button type="button" id="s_light" onclick="setOpt('st', 'light')" class="option"><span>🔆</span>Licht</button>
 </div>
 
 <button type="button" onclick="startSession('train')" class="action-btn start-run">🚀 Training starten</button>
@@ -92,7 +84,7 @@ document.getElementById("mode-info").innerText = "MODUS: " + curCtx.toUpperCase(
 
 function setOpt(type, val) {
 if (type === 'ctx') curCtx = (curCtx === val) ? "none" : val;
-else curSt = val;
+else curSt = (curSt === val) ? "normal" : val;
 try { localStorage.setItem("ma_ctx", curCtx); localStorage.setItem("ma_st", curSt); } catch(e) {}
 updateUI();
 }
@@ -104,41 +96,39 @@ s.style.display = isHidden ? 'flex' : 'none';
 document.getElementById('arrow').innerText = isHidden ? "▲" : "▼"
 }
 
-// Grundregel: Blinzeln ist erlaubt, außer 'starre=true'
-function step(t, s, v, split, starre) { return {t: t, s: s, v: v, split: !!split, starre: !!starre}; }
+function step(t, s, v, split, type) { return {t: t, s: s, v: v, split: !!split, type: type || 'offen'}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 46, "Blinzle locker. Blicke dann auf 12, 3, 6 und 9 Uhr. Der Kopf bleibt absolut still.", true),
-step("Peripherie", 40, "Schau geradeaus und blinzle normal. Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.", true),
-step("Große Schaukel", 45, "Stehe locker, blinzle weich. Schwinge den Körper sanft von links nach rechts. Lass die Umgebung fließen.")
+step("Zifferblatt", 46, "Augen weit offen: Blicke auf 12, 3, 6 und 9 Uhr. Kopf absolut stillhalten.", true, 'offen'),
+step("Peripherie", 40, "Augen offen: Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand und nimm die Bewegung wahr.", true, 'offen'),
+step("Große Schaukel", 45, "Augen offen: Schwinge den Körper sanft von links nach rechts. Lass die Welt fließen.", false, 'offen')
 ],
 shaolin: [
-step("Shaolin-Punkt", 50, "Atme tief. Fixiere einen winzigen Punkt. Versuche, die Details 'aufzusaugen'. Blinzle nur, wenn es absolut nötig ist.", false, true),
-step("Auge des Adlers", 40, "Wähle ein Ziel in der Ferne. Zoome Details weich heran. Blinzle zwischendurch bewusst, um zu entspannen."),
-step("Qi-Sammeln", 60, "Reibe die Hände extrem heiß. Lege sie auf die Augen und ziehe die Energie nach innen. Genieße das Schwarz.")
+step("Shaolin-Punkt", 50, "Fokus: Fixiere einen winzigen Punkt. Atme tief. Sauge die Details auf.", false, 'fokus'),
+step("Auge des Adlers", 40, "Augen offen: Wähle ein Ziel in der Ferne. Zoome Details weich heran.", false, 'offen'),
+step("Qi-Sammeln", 60, "Augen zu: Hände extrem heiß reiben, auf die Augen legen. Wärme tief einsaugen.", false, 'zu')
 ],
 entsp: [
-step("Palmieren", 60, "Blinzle einmal tief. Decke dann die Augen lichtdicht ab. Atme ruhig in die Dunkelheit."),
-step("Lidrand-Pflege", 50, ""), // Wird dynamisch gefüllt
-step("Gähnen", 25, "Gähne weit und tief. Lass den Unterkiefer komplett locker. Entspannt das ganze Gesicht.")
+step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen dann lichtdicht ab. Atme in die Dunkelheit.", false, 'zu'),
+step("Lidrand-Pflege", 50, "", false, 'offen'),
+step("Gähnen", 25, "Augen locker: Gähne weit und tief. Entspanne Kiefer und Gesicht.", false, 'offen')
 ],
 blinz: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht wie ein Schmetterling. Befeuchtet sofort.")
+step("Schmetterling", 25, "Augen offen: Blinzle ganz schnell, locker und federleicht.", false, 'offen')
 ],
 akko: [
-step("Posaune", 40, "Halte einen Text ganz nah vors Auge. Wenn er scharf ist, blicke blitzartig in die Ferne. Wechsel bei Schärfe. Blinzle bei jedem Wechsel.")
+step("Posaune", 40, "Augen offen: Text nah halten, dann blitzartig in die Ferne blicken. Fokus-Wechsel.", false, 'offen')
 ]
 };
 
 function getRndUnique(pool) {
 var avail = pool.filter(function(s) { return sessionHistory.indexOf(s.t) === -1; });
 var picked = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : pool[0];
-// Dynamischer Text für Lidrand-Pflege basierend auf Wärme-Historie
 if (picked.t === "Lidrand-Pflege") {
 picked.v = (sessionHistory.indexOf("Wärme") !== -1 || curCtx === 'bath')
-? "Nutze die Vorwärmung: Streiche am Oberlid von oben nach unten, am Unterlid von unten nach oben zur Lidkante aus. Sanft drücken, nicht reiben."
-: "Ohne Vorwärmung: Mache kleine, kreisende Bewegungen am Lidrand oder nutze kurzes Palmieren zum Aufwärmen. Nicht drücken."
+? "Lidpflege: Streiche am Oberlid abwärts und am Unterlid aufwärts zur Lidkante aus."
+: "Lidpflege: Nur sanft kreisen oder Lider lockern. Ohne Wärme nicht drücken."
 }
 sessionHistory.push(picked.t);
 return picked;
@@ -146,65 +136,32 @@ return picked;
 
 function buildPlan(type) {
 sessionHistory = [];
-// Shaolin Spezial
 if (type === 'shaolin') return [lib.shaolin[0], lib.shaolin[1], lib.shaolin[2]];
-// Morgen/Nacht Routinen
-if (type === 'bed') return [step("Ankommen", 15, "Augen zu. Atme ruhig."), lib.entsp[0], lib.blinz[0]];
+if (type === 'bed') return [step("Ankommen", 15, "Augen zu.", false, 'zu'), lib.entsp[0], lib.blinz[0]];
 if (type === 'bath') {
 sessionHistory.push("Wärme");
-return [
-step("Wärme", 90, "Lege ein warmes Tuch auf die Augen (ca. 40 Grad). Das verflüssigt das Sekret in den Drüsen."),
-getRndUnique([lib.entsp[1]]), // Lidrand-Pflege mit Wärme-Text
-step("Reinigung", 30, "Wische sanft mit einem feuchten Pad von außen nach innen über die Lidkante."),
-lib.blinz[0]
-];
+return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), getRndUnique([lib.entsp[1]]), step("Reinigung", 30, "Lidrand säubern.", false, 'offen'), lib.blinz[0]];
 }
-if (type === 'night') return [lib.entsp[0], step("Kiefer-Lockerung", 30, "Lass den Unterkiefer ganz locker hängen. Blinzle entspannt.")];
-// Medizinische Notfälle (Licht/Allergie)
-if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles Tuch auflegen. Nicht reiben."), step("Augenruhe", 40, "Augen geschlossen halten."), lib.blinz[0]];
-if (curSt === 'light') return [step("Reiz-Stopp", 45, "Augen sofort fest schließen. Lichtquelle meiden."), lib.entsp[0]];
-
-// Dynamisches Training
+if (type === 'night') return [lib.entsp[0], step("Kiefer-Lockerung", 30, "Locker lassen.", false, 'offen')];
 var p = [];
-if (curCtx === 'nature' && curSt === 'normal') {
-p = [lib.shaolin[1], lib.akko[0], lib.neuro[2]]; // Adler, Posaune, Schaukel
-}
-else if (curCtx === 'stress') {
-p = [lib.neuro[2], lib.entsp[2], lib.entsp[0]]; // Schaukel, Gähnen, Palmieren
-}
-else if (curSt === 'dry' || curCtx === 'screen') {
-p = [lib.blinz[0], getRndUnique(lib.entsp), lib.akko[0]]; // Schmetterling, Entspann, Posaune
-}
-else if (curSt === 'tired') {
-p = [lib.entsp[0], lib.neuro[1], lib.blinz[0]]; // Palmieren, Peripherie, Schmetterling
-}
-else {
-// Normales OK-Training
-p = [getRndUnique(lib.neuro), lib.akko[0], getRndUnique(lib.entsp)];
-}
+if (curCtx === 'nature') p = [lib.shaolin[1], lib.akko[0], lib.neuro[2]];
+else if (curSt === 'dry' || curCtx === 'screen') p = [lib.blinz[0], getRndUnique(lib.entsp), lib.akko[0]];
+else p = [getRndUnique(lib.neuro), lib.akko[0], getRndUnique(lib.entsp)];
 return p;
 }
 
 function speak(txt, cb) {
 if (!window.speechSynthesis) { if (cb) cb(); return; }
-speechSynthesis.cancel();
-isSpeaking = true;
-var u = new SpeechSynthesisUtterance(txt);
-u.lang = "de-DE"
-u.onend = function() {
-isSpeaking = false;
-if (cb) cb();
-};
+speechSynthesis.cancel(); isSpeaking = true;
+var u = new SpeechSynthesisUtterance(txt); u.lang = "de-DE"
+u.onend = function() { isSpeaking = false; if (cb) cb(); };
 speechSynthesis.speak(u);
 }
 
 function startSession(type) {
-currentSteps = buildPlan(type);
-currentIndex = 0;
-isPaused = false;
+currentSteps = buildPlan(type); currentIndex = 0; isPaused = false;
 document.getElementById("pauseToggle").innerText = "Pause"
-// Dark Mode für spezifische Übungen
-if (['night','bed','bath','light','shaolin'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
+if (['night','bed','bath','shaolin'].indexOf(type) !== -1) document.body.classList.add("dark");
 else document.body.classList.remove("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
@@ -214,59 +171,41 @@ runNextStep();
 function togglePause() {
 isPaused = !isPaused;
 document.getElementById("pauseToggle").innerText = isPaused ? "Weiter" : "Pause"
-if (isPaused) {
-clearInterval(timer);
-speechSynthesis.cancel(); // Stoppt Sprache bei Pause
-} else {
-startTimer();
-}
+if (isPaused) { clearInterval(timer); speechSynthesis.cancel(); } else { startTimer(); }
 }
 
 function runNextStep() {
 if (currentIndex >= currentSteps.length) {
 document.getElementById("timer").innerText = "✓"
-speak("Training beendet. Blinzle entspannt.", function() { setTimeout(abort, 2000); });
+speak("Training beendet.", function() { setTimeout(abort, 2000); });
 return;
 }
 var s = currentSteps[currentIndex];
 document.getElementById("title").innerText = s.t;
-// Blinzel-Hinweis hinzufügen
-var desc = s.v;
-if (!s.starre) desc += " (Blinzeln erlaubt)"
-document.getElementById("desc").innerText = desc;
+var info = ""
+if (s.type === 'offen') info = " (Blinzeln erlaubt)"
+else if (s.type === 'zu') info = " (Augen geschlossen halten)"
+else if (s.type === 'fokus') info = " (Blinzeln minimieren)"
+document.getElementById("desc").innerText = s.v + info;
 document.getElementById("timer").innerText = "..."
-// Timer startet erst, NACHDEM die Sprachausgabe fertig ist
-speak(s.v, function() {
-currentSec = s.s;
-startTimer();
-});
+speak(s.v, function() { currentSec = s.s; startTimer(); });
 }
 
 function startTimer() {
-clearInterval(timer);
-if (isSpeaking) return; // Sicherheitsnetz
+clearInterval(timer); if (isSpeaking) return;
 document.getElementById("timer").innerText = currentSec;
 timer = setInterval(function() {
 if (!isPaused) {
-currentSec--;
-document.getElementById("timer").innerText = currentSec;
+currentSec--; document.getElementById("timer").innerText = currentSec;
 var s = currentSteps[currentIndex];
-// Split-Timer für Peripherie/Zifferblatt
-if (s.split && currentSec === Math.floor(s.s / 2)) {
-speak("Jetzt Seite oder Richtung wechseln.");
-}
-if (currentSec <= 0) {
-clearInterval(timer);
-currentIndex++;
-runNextStep();
-}
+if (s.split && currentSec === Math.floor(s.s / 2)) speak("Wechseln.");
+if (currentSec <= 0) { clearInterval(timer); currentIndex++; runNextStep(); }
 }
 }, 1000);
 }
 
 function abort() {
-clearInterval(timer);
-speechSynthesis.cancel();
+clearInterval(timer); speechSynthesis.cancel();
 document.body.classList.remove("dark");
 document.getElementById("run").classList.add("hidden");
 document.getElementById("menu").classList.remove("hidden");
