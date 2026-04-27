@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.4.0</title>
+<title>MeineAugen 6.4.1 - Shaolin Edition</title>
 <style>
-:root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; }
+:root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; --shaolin: #e67e22; }
 @media (prefers-color-scheme: dark) { :root { --bg: #000000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
 body.dark { --bg: #000; --card: #111; --text: #eee; }
 body { font-family:-apple-system, sans-serif; background: var(--bg); text-align:center; padding:10px; color: var(--text); transition: 0.3s; margin: 0; touch-action: manipulation; }
@@ -19,6 +19,8 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
 .start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
+.shaolin-btn { background: var(--shaolin); border: 2px solid #d35400; box-shadow: 0 4px 0 #d35400; }
+.shaolin-btn:active { transform: translateY(3px); box-shadow: none; }
 .pause-btn { background: #e67e22 !important; margin-bottom: 5px; }
 #timer { font-size: 90px; color: #e67e22; font-weight: bold; margin: 5px 0; }
 #desc { font-size: 20px; min-height: 160px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
@@ -28,7 +30,7 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.4.0</h2>
+<h2>👁️ MeineAugen 6.4.1</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
 
 <button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -37,23 +39,18 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 <button type="button" onclick="startSession('bath')" class="action-btn" style="background:#3498db; flex:1; border-radius:15px;">🚿 Bad</button>
 </div>
 
-<h4>Kontext</h4>
-<div class="grid">
-<button type="button" id="c_screen" onclick="setOpt('ctx', 'screen')" class="option"><span>📱</span>Bildschirm</button>
-<button type="button" id="c_nature" onclick="setOpt('ctx', 'nature')" class="option"><span>🌳</span>Natur</button>
-<button type="button" id="c_stress" onclick="setOpt('ctx', 'stress')" class="option"><span>⚖️</span>Stress</button>
-<button type="button" id="c_allergy" onclick="setOpt('ctx', 'allergy')" class="option"><span>🤧</span>Allergie</button>
-</div>
+<h4>Training & Fokus</h4>
+<button type="button" onclick="startSession('train')" class="action-btn start-run">🚀 Training starten</button>
+<button type="button" onclick="startSession('shaolin')" class="action-btn shaolin-btn">🧘 Shaolin Fokus (Schärfung)</button>
 
-<h4>Zustand</h4>
+<h4>Kontext / Zustand</h4>
 <div class="grid">
+<button type="button" id="c_screen" onclick="setOpt('ctx', 'screen')" class="option"><span>📱</span>Screen</button>
+<button type="button" id="c_nature" onclick="setOpt('ctx', 'nature')" class="option"><span>🌳</span>Natur</button>
 <button type="button" id="s_normal" onclick="setOpt('st', 'normal')" class="option"><span>✅</span>OK</button>
 <button type="button" id="s_dry" onclick="setOpt('st', 'dry')" class="option"><span>😵</span>Trocken</button>
-<button type="button" id="s_tired" onclick="setOpt('st', 'tired')" class="option"><span>🔴</span>Müde</button>
-<button type="button" id="s_light" onclick="setOpt('st', 'light')" class="option"><span>🔆</span>Licht</button>
 </div>
 
-<button type="button" onclick="startSession('train')" class="action-btn start-run">🚀 Training starten</button>
 <button type="button" onclick="startSession('night')" class="action-btn" style="background:#2c3e50;">🌙 Gute Nacht</button>
 </div>
 
@@ -104,36 +101,32 @@ function step(t, s, v, split) { return {t: t, s: s, v: v, split: !!split}; }
 
 var lib = {
 neuro: [
-step("Zifferblatt", 46, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Kopf bleibt still.", true),
+step("Zifferblatt", 46, "Blicke auf 12, 3, 6 und 9 Uhr. Kopf bleibt absolut still.", true),
 step("Peripherie", 40, "Wackle mit den Fingern am Sichtfeldrand. Nimm die Bewegung wahr.", true),
-step("Große Schaukel", 45, "Schwinge den Körper sanft von links nach rechts. Alles fließt.")
+step("Große Schaukel", 45, "Schwinge den Körper sanft. Lass die Welt fließen.")
 ],
-akko: [
-step("Fokus-Wechsel", 40, "Blicke auf den Daumen, dann weit in die Ferne. Wechsel bei Schärfe."),
-step("Posaune", 40, "Halte Text ganz nah, dann blicke blitzartig in die Ferne.")
+shaolin: [
+step("Shaolin-Punkt", 50, "Fixiere einen winzigen Punkt. Atme tief. Versuche, die Details des Punktes 'aufzusaugen'."),
+step("Auge des Adlers", 40, "Wähle ein Ziel in der Ferne. Verfolge kleinste Details, als würdest du sie heranzoomen."),
+step("Qi-Sammeln", 60, "Reibe die Hände extrem heiß. Lege sie auf die Augen und ziehe die Energie nach innen.")
 ],
 entsp: [
-step("Palmieren", 60, "Hände warm reiben, Augen lichtdicht abdecken. Dunkelheit genießen."),
-step("Lidrand-Pflege", 50, ""), // Text wird dynamisch befüllt
-step("Gähnen", 25, "Gähne weit und tief. Entspanne den Kiefer.")
+step("Palmieren", 60, "Augen lichtdicht abdecken. Tiefe Dunkelheit."),
+step("Lidrand-Pflege", 50, ""),
+step("Gähnen", 25, "Gähne weit. Entspanne das Gesicht.")
 ],
 blinz: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht. Befeuchtet sofort.")
-],
-nature: [
-step("Sunning", 45, "Augen zu. Gesicht sanft zur Sonne drehen. Wärme spüren."),
-step("Fernblick", 40, "Suche Punkt am Horizont. Blick weich werden lassen.")
+step("Schmetterling", 25, "Schnelles, lockeres Blinzeln.")
 ]
 };
 
 function getRndUnique(pool) {
 var avail = pool.filter(function(s) { return sessionHistory.indexOf(s.t) === -1; });
 var picked = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : pool[0];
-// Dynamischer Text für Lidrand-Pflege
 if (picked.t === "Lidrand-Pflege") {
 picked.v = (sessionHistory.indexOf("Vorbereitung") !== -1 || sessionHistory.indexOf("Wärme") !== -1)
 ? "Nutze die Wärme: Streiche oben nach unten und unten nach oben zur Lidkante aus."
-: "Ohne Wärme nur ganz sanft kreisen oder Lider leicht lockern. Nicht drücken."
+: "Ohne Wärme nur ganz sanft die Lider lockern. Nicht drücken."
 }
 sessionHistory.push(picked.t);
 return picked;
@@ -141,27 +134,18 @@ return picked;
 
 function buildPlan(type) {
 sessionHistory = [];
+if (type === 'shaolin') return [lib.shaolin[0], lib.shaolin[1], lib.shaolin[2]];
 if (type === 'bed') return [step("Ankommen", 15, "Augen zu."), lib.entsp[0], lib.blinz[0]];
 if (type === 'bath') {
 sessionHistory.push("Wärme");
-return [
-step("Wärme", 90, "Warmes Tuch auflegen. Das macht das Sekret in den Drüsen flüssig."),
-getRndUnique([lib.entsp[1]]), // Lidrand-Pflege mit Wärme-Text
-step("Reinigung", 30, "Lidkanten mit feuchtem Pad vorsichtig säubern."),
-lib.blinz[0]
-];
+return [step("Wärme", 90, "Warmes Tuch auflegen."), getRndUnique([lib.entsp[1]]), step("Reinigung", 30, "Säubern."), lib.blinz[0]];
 }
-if (type === 'night') return [lib.entsp[0], step("Kiefer-Lockerung", 30, "Unterkiefer locker hängen lassen.")];
-if (curCtx === 'allergy') return [step("Kühlung", 40, "Kühles Tuch auflegen."), step("Augenruhe", 40, "Ruhen."), lib.blinz[0]];
-if (curSt === 'light') return [step("Reiz-Stopp", 45, "Augen fest geschlossen halten."), lib.entsp[0]];
+if (type === 'night') return [lib.entsp[0], step("Kiefer-Lockerung", 30, "Locker lassen.")];
 
 var p = [];
-if (curCtx === 'nature' && curSt === 'normal') { p = [lib.nature[0], lib.akko[1], lib.neuro[2]]; }
-else if (curCtx === 'nature') { p = [lib.nature[0], lib.nature[1], getRndUnique(lib.entsp)]; }
-else if (curCtx === 'stress') { p = [getRndUnique(lib.neuro), lib.entsp[2], getRndUnique(lib.entsp)]; }
-else if (curSt === 'dry' || curCtx === 'screen') { p = [lib.blinz[0], getRndUnique(lib.entsp), getRndUnique(lib.akko)]; }
-else if (curSt === 'tired') { p = [lib.entsp[0], getRndUnique([lib.entsp[1]]), lib.neuro[1]]; }
-else { p = [getRndUnique(lib.neuro), getRndUnique(lib.akko), getRndUnique(lib.entsp)]; }
+if (curCtx === 'nature' && curSt === 'normal') { p = [lib.shaolin[1], step("Posaune", 40, "Nah und Fern im Wechsel."), lib.neuro[2]]; }
+else if (curSt === 'dry') { p = [lib.blinz[0], getRndUnique(lib.entsp), step("Fokus-Wechsel", 40, "Daumen und Ferne.")]; }
+else { p = [getRndUnique(lib.neuro), step("Fokus", 40, "Nah/Fern Wechsel."), getRndUnique(lib.entsp)]; }
 return p;
 }
 
@@ -178,7 +162,7 @@ function startSession(type) {
 currentSteps = buildPlan(type);
 currentIndex = 0; isPaused = false;
 document.getElementById("pauseToggle").innerText = "Pause"
-if (['night','bed','bath','light'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
+if (['night','bed','bath'].indexOf(type) !== -1) document.body.classList.add("dark");
 document.getElementById("menu").classList.add("hidden");
 document.getElementById("run").classList.remove("hidden");
 runNextStep();
