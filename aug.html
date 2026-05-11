@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.5.5 - Variety Update</title>
+<title>MeineAugen 6.5.6 - True Rotation</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; --shaolin: #e67e22; }
 @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
@@ -21,15 +21,14 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 .shaolin-btn { background: var(--shaolin); border: 2px solid #d35400; }
 .pause-btn { background: #e67e22 !important; margin-bottom: 5px; }
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 17px; min-height: 220px; padding: 0 15px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+#desc { font-size: 17px; min-height: 230px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
-body.dark { --bg: #000; --card: #111; --text: #eee; }
 </style>
 </head>
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.5.5</h2>
+<h2>👁️ MeineAugen 6.5.6</h2>
 <div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
 
 <button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
@@ -71,7 +70,6 @@ body.dark { --bg: #000; --card: #111; --text: #eee; }
 <script>
 var curCtx = "none", curSt = "normal"
 var timer, isPaused = false, currentSec = 0, currentSteps = [], currentIndex = 0;
-var sessionHistory = [];
 var isSpeaking = false;
 
 function init() {
@@ -114,60 +112,43 @@ step("Augen-Kreisen", 40, "Rolle die Augen langsam in einem großen Kreis. Erst 
 step("Nasenspitze", 30, "Blicke auf deine Nasenspitze, dann weit in die Ferne. Wiederhole das langsam.")
 ],
 fokus: [
-step("Posaune", 40, "Halte einen Text ganz nah, bis er gerade noch scharf ist. Blicke dann blitzartig in die Ferne."),
+step("Posaune", 40, "Halte einen Text ganz nah, bis er gerade noch scharf ist. Blicke dann blitzartig in die Ferne auf ein festes Ziel."),
 step("Daumen-Sprung", 35, "Fokussiere den Daumen nah vor dem Gesicht, dann ein Ziel in 3m, dann in der Ferne. Hin und her."),
 step("Auge des Adlers", 40, "Wähle ein Ziel in der Ferne. Zoome Details weich heran. Blinzle bewusst bei jedem Fokus."),
 step("Shaolin-Punkt", 50, "Fixiere einen winzigen Punkt. Atme tief. Versuche, die Details 'aufzusaugen'.", false, 'fokus')
 ],
 entspannung: [
-step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen lichtdicht ab. Atme tief.", false, 'zu'),
+step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen lichtdicht ab. Atme tief in die Dunkelheit.", false, 'zu'),
 step("Große Schaukel", 45, "Stehe locker und schwinge den Körper sanft von links nach rechts. Lass die Welt fließen."),
 step("Gähnen", 25, "Gähne weit und tief. Lass den Kiefer locker hängen. Das entspannt die Augenpartie."),
 step("Peripherie", 40, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand und nimm die Bewegung bewusst wahr."),
 step("Kiefer-Lockerung", 30, "Lass den Kiefer locker hängen. Entspannte Kiefermuskeln lösen reflektorisch Augenstress.")
 ],
 pflege: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht. Befeuchtet die Hornhaut sofort."),
-step("Lidrand-Pflege", 50, "")
+step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht. Befeuchtet die Hornhaut sofort.")
 ]
 };
 
-function shuffle(array) {
-for (let i = array.length - 1; i > 0; i--) {
-const j = Math.floor(Math.random() * (i + 1));
-[array[i], array[array[j]]] = [array[array[j]], array[i]];
-}
-return array;
-}
-
-function getStep(cat) {
-let pool = shuffle([...lib[cat]]);
-return pool[0];
-}
+function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 
 function buildPlan(type) {
-sessionHistory = [];
 if (type === 'shaolin') return [lib.fokus[3], lib.fokus[2], lib.entspannung[0]];
-if (type === 'bed') return [step("Ankommen", 15, "Augen zu.", false, 'zu'), lib.entspannung[0], lib.pflege[0]];
+if (type === 'bed') return [step("Ankommen", 15, "Augen zu.", false, 'zu'), shuffle([...lib.entspannung])[0], lib.pflege[0]];
 if (type === 'bath') {
-sessionHistory.push("Wärme");
-let lp = step("Lidrand-Massage", 50, "Streiche am Oberlid sanft abwärts und am Unterlid aufwärts zur Lidkante aus.");
-return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), lp, step("Reinigung", 30, "Lidrand mit Pad säubern."), lib.pflege[0]];
+return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), step("Lidrand-Massage", 50, "Streiche am Oberlid sanft abwärts und am Unterlid aufwärts aus."), step("Reinigung", 30, "Lidrand mit Pad säubern."), lib.pflege[0]];
 }
-if (type === 'night') return [lib.entspannung[0], lib.entspannung[4]];
-// Dynamisches Training - Mische Kategorien für Abwechslung
-let plan = [];
-if (curCtx === 'screen' || curSt === 'dry') {
-plan = [lib.pflege[0], getStep('entspannung'), getStep('fokus')];
-} else if (curCtx === 'nature') {
-plan = [getStep('fokus'), getStep('motorik'), lib.entspannung[1]];
-} else if (curSt === 'tired') {
-plan = [lib.entspannung[0], getStep('motorik'), lib.pflege[0]];
-} else {
-// Normales OK Training: Mix aus allem
-plan = [getStep('motorik'), getStep('fokus'), getStep('entspannung')];
-}
-return plan;
+if (type === 'night') return [shuffle([...lib.entspannung])[0], lib.entspannung[4]];
+
+// Echte Zufalls-Mischung aus 3 Töpfen
+let m = shuffle([...lib.motorik])[0];
+let f = shuffle([...lib.fokus])[0];
+let e = shuffle([...lib.entspannung])[0];
+let p = lib.pflege[0];
+
+if (curCtx === 'screen' || curSt === 'dry') return [p, e, f];
+if (curCtx === 'nature') return [f, m, e];
+if (curSt === 'tired') return [e, m, p];
+return [m, f, e]; // Standard Mix
 }
 
 function speak(txt, cb) {
@@ -202,10 +183,7 @@ return;
 }
 var s = currentSteps[currentIndex];
 document.getElementById("title").innerText = s.t;
-var info = ""
-if (s.type === 'offen') info = "\n\n(Blinzeln erlaubt)"
-else if (s.type === 'zu') info = "\n\n(Augen geschlossen halten)"
-else if (s.type === 'fokus') info = "\n\n(Blinzeln minimieren)"
+var info = (s.type === 'offen') ? "\n\n(Blinzeln erlaubt)" : (s.type === 'zu' ? "\n\n(Augen geschlossen halten)" : "\n\n(Blinzeln minimieren)");
 document.getElementById("desc").innerText = s.v + info;
 document.getElementById("timer").innerText = "..."
 speak(s.v, function() { currentSec = s.s; startTimer(); });
@@ -217,8 +195,7 @@ document.getElementById("timer").innerText = currentSec;
 timer = setInterval(function() {
 if (!isPaused) {
 currentSec--; document.getElementById("timer").innerText = currentSec;
-var s = currentSteps[currentIndex];
-if (s.split && currentSec === Math.floor(s.s / 2)) speak("Wechseln.");
+if (currentSteps[currentIndex].split && currentSec === Math.floor(currentSteps[currentIndex].s / 2)) speak("Wechseln.");
 if (currentSec <= 0) { clearInterval(timer); currentIndex++; runNextStep(); }
 }
 }, 1000);
