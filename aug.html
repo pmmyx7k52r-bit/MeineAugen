@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MeineAugen 6.5.6 - True Rotation</title>
+<title>MeineAugen 6.5.9 - Maxi Pool</title>
 <style>
 :root { --bg: #f4f1ee; --card: white; --text: #2c3e50; --accent: #2980b9; --gray: #bdc3c7; --active: #2ecc71; --shaolin: #e67e22; }
 @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #121212; --text: #dcdcdc; --accent: #3498db; --gray: #333; } }
@@ -16,30 +16,27 @@ button.option { padding: 10px 2px; border: none; border-radius: 12px; font-weigh
 button.option span { font-size: 18px; margin-bottom: 3px; pointer-events: none; }
 button.option.active { background-color: var(--accent) !important; outline: 3px solid var(--active); transform: scale(1.05); }
 .action-btn { padding: 18px; margin: 6px 0; width: 100%; border: none; border-radius: 22px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
-.start-morning { background: #f1c40f; color: #2c3e50; }
 .start-run { background: #27ae60; margin-top: 10px; }
-.shaolin-btn { background: var(--shaolin); border: 2px solid #d35400; }
-.pause-btn { background: #e67e22 !important; margin-bottom: 5px; }
 #timer { font-size: 80px; color: #e67e22; font-weight: bold; margin: 5px 0; }
-#desc { font-size: 17px; min-height: 230px; padding: 0 20px; line-height: 1.5; display: flex; align-items: center; justify-content: center; font-weight: 500; }
+#desc { font-size: 17px; min-height: 230px; padding: 0 20px; line-height: 1.4; display: flex; align-items: center; justify-content: center; font-weight: 500; }
 .hidden { display: none !important; }
 </style>
 </head>
 <body onload="init()">
 
 <div id="menu" class="card">
-<h2>👁️ MeineAugen 6.5.6</h2>
-<div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">BEREIT</div>
+<h2>👁️ MeineAugen 6.5.9</h2>
+<div id="mode-info" style="font-size:10px; margin-bottom:10px; font-weight:bold; color:#7f8c8d;">20 ÜBUNGEN IM POOL</div>
 
-<button type="button" onclick="toggleMorning()" class="action-btn start-morning">☀️ Morgen-Routine <span id="arrow">▼</span></button>
+<button type="button" onclick="toggleMorning()" class="action-btn" style="background:#f1c40f; color:#2c3e50;">☀️ Morgen-Routine <span id="arrow">▼</span></button>
 <div id="morning-sub">
 <button type="button" onclick="startSession('bed')" class="action-btn" style="background:#f39c12; flex:1; border-radius:15px;">🛌 Bett</button>
 <button type="button" onclick="startSession('bath')" class="action-btn" style="background:#3498db; flex:1; border-radius:15px;">🚿 Bad</button>
 </div>
 
-<button type="button" onclick="startSession('shaolin')" class="action-btn shaolin-btn">🧘 Shaolin Fokus (Schärfung)</button>
+<button type="button" onclick="startSession('shaolin')" class="action-btn" style="background:#e67e22;">🧘 Shaolin Fokus</button>
 
-<h4>Kontext (Fokus)</h4>
+<h4>Kontext</h4>
 <div class="grid">
 <button type="button" id="c_screen" onclick="setOpt('ctx', 'screen')" class="option"><span>📱</span>Screen</button>
 <button type="button" id="c_nature" onclick="setOpt('ctx', 'nature')" class="option"><span>🌳</span>Natur</button>
@@ -63,150 +60,83 @@ button.option.active { background-color: var(--accent) !important; outline: 3px 
 <div id="title" style="font-weight:bold; font-size: 22px; color: var(--accent);"></div>
 <div id="timer">...</div>
 <div id="desc"></div>
-<button type="button" id="pauseToggle" onclick="togglePause()" class="action-btn pause-btn">Pause</button>
-<button type="button" onclick="abort()" class="action-btn" style="background:#95a5a6;">Abbrechen</button>
+<button type="button" id="pauseToggle" onclick="togglePause()" class="action-btn" style="background:#e67e22; width:100%; border-radius:22px; padding:18px; color:white; border:none; font-weight:bold;">Pause</button>
+<button type="button" onclick="abort()" class="action-btn" style="background:#95a5a6; border:none; width:100%; border-radius:22px; padding:18px; color:white; font-weight:bold; margin-top:5px;">Abbrechen</button>
 </div>
 
 <script>
-var curCtx = "none", curSt = "normal"
-var timer, isPaused = false, currentSec = 0, currentSteps = [], currentIndex = 0;
-var isSpeaking = false;
+var curCtx = "none", curSt = "normal", timer, isPaused = false, currentSec = 0, currentSteps = [], currentIndex = 0, isSpeaking = false;
 
-function init() {
-try {
-curCtx = localStorage.getItem("ma_ctx") || "none"
-curSt = localStorage.getItem("ma_st") || "normal"
-} catch(e) {}
-updateUI();
-}
-
+function init() { try { curCtx = localStorage.getItem("ma_ctx") || "none" curSt = localStorage.getItem("ma_st") || "normal" } catch(e) {} updateUI(); }
 function updateUI() {
 var opts = document.getElementsByClassName('option');
-for (var i = 0; i < opts.length; i++) { opts[i].classList.remove('active'); }
+for (var i = 0; i < opts.length; i++) opts[i].classList.remove('active');
 if (document.getElementById("c_" + curCtx)) document.getElementById("c_" + curCtx).classList.add('active');
 if (document.getElementById("s_" + curSt)) document.getElementById("s_" + curSt).classList.add('active');
-document.getElementById("mode-info").innerText = "FOKUS: " + curCtx.toUpperCase() + " | STATUS: " + curSt.toUpperCase();
 }
-
-function setOpt(type, val) {
-if (type === 'ctx') curCtx = (curCtx === val) ? "none" : val;
-else curSt = (curSt === val) ? "normal" : val;
-try { localStorage.setItem("ma_ctx", curCtx); localStorage.setItem("ma_st", curSt); } catch(e) {}
-updateUI();
-}
-
-function toggleMorning() {
-var s = document.getElementById('morning-sub');
-var isHidden = (window.getComputedStyle(s).display === 'none');
-s.style.display = isHidden ? 'flex' : 'none';
-document.getElementById('arrow').innerText = isHidden ? "▲" : "▼"
-}
+function setOpt(type, val) { if (type === 'ctx') curCtx = (curCtx === val) ? "none" : val; else curSt = (curSt === val) ? "normal" : val; try { localStorage.setItem("ma_ctx", curCtx); localStorage.setItem("ma_st", curSt); } catch(e) {} updateUI(); }
+function toggleMorning() { var s = document.getElementById('morning-sub'), isHidden = (window.getComputedStyle(s).display === 'none'); s.style.display = isHidden ? 'flex' : 'none'; document.getElementById('arrow').innerText = isHidden ? "▲" : "▼" }
 
 function step(t, s, v, split, type) { return {t: t, s: s, v: v, split: !!split, type: type || 'offen'}; }
 
-var lib = {
+const lib = {
 motorik: [
-step("Zifferblatt", 46, "Blicke nacheinander auf 12, 3, 6 und 9 Uhr. Halte die Extrempunkte kurz. Kopf absolut still.", true),
-step("Die liegende Acht", 45, "Stelle dir eine große 8 vor dir vor. Fahre die Linien langsam mit den Augen ab. Kopf ruhig halten.", true),
-step("Augen-Kreisen", 40, "Rolle die Augen langsam in einem großen Kreis. Erst im Uhrzeigersinn, dann andersherum.", true),
-step("Nasenspitze", 30, "Blicke auf deine Nasenspitze, dann weit in die Ferne. Wiederhole das langsam.")
+step("Zifferblatt", 46, "Blicke auf 12, 3, 6 und 9 Uhr. Halte die Punkte kurz. Kopf still halten.", true),
+step("Liegende Acht", 45, "Fahre eine liegende 8 langsam mit den Augen ab. Kopf ruhig halten.", true),
+step("Augen-Roll", 40, "Rolle die Augen langsam im Kreis. Erst rechtsrum, dann linksrum.", true),
+step("Augen-Schreiben", 45, "Schreibe deinen Namen mit den Augen groß in die Luft. Kopf bleibt starr."),
+step("Diagonalen", 40, "Blicke von oben links nach unten rechts, dann oben rechts nach unten links.", true)
 ],
 fokus: [
-step("Posaune", 40, "Halte einen Text ganz nah, bis er gerade noch scharf ist. Blicke dann blitzartig in die Ferne auf ein festes Ziel."),
-step("Daumen-Sprung", 35, "Fokussiere den Daumen nah vor dem Gesicht, dann ein Ziel in 3m, dann in der Ferne. Hin und her."),
-step("Auge des Adlers", 40, "Wähle ein Ziel in der Ferne. Zoome Details weich heran. Blinzle bewusst bei jedem Fokus."),
-step("Shaolin-Punkt", 50, "Fixiere einen winzigen Punkt. Atme tief. Versuche, die Details 'aufzusaugen'.", false, 'fokus')
+step("Posaune", 40, "Text nah halten bis unscharf, dann blitzartig Fern-Ziel fixieren. Schärfe triggern."),
+step("Daumen-Sprung", 35, "Nah, Mittel, Fern. Springe mit dem Fokus blitzschnell hin und her."),
+step("Auge des Adlers", 40, "Fern-Ziel wählen. Details heranziehen. Bewusst blinzeln."),
+step("Fenster-Check", 40, "Fokussiere den Rahmen/das Glas, dann die Welt draußen. Hin und her."),
+step("Shaolin-Punkt", 50, "Fixiere einen winzigen Punkt. Atme tief. Details aufsaugen.", false, 'fokus')
 ],
 entspannung: [
-step("Palmieren", 60, "Augen zu: Reibe die Hände kräftig warm. Decke die Augen lichtdicht ab. Atme tief in die Dunkelheit.", false, 'zu'),
-step("Große Schaukel", 45, "Stehe locker und schwinge den Körper sanft von links nach rechts. Lass die Welt fließen."),
-step("Gähnen", 25, "Gähne weit und tief. Lass den Kiefer locker hängen. Das entspannt die Augenpartie."),
-step("Peripherie", 40, "Schau geradeaus. Wackle mit den Fingern am Sichtfeldrand und nimm die Bewegung bewusst wahr."),
-step("Kiefer-Lockerung", 30, "Lass den Kiefer locker hängen. Entspannte Kiefermuskeln lösen reflektorisch Augenstress.")
+step("Palmieren", 60, "Hände warm reiben. Augen lichtdicht abdecken. In die Dunkelheit atmen.", false, 'zu'),
+step("Kiefer-Lockerung", 30, "Kiefer locker hängen lassen. Entspannte Kiefermuskeln lösen Augenstress."),
+step("Gähnen", 25, "Gähne weit und tief. Entspannt die Gesichtsmuskulatur reflexartig."),
+step("Brauen-Lift", 30, "Hebe die Augenbrauen maximal an, dann locker lassen. Löst Stirnspannung."),
+step("Akupressur", 40, "Drücke sanft die Punkte an den inneren Augenbrauen-Enden. Atmen.")
 ],
 pflege: [
-step("Schmetterling", 25, "Blinzle ganz schnell, locker und federleicht. Befeuchtet die Hornhaut sofort.")
+step("Schmetterling", 25, "Blinzle ganz schnell und locker. Befeuchtet die Hornhaut sofort."),
+step("Nasenspitze", 30, "Blick zur Nase, dann Fernblick. Regt die Tränendrüsen an."),
+step("Gähn-Tränen", 30, "Provoziere ein Gähnen, um die Tränendrüsen aktiv zu pressen."),
+step("Lid-Klick", 25, "Schließe die Augen fest für 2 Sekunden, dann weit öffnen. 5 mal.")
 ]
 };
 
 function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 
 function buildPlan(type) {
-if (type === 'shaolin') return [lib.fokus[3], lib.fokus[2], lib.entspannung[0]];
-if (type === 'bed') return [step("Ankommen", 15, "Augen zu.", false, 'zu'), shuffle([...lib.entspannung])[0], lib.pflege[0]];
-if (type === 'bath') {
-return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), step("Lidrand-Massage", 50, "Streiche am Oberlid sanft abwärts und am Unterlid aufwärts aus."), step("Reinigung", 30, "Lidrand mit Pad säubern."), lib.pflege[0]];
-}
-if (type === 'night') return [shuffle([...lib.entspannung])[0], lib.entspannung[4]];
+if (type === 'shaolin') return [lib.fokus[4], lib.fokus[0], lib.entspannung[0]];
+if (type === 'bed') return [step("Ruhe", 15, "Augen zu.", false, 'zu'), shuffle([...lib.entspannung])[0], lib.pflege[0]];
+if (type === 'bath') return [step("Wärme", 90, "Warmes Tuch auflegen.", false, 'zu'), step("Lidrand-Massage", 50, "Lider sanft zur Kante hin ausstreichen."), lib.pflege[0]];
+if (type === 'night') return [lib.entspannung[0], lib.entspannung[1]];
 
-// Echte Zufalls-Mischung aus 3 Töpfen
+// Auswahl-Logik mit erweitertem Pool
 let m = shuffle([...lib.motorik])[0];
 let f = shuffle([...lib.fokus])[0];
 let e = shuffle([...lib.entspannung])[0];
-let p = lib.pflege[0];
+let p = shuffle([...lib.pflege])[0];
 
-if (curCtx === 'screen' || curSt === 'dry') return [p, e, f];
-if (curCtx === 'nature') return [f, m, e];
-if (curSt === 'tired') return [e, m, p];
-return [m, f, e]; // Standard Mix
-}
+if (curSt === 'dry' || curCtx === 'screen') return [p, e, f];
+if (curSt === 'tired') return [m, p, shuffle([...lib.motorik])[1]];
+if (curCtx === 'stress') return [lib.entspannung[1], lib.entspannung[4], m];
+if (curCtx === 'nature') return [f, shuffle([...lib.fokus])[1], m];
 
-function speak(txt, cb) {
-if (!window.speechSynthesis) { if (cb) cb(); return; }
-speechSynthesis.cancel(); isSpeaking = true;
-var u = new SpeechSynthesisUtterance(txt); u.lang = "de-DE"
-u.onend = function() { isSpeaking = false; if (cb) cb(); };
-speechSynthesis.speak(u);
+return [m, f, e];
 }
 
-function startSession(type) {
-currentSteps = buildPlan(type); currentIndex = 0; isPaused = false;
-document.getElementById("pauseToggle").innerText = "Pause"
-if (['night','bed','bath','shaolin'].indexOf(type) !== -1 || curSt === 'light') document.body.classList.add("dark");
-else document.body.classList.remove("dark");
-document.getElementById("menu").classList.add("hidden");
-document.getElementById("run").classList.remove("hidden");
-runNextStep();
-}
-
-function togglePause() {
-isPaused = !isPaused;
-document.getElementById("pauseToggle").innerText = isPaused ? "Weiter" : "Pause"
-if (isPaused) { clearInterval(timer); speechSynthesis.cancel(); } else { startTimer(); }
-}
-
-function runNextStep() {
-if (currentIndex >= currentSteps.length) {
-document.getElementById("timer").innerText = "✓"
-speak("Training beendet.", function() { setTimeout(abort, 2000); });
-return;
-}
-var s = currentSteps[currentIndex];
-document.getElementById("title").innerText = s.t;
-var info = (s.type === 'offen') ? "\n\n(Blinzeln erlaubt)" : (s.type === 'zu' ? "\n\n(Augen geschlossen halten)" : "\n\n(Blinzeln minimieren)");
-document.getElementById("desc").innerText = s.v + info;
-document.getElementById("timer").innerText = "..."
-speak(s.v, function() { currentSec = s.s; startTimer(); });
-}
-
-function startTimer() {
-clearInterval(timer); if (isSpeaking) return;
-document.getElementById("timer").innerText = currentSec;
-timer = setInterval(function() {
-if (!isPaused) {
-currentSec--; document.getElementById("timer").innerText = currentSec;
-if (currentSteps[currentIndex].split && currentSec === Math.floor(currentSteps[currentIndex].s / 2)) speak("Wechseln.");
-if (currentSec <= 0) { clearInterval(timer); currentIndex++; runNextStep(); }
-}
-}, 1000);
-}
-
-function abort() {
-clearInterval(timer); speechSynthesis.cancel();
-document.body.classList.remove("dark");
-document.getElementById("run").classList.add("hidden");
-document.getElementById("menu").classList.remove("hidden");
-}
+function speak(txt, cb) { if (!window.speechSynthesis) { if (cb) cb(); return; } speechSynthesis.cancel(); isSpeaking = true; var u = new SpeechSynthesisUtterance(txt); u.lang = "de-DE" u.onend = function() { isSpeaking = false; if (cb) cb(); }; speechSynthesis.speak(u); }
+function startSession(type) { currentSteps = buildPlan(type); currentIndex = 0; isPaused = false; document.getElementById("pauseToggle").innerText = "Pause" if (['night','bed','bath','shaolin'].indexOf(type) !== -1 || curSt === 'light') document.body.style.background = "#000" else document.body.style.background = "" document.getElementById("menu").classList.add("hidden"); document.getElementById("run").classList.remove("hidden"); runNextStep(); }
+function togglePause() { isPaused = !isPaused; document.getElementById("pauseToggle").innerText = isPaused ? "Weiter" : "Pause" if (isPaused) { clearInterval(timer); speechSynthesis.cancel(); } else startTimer(); }
+function runNextStep() { if (currentIndex >= currentSteps.length) { document.getElementById("timer").innerText = "✓" speak("Training beendet.", function() { setTimeout(abort, 2000); }); return; } var s = currentSteps[currentIndex]; document.getElementById("title").innerText = s.t; var info = (s.type === 'offen') ? "\n\n(Blinzeln erlaubt)" : (s.type === 'zu' ? "\n\n(Augen zu)" : "\n\n(Fokus halten)"); document.getElementById("desc").innerText = s.v + info; document.getElementById("timer").innerText = "..." speak(s.v, function() { currentSec = s.s; startTimer(); }); }
+function startTimer() { clearInterval(timer); if (isSpeaking) return; document.getElementById("timer").innerText = currentSec; timer = setInterval(function() { if (!isPaused) { currentSec--; document.getElementById("timer").innerText = currentSec; if (currentSteps[currentIndex].split && currentSec === Math.floor(currentSteps[currentIndex].s / 2)) speak("Wechseln."); if (currentSec <= 0) { clearInterval(timer); currentIndex++; runNextStep(); } } }, 1000); }
+function abort() { clearInterval(timer); speechSynthesis.cancel(); document.body.style.background = "" document.getElementById("run").classList.add("hidden"); document.getElementById("menu").classList.remove("hidden"); }
 </script>
 </body>
 </html>
